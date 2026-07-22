@@ -77,7 +77,7 @@ class RepositoryTests(unittest.TestCase):
     def test_operator_fixture_is_listable(self) -> None:
         result = run_script("benchmarks/pytorch_baseline.py", "--list")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        for operator in ("add", "softmax", "layer_norm", "matmul"):
+        for operator in ("add", "softmax", "layer_norm", "matmul", "quantize", "transpose", "moe_routing"):
             self.assertIn(operator, result.stdout)
 
 
