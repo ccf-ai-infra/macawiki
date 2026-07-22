@@ -51,7 +51,7 @@ python3 scripts/doctor.py
 - 示例中的版本未知时明确标为 `unspecified`。
 - 不复制官方文档附件，不批量抓取仓库，不保存许可证不明的代码资产。
 - 所有性能知识均为方法性说明，没有独立 Benchmark 就不标记为已验证。
-- 当前环境没有 C500 与 MXMACA；仓库不包含任何伪造性能数字。CPU 上的 PyTorch 运行只验证评估流程，不代表 C500 性能。
+- C500 与 MXMACA 已就绪；`benchmarks/results/` 下的 C500 结果为同环境相对计时（非官方规格），环境指纹、硬件型号、MACA/mxcc 版本与运行命令随结果 JSON 保存，可由 `scripts/compare_benchmarks.py` 复算。仓库不含任何伪造性能数字。
 
 详细治理规则见 [AGENTS.md](AGENTS.md)，Agent 使用方式见 [SKILL.md](SKILL.md)，数据契约见 [references/schema.md](references/schema.md)，后续硬件验证门禁见 [评估计划](docs/hardware-validation.md)。
 

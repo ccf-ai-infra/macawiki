@@ -1,0 +1,71 @@
+{
+  "comparison": "same C500, PyTorch backend, small-shape baseline vs large-shape candidate",
+  "baseline": "benchmarks/results/pytorch_c500.json",
+  "candidate": "benchmarks/results/pytorch_c500_large.json",
+  "environment_fingerprint": "4baa1c1c763a5a339a11690663dd8adc5b8cba83f4b4eb1dad0301799bb3e192",
+  "device": "cuda",
+  "torch": "2.8.0+metax3.7.1.3",
+  "note": "small-shape medians are from the regenerated pytorch_c500.json; large-shape medians are the original recorded values on the same C500 (large shapes are not in operator_cases.yaml and cannot be reproduced by the standard runner).",
+  "comparisons": [
+    {
+      "operator": "add",
+      "small_shape": [
+        4096
+      ],
+      "large_shape": [
+        65536
+      ],
+      "small_median_ms": 0.021976884454488754,
+      "large_median_ms": 0.02287980169057846,
+      "ratio": 1.0410848606843945,
+      "both_correct": true
+    },
+    {
+      "operator": "softmax",
+      "small_shape": [
+        64,
+        128
+      ],
+      "large_shape": [
+        512,
+        1024
+      ],
+      "small_median_ms": 0.022981083020567894,
+      "large_median_ms": 0.033878255635499954,
+      "ratio": 1.4741801161058934,
+      "both_correct": true
+    },
+    {
+      "operator": "layer_norm",
+      "small_shape": [
+        64,
+        128
+      ],
+      "large_shape": [
+        512,
+        1024
+      ],
+      "small_median_ms": 0.025220448151230812,
+      "large_median_ms": 0.04001590423285961,
+      "ratio": 1.5866452488437146,
+      "both_correct": true
+    },
+    {
+      "operator": "matmul",
+      "small_shape": [
+        64,
+        128,
+        64
+      ],
+      "large_shape": [
+        512,
+        1024,
+        512
+      ],
+      "small_median_ms": 0.024837441742420197,
+      "large_median_ms": 0.04573049955070019,
+      "ratio": 1.8411920206981889,
+      "both_correct": true
+    }
+  ]
+}

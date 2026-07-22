@@ -1,0 +1,32 @@
+{
+  "baseline": "benchmarks/results/pytorch_c500.json",
+  "candidate": "benchmarks/results/tilelang_c500.json",
+  "comparisons": [
+    {
+      "case_id": "add-f32-4096",
+      "status": "comparable",
+      "baseline_median_ms": 0.021976884454488754,
+      "candidate_median_ms": 0.029594404622912407,
+      "speedup": 0.7426026890729858
+    },
+    {
+      "case_id": "layernorm-f32-64x128",
+      "status": "comparable",
+      "baseline_median_ms": 0.025220448151230812,
+      "candidate_median_ms": 0.029969261959195137,
+      "speedup": 0.8415438520164392
+    },
+    {
+      "case_id": "matmul-f32-64x128x64",
+      "status": "not_comparable",
+      "reason": "correctness gate failed"
+    },
+    {
+      "case_id": "softmax-f32-64x128",
+      "status": "comparable",
+      "baseline_median_ms": 0.022981083020567894,
+      "candidate_median_ms": 0.02944888547062874,
+      "speedup": 0.7803719106275991
+    }
+  ]
+}

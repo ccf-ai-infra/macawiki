@@ -8,13 +8,13 @@ import hashlib
 import importlib.util
 import json
 import math
-import platform
 import statistics
 import sys
 import time
 from pathlib import Path
 from typing import Any
 
+from env_capture import environment, provenance
 
 ROOT = Path(__file__).resolve().parent.parent
 CASES = ROOT / "benchmarks" / "operator_cases.yaml"
@@ -156,18 +156,27 @@ def main() -> int:
     iterations = max(1, args.iterations if args.iterations is not None else profile["iterations"])
     selected = [case for case in cases["operators"] if args.operator == "all" or case["name"] == args.operator]
     results = [run_case(torch, case, device, warmup, iterations, args.correctness_only) for case in selected]
+    run_command = (
+        f"python3 benchmarks/pytorch_baseline.py "
+        f"--operator {args.operator} --profile {args.profile} --device {args.device} "
+        f"--warmup {warmup} --iterations {iterations}"
+        + (" --correctness-only" if args.correctness_only else "")
+        + (f" --output {args.output}" if args.output else "")
+    )
     report = {
         "schema_version": 1,
         "backend": "pytorch",
         "status": "completed",
         "reference_role": "reference-implementation",
-        "environment": {
-            "python": platform.python_version(),
-            "torch": torch.__version__,
-            "device": str(device),
-            "platform": platform.platform(),
-            "environment_fingerprint": hashlib.sha256(json.dumps({"torch": torch.__version__, "device": str(device), "platform": platform.platform()}, sort_keys=True).encode()).hexdigest(),
-        },
+        "environment": environment(torch, device, backend="pytorch", include_tilelang=False),
+        "provenance": provenance(
+            run_command,
+            capture_command="python3 scripts/capture_environment.py --output benchmarks/results/environment.json",
+            notes=[
+                "PyTorch self-check is not independent backend validation; it is the correctness reference for the TileLang candidate.",
+                "CPU results are workflow checks, not C500 evidence; C500 evidence requires device.type == cuda on a MetaX C500.",
+            ],
+        ),
         "config": {"profile": args.profile, "warmup": warmup, "iterations": iterations, "correctness_only": args.correctness_only},
         "cases": results,
         "limitations": ["PyTorch self-check is not independent backend validation.", "CPU results are workflow checks, not C500 evidence."],

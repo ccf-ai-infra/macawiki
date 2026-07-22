@@ -1,6 +1,6 @@
 # C500 算子验证计划
 
-当前仓库没有 C500 和 MXMACA。以下内容是可执行的实验设计，不是已完成的性能结论。
+C500 与 MXMACA 已就绪。`benchmarks/results/` 下保存了在 MetaX C500 上实测的 PyTorch 基线与 TileLang 候选结果（环境指纹、硬件型号、MACA/mxcc 版本与运行命令见各 JSON 的 `environment`/`provenance` 字段）。以下门禁仍是一致性的硬约束，不是已完成报告的免责声明：matmul 因 TileLang/maca codegen 差距标记为 `not_comparable`，其余算子为同环境相对计时，非官方 C500 规格。
 
 ## 目标与基线算子
 
