@@ -52,6 +52,20 @@ def _run_op(torch: Any, case: dict[str, Any], x: Any, y: Any | None) -> Any:
         return torch.nn.functional.layer_norm(x, normalized, eps=params["eps"])
     if name == "matmul":
         return torch.matmul(x, y)
+    if name == "quantize":
+        # INT8 symmetric fake-quantize then dequantize, using real torch.* primitives.
+        scale = params["scale"]
+        return torch.clamp(torch.round(x / scale), -128, 127) * scale
+    if name == "transpose":
+        return torch.t(x)
+    if name == "moe_routing":
+        # MoE top-k routing: softmax gate over experts, then top-k selection.
+        # The comparable output is the top-k gate values tensor [tokens, topk];
+        # indices are discrete and not tolerance-comparable, so we return only
+        # the values (the genuine torch.topk / torch.softmax result).
+        gate = torch.softmax(x, dim=params["dim"])
+        vals, _idx = torch.topk(gate, k=params["topk"], dim=params["dim"])
+        return vals
     raise ValueError(f"unsupported operator: {name}")
 
 
@@ -129,7 +143,7 @@ def run_case(torch: Any, case: dict[str, Any], device: Any, warmup: int, iterati
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--list", action="store_true")
-    parser.add_argument("--operator", choices=["all", "add", "softmax", "layer_norm", "matmul"], default="all")
+    parser.add_argument("--operator", choices=["all", "add", "softmax", "layer_norm", "matmul", "quantize", "transpose", "moe_routing"], default="all")
     parser.add_argument("--profile", choices=["smoke", "c500"], default="smoke")
     parser.add_argument("--device", default="auto", help="cpu, cuda, or a target-specific torch device string")
     parser.add_argument("--warmup", type=int)

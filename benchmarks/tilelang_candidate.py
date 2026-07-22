@@ -160,7 +160,52 @@ def _load_tilelang_backend() -> tuple[Any, Any, dict[str, Any]]:
             T.copy(c_l, C[by * BLOCK_M, bx * BLOCK_N])
         return C
 
-    kernels = {"add": tl_add, "softmax": tl_softmax, "layer_norm": tl_layernorm, "matmul": tl_matmul}
+    @tilelang.jit(target="maca")
+    def tl_quantize(X, scale: float, BLOCK_N, dtype, out_dtype, threads):
+        # INT8 symmetric fake-quantize then dequantize: clamp(round(x/s),-128,127)*s.
+        # Elementwise, one block per tile of elements (same shape as tl_add).
+        N = T.const("N")
+        X: T.Tensor((N,), dtype)
+        Y = T.empty((N,), out_dtype)
+        sf = T.float32(scale)
+        lo = T.float32(-128.0)
+        hi = T.float32(127.0)
+        with T.Kernel(T.ceildiv(N, BLOCK_N), threads=threads) as (bx,):
+            x = T.alloc_shared((BLOCK_N,), dtype)
+            ys = T.alloc_shared((BLOCK_N,), out_dtype)
+            T.copy(X[bx * BLOCK_N], x)
+            for i in T.Parallel(BLOCK_N):
+                qf = T.Cast(accum, x[i]) / sf
+                qf = T.max(lo, T.min(hi, T.Cast(accum, T.round(qf))))
+                ys[i] = T.Cast(out_dtype, qf * sf)
+            T.copy(ys, Y[bx * BLOCK_N])
+        return Y
+
+    @tilelang.jit(target="maca")
+    def tl_transpose(X, BLOCK_M, BLOCK_N, dtype, out_dtype, threads):
+        # Tiled 2D transpose: write X[m, n] to Y[n, m]. Each block owns a
+        # (BLOCK_M, BLOCK_N) tile and transposes it through shared memory so the
+        # output is written coalesced in the transposed layout.
+        M, N = T.const("M, N")
+        X: T.Tensor((M, N), dtype)
+        Y = T.empty((N, M), out_dtype)
+        with T.Kernel(T.ceildiv(N, BLOCK_N), T.ceildiv(M, BLOCK_M), threads=threads) as (bx, by):
+            xs = T.alloc_shared((BLOCK_M, BLOCK_N), dtype)
+            ys = T.alloc_shared((BLOCK_N, BLOCK_M), out_dtype)
+            T.copy(X[by * BLOCK_M, bx * BLOCK_N], xs)
+            for i, j in T.Parallel(BLOCK_M, BLOCK_N):
+                ys[j, i] = T.Cast(out_dtype, xs[i, j])
+            T.copy(ys, Y[bx * BLOCK_N, by * BLOCK_M])
+        return Y
+
+    kernels = {
+        "add": tl_add,
+        "softmax": tl_softmax,
+        "layer_norm": tl_layernorm,
+        "matmul": tl_matmul,
+        "quantize": tl_quantize,
+        "transpose": tl_transpose,
+    }
     return tilelang, T, kernels
 
 
@@ -175,6 +220,21 @@ MATMUL_NOT_RUN_REASON = (
     "TileLang fp32 GEMM on maca target hits a tf32 mma codegen error "
     "(__builtin_mxc_mma_16x16x8tf32) for this build; naive grid accumulation "
     "is not a valid GPU reduction. Marked not_comparable pending a fix."
+)
+
+# Known codegen gap: MoE routing needs a per-row top-k selection (a sorted
+# comparison/scan over the gate row), which TileLang's maca primitives do not
+# expose as a direct op and a hand-written cross-thread compare-swap reduction
+# is not valid on this GPU target without an atomic/shared cross-lane primitive
+# we have not validated. The softmax half is expressible (we reuse the tl_softmax
+# pattern), but the top-k selection half is not. Rather than fake a result by
+# returning only the softmax or an unsorted subset, we mark the whole op
+# not_comparable and record the reason. (AGENTS.md: "A not_run result is more
+# honest than a synthetic benchmark.")
+MOE_ROUTING_NOT_RUN_REASON = (
+    "TileLang/maca has no validated per-row top-k primitive; a hand-written "
+    "compare-swap reduction is not valid on this target. Marked not_comparable "
+    "pending a supported top-k path (softmax half is expressible, top-k is not)."
 )
 
 
@@ -216,6 +276,12 @@ def _build_kernel(tilelang: Any, T: Any, kernels: dict[str, Any], case: dict[str
     if name == "matmul":
         m, k_, n_ = shape  # [M, K, N]
         return kernels["matmul"].compile(M=m, N=n_, K=k_, BLOCK_M=16, BLOCK_N=16, BLOCK_K=16, threads=128, dtype=dtype, out_dtype=out, accum_dtype=acc), ("matmul", shape)
+    if name == "quantize":
+        n = shape[0]
+        return kernels["quantize"].compile(N=n, scale=case["parameters"]["scale"], BLOCK_N=128, dtype=dtype, out_dtype=out, threads=128), ("quantize", shape)
+    if name == "transpose":
+        m, n = shape
+        return kernels["transpose"].compile(M=m, N=n, BLOCK_M=16, BLOCK_N=16, dtype=dtype, out_dtype=out, threads=128), ("transpose", shape)
     raise ValueError(f"unsupported operator: {name}")
 
 
@@ -246,6 +312,15 @@ def _reference(torch: Any, case: dict[str, Any], x: Any, y: Any | None) -> Any:
         return torch.nn.functional.layer_norm(x, tuple(p["normalized_shape"]), eps=p["eps"])
     if name == "matmul":
         return torch.matmul(x, y)
+    if name == "quantize":
+        scale = p["scale"]
+        return torch.clamp(torch.round(x / scale), -128, 127) * scale
+    if name == "transpose":
+        return torch.t(x)
+    if name == "moe_routing":
+        gate = torch.softmax(x, dim=p["dim"])
+        vals, _idx = torch.topk(gate, k=p["topk"], dim=p["dim"])
+        return vals
     raise ValueError(name)
 
 
@@ -271,12 +346,18 @@ def _run_kernel(kernel, op: str, x: Any, y: Any | None, gamma: Any = None, beta:
         return kernel(x, gamma, beta)
     if op == "matmul":
         return kernel(x, y)
+    if op == "quantize":
+        return kernel(x)
+    if op == "transpose":
+        return kernel(x)
     raise ValueError(op)
 
 
 def run_case(torch: Any, tilelang: Any, T: Any, kernels: dict[str, Any], case: dict[str, Any], device: Any, warmup: int, iterations: int, correctness_only: bool) -> dict[str, Any]:
     if case["name"] == "matmul":
         return _not_run_case(case, MATMUL_NOT_RUN_REASON)
+    if case["name"] == "moe_routing":
+        return _not_run_case(case, MOE_ROUTING_NOT_RUN_REASON)
     kernel, (op, _shape) = _build_kernel(tilelang, T, kernels, case)
     x, y = _inputs(torch, case, device)
     gamma = beta = None
@@ -312,6 +393,7 @@ def run_case(torch: Any, tilelang: Any, T: Any, kernels: dict[str, Any], case: d
     call = (lambda: kernel(x, y)) if op == "add" else \
            (lambda: kernel(x)) if op == "softmax" else \
            (lambda: kernel(x, gamma, beta)) if op == "layer_norm" else \
+           (lambda: kernel(x)) if op in {"quantize", "transpose"} else \
            (lambda: kernel(x, y))
     # Timing uses the SAME method as pytorch_baseline.py
     # (time.perf_counter + torch.cuda.synchronize) so the two backends are
@@ -343,7 +425,7 @@ def run_case(torch: Any, tilelang: Any, T: Any, kernels: dict[str, Any], case: d
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--list", action="store_true")
-    parser.add_argument("--operator", choices=["all", "add", "softmax", "layer_norm", "matmul"], default="all")
+    parser.add_argument("--operator", choices=["all", "add", "softmax", "layer_norm", "matmul", "quantize", "transpose", "moe_routing"], default="all")
     parser.add_argument("--profile", choices=["smoke", "c500"], default="smoke")
     parser.add_argument("--device", default="auto")
     parser.add_argument("--warmup", type=int)
@@ -401,6 +483,7 @@ def main() -> int:
             notes=[
                 "Timed on the same C500 host and software stack as the PyTorch baseline; treat as same-environment relative timing, not an official C500 spec.",
                 "matmul is recorded as not_comparable because of a TileLang/maca codegen gap; see MATMUL_NOT_RUN_REASON in the source.",
+                "moe_routing is recorded as not_comparable because TileLang/maca has no validated per-row top-k primitive; see MOE_ROUTING_NOT_RUN_REASON in the source.",
             ],
         ),
         "config": {"profile": args.profile, "warmup": warmup, "iterations": iterations, "correctness_only": args.correctness_only},

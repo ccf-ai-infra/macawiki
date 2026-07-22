@@ -34,6 +34,27 @@
       "shape": [64, 128, 64],
       "parameters": {},
       "tolerance": {"atol": 2e-5, "rtol": 2e-5}
+    },
+    {
+      "name": "quantize",
+      "case_id": "quantize-f32-8192",
+      "shape": [8192],
+      "parameters": {"scale": 0.1},
+      "tolerance": {"atol": 1e-1, "rtol": 1e-2}
+    },
+    {
+      "name": "transpose",
+      "case_id": "transpose-f32-128x4096",
+      "shape": [128, 4096],
+      "parameters": {},
+      "tolerance": {"atol": 1e-6, "rtol": 1e-6}
+    },
+    {
+      "name": "moe_routing",
+      "case_id": "moe-routing-f32-1024x8-top2",
+      "shape": [1024, 8],
+      "parameters": {"topk": 2, "dim": -1},
+      "tolerance": {"atol": 1e-5, "rtol": 1e-5}
     }
   ]
 }
