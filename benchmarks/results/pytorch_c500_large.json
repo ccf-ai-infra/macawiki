@@ -7,7 +7,25 @@
     "python": "3.12.11",
     "torch": "2.8.0+metax3.7.1.3",
     "device": "cuda",
+    "device_name": "MetaX C500",
     "platform": "Linux-5.15.0-58-generic-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "processor": "x86_64",
+    "maca_version": "3.7.1.5",
+    "driver_version": "3.8.30",
+    "mxcc": {
+      "path": "/opt/maca/mxgpu_llvm/bin/mxcc",
+      "version": "mxcc version 1.0.0 (d9102a1572)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/maca-3.7.1/mxgpu_llvm/bin"
+    },
+    "nvidia_smi": {
+      "path": null,
+      "version": null
+    },
+    "env_vars": {},
+    "python_packages": {
+      "torch": "2.8.0+metax3.7.1.3",
+      "tilelang": null
+    },
     "environment_fingerprint": "4baa1c1c763a5a339a11690663dd8adc5b8cba83f4b4eb1dad0301799bb3e192"
   },
   "config": {
@@ -563,5 +581,13 @@
   "limitations": [
     "PyTorch self-check is not independent backend validation.",
     "Candidate uses larger shapes than baseline; speedup reflects shape/config scaling on the same C500 PyTorch backend, not a cross-backend comparison."
-  ]
+  ],
+  "provenance": {
+    "run_command": "python3 benchmarks/pytorch_baseline.py (large-shape variant: shapes [65536], [512,1024], [512,1024], [512,1024,512]; warmup 20, iterations 100)",
+    "capture_command": "python3 scripts/capture_environment.py --output benchmarks/results/environment.json",
+    "notes": [
+      "Large shapes are NOT in operator_cases.yaml; this file was produced with an ad-hoc large-shape case set on the same C500. It is kept for the small-vs-large scaling comparison only and is not a contract case.",
+      "Timing samples are the original recorded values; only the environment/provenance metadata was backfilled to match the schema of pytorch_c500.json."
+    ]
+  }
 }

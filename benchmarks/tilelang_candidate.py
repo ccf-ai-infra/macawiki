@@ -10,6 +10,10 @@ The TileLang install lives at /opt/tilelang-metax and is not on the default
 PYTHONPATH; set it before running, e.g.::
 
     PYTHONPATH=/opt/tilelang-metax python3 benchmarks/tilelang_candidate.py --operator all --profile c500 --output benchmarks/results/tilelang_c500.json
+
+TileLang is imported lazily so that ``--list`` and argparse work on machines
+without the TileLang/MXMACA stack installed (the previous version imported
+TileLang at module top level and crashed on ``--list``).
 """
 
 from __future__ import annotations
@@ -22,136 +26,157 @@ import math
 import platform
 import statistics
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
-import tilelang
-import tilelang.language as T
-from tilelang.profiler import do_bench
+from env_capture import environment, provenance, tilelang_source_ref
 
 ROOT = Path(__file__).resolve().parent.parent
 CASES = ROOT / "benchmarks" / "operator_cases.yaml"
-TILELANG_COMMIT_FILE = Path("/opt/tilelang-metax/.git_commit.txt")
-TILELANG_ROOT = Path("/opt/tilelang-metax")
 
 # ---------------------------------------------------------------------------
 # TileLang kernels (target=maca). One block handles a tile of rows so that
 # reductions stay within a block (no cross-block communication).
+#
+# These are defined inside ``_load_tilelang_backend`` rather than at module top
+# level so that importing this module does not require TileLang to be present.
+# ``--list`` (and argparse) therefore work without the TileLang/MXMACA stack.
 # ---------------------------------------------------------------------------
 
 
-@tilelang.jit(target="maca")
-def tl_add(A, B, BLOCK_N, dtype, out_dtype, threads):
-    N = T.const("N")
-    A: T.Tensor((N,), dtype)
-    B: T.Tensor((N,), dtype)
-    C = T.empty((N,), out_dtype)
-    with T.Kernel(T.ceildiv(N, BLOCK_N), threads=threads) as (bx,):
-        a = T.alloc_shared((BLOCK_N,), dtype)
-        b = T.alloc_shared((BLOCK_N,), dtype)
-        c = T.alloc_shared((BLOCK_N,), out_dtype)
-        T.copy(A[bx * BLOCK_N], a)
-        T.copy(B[bx * BLOCK_N], b)
-        for i in T.Parallel(BLOCK_N):
-            c[i] = T.Cast(out_dtype, T.Cast(dtype, a[i]) + T.Cast(dtype, b[i]))
-        T.copy(c, C[bx * BLOCK_N])
-    return C
+def _load_tilelang_backend() -> tuple[Any, Any, dict[str, Any]]:
+    """Import TileLang and register the maca kernels on first real use.
 
+    Returns ``(tilelang, T, kernels)`` where ``kernels`` maps operator names
+    to jit-compiled builder functions. Raises a clear error when TileLang is
+    not importable.
+    """
+    import tilelang  # noqa: F401  (imported for side effects + __version__)
+    import tilelang.language as T
 
-@tilelang.jit(target="maca")
-def tl_softmax(X, BLOCK_M, BLOCK_N, dtype, out_dtype, threads):
-    M, N = T.const("M, N")
-    X: T.Tensor((M, N), dtype)
-    Y = T.empty((M, N), out_dtype)
-    accum = T.float32
-    with T.Kernel(T.ceildiv(M, BLOCK_M), threads=threads) as (bm,):
-        x = T.alloc_fragment((BLOCK_M, BLOCK_N), dtype)
-        xf = T.alloc_fragment((BLOCK_M, BLOCK_N), accum)
-        mx = T.alloc_fragment((BLOCK_M,), accum)
-        s = T.alloc_fragment((BLOCK_M,), accum)
-        yf = T.alloc_fragment((BLOCK_M, BLOCK_N), accum)
-        ys = T.alloc_shared((BLOCK_M, BLOCK_N), out_dtype)
-        for bn in T.Pipelined(T.ceildiv(N, BLOCK_N)):
-            T.copy(X[bm * BLOCK_M, bn * BLOCK_N], x)
+    @tilelang.jit(target="maca")
+    def tl_add(A, B, BLOCK_N, dtype, out_dtype, threads):
+        N = T.const("N")
+        A: T.Tensor((N,), dtype)
+        B: T.Tensor((N,), dtype)
+        C = T.empty((N,), out_dtype)
+        with T.Kernel(T.ceildiv(N, BLOCK_N), threads=threads) as (bx,):
+            a = T.alloc_shared((BLOCK_N,), dtype)
+            b = T.alloc_shared((BLOCK_N,), dtype)
+            c = T.alloc_shared((BLOCK_N,), out_dtype)
+            T.copy(A[bx * BLOCK_N], a)
+            T.copy(B[bx * BLOCK_N], b)
+            for i in T.Parallel(BLOCK_N):
+                c[i] = T.Cast(out_dtype, T.Cast(dtype, a[i]) + T.Cast(dtype, b[i]))
+            T.copy(c, C[bx * BLOCK_N])
+        return C
+
+    @tilelang.jit(target="maca")
+    def tl_softmax(X, BLOCK_M, BLOCK_N, dtype, out_dtype, threads):
+        M, N = T.const("M, N")
+        X: T.Tensor((M, N), dtype)
+        Y = T.empty((M, N), out_dtype)
+        accum = T.float32
+        with T.Kernel(T.ceildiv(M, BLOCK_M), threads=threads) as (bm,):
+            x = T.alloc_fragment((BLOCK_M, BLOCK_N), dtype)
+            xf = T.alloc_fragment((BLOCK_M, BLOCK_N), accum)
+            mx = T.alloc_fragment((BLOCK_M,), accum)
+            s = T.alloc_fragment((BLOCK_M,), accum)
+            yf = T.alloc_fragment((BLOCK_M, BLOCK_N), accum)
+            ys = T.alloc_shared((BLOCK_M, BLOCK_N), out_dtype)
+            for bn in T.Pipelined(T.ceildiv(N, BLOCK_N)):
+                T.copy(X[bm * BLOCK_M, bn * BLOCK_N], x)
+                for i, j in T.Parallel(BLOCK_M, BLOCK_N):
+                    xf[i, j] = T.Cast(accum, x[i, j])
+                T.reduce_max(xf, mx, dim=1, clear=True)
+                for i, j in T.Parallel(BLOCK_M, BLOCK_N):
+                    yf[i, j] = T.exp(xf[i, j] - mx[i])
+                T.reduce_sum(yf, s, dim=1, clear=True)
+                for i, j in T.Parallel(BLOCK_M, BLOCK_N):
+                    ys[i, j] = T.Cast(out_dtype, yf[i, j] / s[i])
+                T.copy(ys, Y[bm * BLOCK_M, bn * BLOCK_N])
+        return Y
+
+    @tilelang.jit(target="maca")
+    def tl_layernorm(X, gamma, beta, D, eps: float, BLOCK_M, threads, dtype, out_dtype):
+        N, D = T.const("N, D")
+        X: T.Tensor((N, D), dtype)
+        gamma: T.Tensor((D,), dtype)
+        beta: T.Tensor((D,), dtype)
+        Y = T.empty((N, D), out_dtype)
+        accum = T.float32
+        with T.Kernel(T.ceildiv(N, BLOCK_M), threads=threads) as (bx,):
+            xs = T.alloc_shared((BLOCK_M, D), dtype)
+            gs = T.alloc_shared((D,), dtype)
+            bs = T.alloc_shared((D,), dtype)
+            xf = T.alloc_fragment((BLOCK_M, D), accum)
+            xsq = T.alloc_fragment((BLOCK_M, D), accum)
+            sum_row = T.alloc_fragment((BLOCK_M,), accum)
+            sumsq_row = T.alloc_fragment((BLOCK_M,), accum)
+            mean_row = T.alloc_fragment((BLOCK_M,), accum)
+            rstd_row = T.alloc_fragment((BLOCK_M,), accum)
+            ys = T.alloc_shared((BLOCK_M, D), out_dtype)
+            T.copy(X[bx * BLOCK_M, 0], xs)
+            T.copy(gamma, gs)
+            T.copy(beta, bs)
+            for i, j in T.Parallel(BLOCK_M, D):
+                xf[i, j] = T.Cast(accum, xs[i, j])
+            for i, j in T.Parallel(BLOCK_M, D):
+                xsq[i, j] = xf[i, j] * xf[i, j]
+            T.reduce_sum(xf, sum_row, dim=1)
+            T.reduce_sum(xsq, sumsq_row, dim=1)
+            inv_D = T.float32(1.0) / T.Cast(accum, D)
+            for i in T.Parallel(BLOCK_M):
+                mean_row[i] = sum_row[i] * inv_D
+                rstd_row[i] = T.rsqrt(sumsq_row[i] * inv_D - mean_row[i] * mean_row[i] + T.Cast(accum, eps))
+            for i, j in T.Parallel(BLOCK_M, D):
+                norm = (xf[i, j] - mean_row[i]) * rstd_row[i]
+                ys[i, j] = T.Cast(out_dtype, norm * T.Cast(accum, gs[j]) + T.Cast(accum, bs[j]))
+            T.copy(ys, Y[bx * BLOCK_M, 0])
+        return Y
+
+    @tilelang.jit(target="maca")
+    def tl_matmul(A, B, BLOCK_M, BLOCK_N, BLOCK_K, threads, dtype, out_dtype, accum_dtype):
+        # Naive tiled GEMM (no TensorCore intrinsics): avoids the fp32 tf32 mma
+        # codegen path that the maca compiler mis-emits. Standard layout: A=(M,K),
+        # B=(K,N), C=(M,N). Per-tile math: c[i,j] += a[i,k]*b[k,j].
+        M, N, K = T.const("M, N, K")
+        A: T.Tensor((M, K), dtype)
+        B: T.Tensor((K, N), dtype)
+        C = T.empty((M, N), out_dtype)
+        with T.Kernel(T.ceildiv(N, BLOCK_N), T.ceildiv(M, BLOCK_M), threads=threads) as (bx, by):
+            a_s = T.alloc_shared((BLOCK_M, BLOCK_K), dtype)
+            b_s = T.alloc_shared((BLOCK_K, BLOCK_N), dtype)
+            c_l = T.alloc_fragment((BLOCK_M, BLOCK_N), accum_dtype)
+            T.clear(c_l)
+            for ko in T.Pipelined(T.ceildiv(K, BLOCK_K), num_stages=2):
+                T.copy(A[by * BLOCK_M, ko * BLOCK_K], a_s)
+                T.copy(B[ko * BLOCK_K, bx * BLOCK_N], b_s)
+                for i, j, k in T.grid(BLOCK_M, BLOCK_N, BLOCK_K):
+                    c_l[i, j] = c_l[i, j] + T.Cast(accum_dtype, a_s[i, k]) * T.Cast(accum_dtype, b_s[k, j])
             for i, j in T.Parallel(BLOCK_M, BLOCK_N):
-                xf[i, j] = T.Cast(accum, x[i, j])
-            T.reduce_max(xf, mx, dim=1, clear=True)
-            for i, j in T.Parallel(BLOCK_M, BLOCK_N):
-                yf[i, j] = T.exp(xf[i, j] - mx[i])
-            T.reduce_sum(yf, s, dim=1, clear=True)
-            for i, j in T.Parallel(BLOCK_M, BLOCK_N):
-                ys[i, j] = T.Cast(out_dtype, yf[i, j] / s[i])
-            T.copy(ys, Y[bm * BLOCK_M, bn * BLOCK_N])
-    return Y
+                c_l[i, j] = T.Cast(out_dtype, c_l[i, j])
+            T.copy(c_l, C[by * BLOCK_M, bx * BLOCK_N])
+        return C
+
+    kernels = {"add": tl_add, "softmax": tl_softmax, "layer_norm": tl_layernorm, "matmul": tl_matmul}
+    return tilelang, T, kernels
 
 
-@tilelang.jit(target="maca")
-def tl_layernorm(X, gamma, beta, D, eps: float, BLOCK_M, threads, dtype, out_dtype):
-    N, D = T.const("N, D")
-    X: T.Tensor((N, D), dtype)
-    gamma: T.Tensor((D,), dtype)
-    beta: T.Tensor((D,), dtype)
-    Y = T.empty((N, D), out_dtype)
-    accum = T.float32
-    with T.Kernel(T.ceildiv(N, BLOCK_M), threads=threads) as (bx,):
-        xs = T.alloc_shared((BLOCK_M, D), dtype)
-        gs = T.alloc_shared((D,), dtype)
-        bs = T.alloc_shared((D,), dtype)
-        xf = T.alloc_fragment((BLOCK_M, D), accum)
-        xsq = T.alloc_fragment((BLOCK_M, D), accum)
-        sum_row = T.alloc_fragment((BLOCK_M,), accum)
-        sumsq_row = T.alloc_fragment((BLOCK_M,), accum)
-        mean_row = T.alloc_fragment((BLOCK_M,), accum)
-        rstd_row = T.alloc_fragment((BLOCK_M,), accum)
-        ys = T.alloc_shared((BLOCK_M, D), out_dtype)
-        T.copy(X[bx * BLOCK_M, 0], xs)
-        T.copy(gamma, gs)
-        T.copy(beta, bs)
-        for i, j in T.Parallel(BLOCK_M, D):
-            xf[i, j] = T.Cast(accum, xs[i, j])
-        for i, j in T.Parallel(BLOCK_M, D):
-            xsq[i, j] = xf[i, j] * xf[i, j]
-        T.reduce_sum(xf, sum_row, dim=1)
-        T.reduce_sum(xsq, sumsq_row, dim=1)
-        inv_D = T.float32(1.0) / T.Cast(accum, D)
-        for i in T.Parallel(BLOCK_M):
-            mean_row[i] = sum_row[i] * inv_D
-            rstd_row[i] = T.rsqrt(sumsq_row[i] * inv_D - mean_row[i] * mean_row[i] + T.Cast(accum, eps))
-        for i, j in T.Parallel(BLOCK_M, D):
-            norm = (xf[i, j] - mean_row[i]) * rstd_row[i]
-            ys[i, j] = T.Cast(out_dtype, norm * T.Cast(accum, gs[j]) + T.Cast(accum, bs[j]))
-        T.copy(ys, Y[bx * BLOCK_M, 0])
-    return Y
+# Known codegen gap: TileLang's fp32 GEMM via T.gemm dispatches the maca
+# tf32 mma intrinsic (__builtin_mxc_mma_16x16x8tf32), which the maca compiler
+# mis-emits for this tilelang build. A naive T.grid accumulation is not valid
+# on the GPU target (fragment/local are thread-local, so the 128-thread block
+# never reduces to a single accumulator). Rather than fake a result, we mark
+# matmul as not_comparable and record the reason. (AGENTS.md: "A not_run result
+# is more honest than a synthetic benchmark.")
+MATMUL_NOT_RUN_REASON = (
+    "TileLang fp32 GEMM on maca target hits a tf32 mma codegen error "
+    "(__builtin_mxc_mma_16x16x8tf32) for this build; naive grid accumulation "
+    "is not a valid GPU reduction. Marked not_comparable pending a fix."
+)
 
-
-@tilelang.jit(target="maca")
-def tl_matmul(A, B, BLOCK_M, BLOCK_N, BLOCK_K, threads, dtype, out_dtype, accum_dtype):
-    # Naive tiled GEMM (no TensorCore intrinsics): avoids the fp32 tf32 mma
-    # codegen path that the maca compiler mis-emits. Standard layout: A=(M,K),
-    # B=(K,N), C=(M,N). Per-tile math: c[i,j] += a[i,k]*b[k,j].
-    M, N, K = T.const("M, N, K")
-    A: T.Tensor((M, K), dtype)
-    B: T.Tensor((K, N), dtype)
-    C = T.empty((M, N), out_dtype)
-    with T.Kernel(T.ceildiv(N, BLOCK_N), T.ceildiv(M, BLOCK_M), threads=threads) as (bx, by):
-        a_s = T.alloc_shared((BLOCK_M, BLOCK_K), dtype)
-        b_s = T.alloc_shared((BLOCK_K, BLOCK_N), dtype)
-        c_l = T.alloc_fragment((BLOCK_M, BLOCK_N), accum_dtype)
-        T.clear(c_l)
-        for ko in T.Pipelined(T.ceildiv(K, BLOCK_K), num_stages=2):
-            T.copy(A[by * BLOCK_M, ko * BLOCK_K], a_s)
-            T.copy(B[ko * BLOCK_K, bx * BLOCK_N], b_s)
-            for i, j, k in T.grid(BLOCK_M, BLOCK_N, BLOCK_K):
-                c_l[i, j] = c_l[i, j] + T.Cast(accum_dtype, a_s[i, k]) * T.Cast(accum_dtype, b_s[k, j])
-        for i, j in T.Parallel(BLOCK_M, BLOCK_N):
-            c_l[i, j] = T.Cast(out_dtype, c_l[i, j])
-        T.copy(c_l, C[by * BLOCK_M, bx * BLOCK_N])
-    return C
-
-
-# ---------------------------------------------------------------------------
-# Driver: same schema as pytorch_baseline.py
-# ---------------------------------------------------------------------------
 
 def load_cases() -> dict[str, Any]:
     return json.loads(CASES.read_text(encoding="utf-8"))
@@ -174,38 +199,24 @@ def _tensor_summary(torch: Any, output: Any) -> dict[str, Any]:
     }
 
 
-def _build_kernel(case: dict[str, Any]):
+def _build_kernel(tilelang: Any, T: Any, kernels: dict[str, Any], case: dict[str, Any]):
     name = case["name"]
     shape = case["shape"]
     dtype = T.float32
     out = T.float32
     acc = T.float32
     if name == "add":
-        return tl_add.compile(N=shape[0], BLOCK_N=128, dtype=dtype, out_dtype=out, threads=128), ("add", shape)
+        return kernels["add"].compile(N=shape[0], BLOCK_N=128, dtype=dtype, out_dtype=out, threads=128), ("add", shape)
     if name == "softmax":
         m, n = shape
-        return tl_softmax.compile(M=m, N=n, BLOCK_M=1, BLOCK_N=n, dtype=dtype, out_dtype=out, threads=128), ("softmax", shape)
+        return kernels["softmax"].compile(M=m, N=n, BLOCK_M=1, BLOCK_N=n, dtype=dtype, out_dtype=out, threads=128), ("softmax", shape)
     if name == "layer_norm":
         m, n = shape
-        return tl_layernorm.compile(N=m, D=n, eps=case["parameters"]["eps"], BLOCK_M=1, threads=256, dtype=dtype, out_dtype=out), ("layer_norm", shape)
+        return kernels["layer_norm"].compile(N=m, D=n, eps=case["parameters"]["eps"], BLOCK_M=1, threads=256, dtype=dtype, out_dtype=out), ("layer_norm", shape)
     if name == "matmul":
         m, k_, n_ = shape  # [M, K, N]
-        return tl_matmul.compile(M=m, N=n_, K=k_, BLOCK_M=16, BLOCK_N=16, BLOCK_K=16, threads=128, dtype=dtype, out_dtype=out, accum_dtype=acc), ("matmul", shape)
+        return kernels["matmul"].compile(M=m, N=n_, K=k_, BLOCK_M=16, BLOCK_N=16, BLOCK_K=16, threads=128, dtype=dtype, out_dtype=out, accum_dtype=acc), ("matmul", shape)
     raise ValueError(f"unsupported operator: {name}")
-
-
-# Known codegen gap: TileLang's fp32 GEMM via T.gemm dispatches the maca
-# tf32 mma intrinsic (__builtin_mxc_mma_16x16x8tf32), which the maca compiler
-# mis-emits for this tilelang build. A naive T.grid accumulation is not valid
-# on the GPU target (fragment/local are thread-local, so the 128-thread block
-# never reduces to a single accumulator). Rather than fake a result, we mark
-# matmul as not_comparable and record the reason. (AGENTS.md: "A not_run result
-# is more honest than a synthetic benchmark.")
-MATMUL_NOT_RUN_REASON = (
-    "TileLang fp32 GEMM on maca target hits a tf32 mma codegen error "
-    "(__builtin_mxc_mma_16x16x8tf32) for this build; naive grid accumulation "
-    "is not a valid GPU reduction. Marked not_comparable pending a fix."
-)
 
 
 def _not_run_case(case: dict[str, Any], reason: str) -> dict[str, Any]:
@@ -263,10 +274,10 @@ def _run_kernel(kernel, op: str, x: Any, y: Any | None, gamma: Any = None, beta:
     raise ValueError(op)
 
 
-def run_case(torch: Any, case: dict[str, Any], device: Any, warmup: int, iterations: int, correctness_only: bool) -> dict[str, Any]:
+def run_case(torch: Any, tilelang: Any, T: Any, kernels: dict[str, Any], case: dict[str, Any], device: Any, warmup: int, iterations: int, correctness_only: bool) -> dict[str, Any]:
     if case["name"] == "matmul":
         return _not_run_case(case, MATMUL_NOT_RUN_REASON)
-    kernel, (op, _shape) = _build_kernel(case)
+    kernel, (op, _shape) = _build_kernel(tilelang, T, kernels, case)
     x, y = _inputs(torch, case, device)
     gamma = beta = None
     if op == "layer_norm":
@@ -297,14 +308,17 @@ def run_case(torch: Any, case: dict[str, Any], device: Any, warmup: int, iterati
     }
     if correctness_only:
         return result
-    import time
 
     call = (lambda: kernel(x, y)) if op == "add" else \
            (lambda: kernel(x)) if op == "softmax" else \
            (lambda: kernel(x, gamma, beta)) if op == "layer_norm" else \
            (lambda: kernel(x, y))
-    # Use the same timing method as pytorch_baseline.py (perf_counter +
-    # torch.cuda.synchronize) so the two backends are directly comparable.
+    # Timing uses the SAME method as pytorch_baseline.py
+    # (time.perf_counter + torch.cuda.synchronize) so the two backends are
+    # directly comparable on the same C500. We do NOT use
+    # tilelang.profiler.do_bench here: it reports a different (CUDA-event based)
+    # metric, which would mix synchronization semantics across backends and
+    # break the comparability gate in docs/hardware-validation.md.
     torch.cuda.synchronize(device)
     for _ in range(warmup):
         call()
@@ -342,6 +356,15 @@ def main() -> int:
         for case in cases["operators"]:
             print(f"{case['case_id']}\t{case['name']}\tshape={case['shape']}")
         return 0
+    # TileLang is imported lazily so --list and argparse work without it.
+    if importlib.util.find_spec("tilelang") is None:
+        print(
+            "TileLang is not importable. Set PYTHONPATH to the MetaX TileLang build, e.g.:\n"
+            "  PYTHONPATH=/opt/tilelang-metax python3 benchmarks/tilelang_candidate.py ...",
+            file=sys.stderr,
+        )
+        return 2
+    tilelang, T, kernels = _load_tilelang_backend()
     import torch
 
     device_name = args.device
@@ -352,42 +375,39 @@ def main() -> int:
     warmup = max(0, args.warmup if args.warmup is not None else profile["warmup"])
     iterations = max(1, args.iterations if args.iterations is not None else profile["iterations"])
     selected = [c for c in cases["operators"] if args.operator == "all" or c["name"] == args.operator]
-    results = [run_case(torch, c, device, warmup, iterations, args.correctness_only) for c in selected]
+    results = [run_case(torch, tilelang, T, kernels, c, device, warmup, iterations, args.correctness_only) for c in selected]
 
-    source_commit = "unknown"
-    try:
-        if TILELANG_COMMIT_FILE.exists():
-            source_commit = TILELANG_COMMIT_FILE.read_text(encoding="utf-8").strip()
-    except OSError:
-        pass
-
+    run_command = (
+        f"PYTHONPATH=/opt/tilelang-metax python3 benchmarks/tilelang_candidate.py "
+        f"--operator {args.operator} --profile {args.profile} "
+        f"--warmup {warmup} --iterations {iterations}"
+        + (" --correctness-only" if args.correctness_only else "")
+        + (f" --output {args.output}" if args.output else "")
+    )
     report = {
         "schema_version": 1,
         "backend": "tilelang",
         "status": "completed",
         "reference_role": "candidate-implementation",
         "source_ref": {
-            "tilelang_version": tilelang.__version__,
-            "source_root": str(TILELANG_ROOT),
-            "source_commit": source_commit,
-            "target": "maca",
-            "synchronization_api": "time.perf_counter + torch.cuda.synchronize (same method as pytorch_baseline.py); tilelang.profiler.do_bench available as alternate profiler",
-            "license": "see /opt/tilelang-metax/LICENSE and THIRDPARTYNOTICES.txt",
+            **tilelang_source_ref(tilelang),
+            "synchronization_api": "time.perf_counter + torch.cuda.synchronize (identical method to pytorch_baseline.py for same-backend comparability)",
+            "synchronization_api_note": "tilelang.profiler.do_bench (CUDA-event based) is available in the build but is NOT used in these results; mixing it with perf_counter timing across backends would violate the comparability gate.",
         },
-        "environment": {
-            "python": platform.python_version(),
-            "torch": torch.__version__,
-            "tilelang": tilelang.__version__,
-            "device": str(device),
-            "device_name": torch.cuda.get_device_name(0) if device.type == "cuda" else "cpu",
-            "platform": platform.platform(),
-            "environment_fingerprint": hashlib.sha256(json.dumps({"torch": torch.__version__, "device": str(device), "platform": platform.platform()}, sort_keys=True).encode()).hexdigest(),
-        },
+        "environment": environment(torch, device, backend="tilelang", include_tilelang=True, tilelang_module=tilelang),
+        "provenance": provenance(
+            run_command,
+            capture_command="python3 scripts/capture_environment.py --output benchmarks/results/environment.json",
+            notes=[
+                "Timed on the same C500 host and software stack as the PyTorch baseline; treat as same-environment relative timing, not an official C500 spec.",
+                "matmul is recorded as not_comparable because of a TileLang/maca codegen gap; see MATMUL_NOT_RUN_REASON in the source.",
+            ],
+        ),
         "config": {"profile": args.profile, "warmup": warmup, "iterations": iterations, "correctness_only": args.correctness_only},
         "cases": results,
         "limitations": [
             "Correctness reference is PyTorch on the same device, not an independent CPU reference.",
-            "TileLang timings use the CUDA-event do_bench backend exposed by the MXMACA stack; treat as same-environment relative timing, not an official C500 spec.",
+            "Timings use time.perf_counter + torch.cuda.synchronize, the same method as pytorch_baseline.py; they are same-environment relative timing, not an official C500 spec.",
         ],
     }
     text = json.dumps(report, ensure_ascii=False, indent=2) + "\n"

@@ -1,6 +1,6 @@
 # 三后端算子评估脚手架
 
-本目录定义同一组 PyTorch、TileLang、MXMACA++ 算子比较的输入契约和结果格式。它目前是评估例子与运行器，不声称已经在 C500 上完成。
+本目录定义同一组 PyTorch、TileLang、MXMACA++ 算子比较的输入契约和结果格式。PyTorch 基线与 TileLang 候选已在 MetaX C500 上实测，结果见 `results/`（同环境相对计时，非官方规格；环境指纹与运行命令随结果 JSON 保存）。MXMACA++ 后端尚未接入。
 
 ## 统一契约
 
