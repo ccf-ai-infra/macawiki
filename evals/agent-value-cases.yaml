@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "description": "Offline retrieval-and-guardrail checks for the value Macawiki exposes to an Agent.",
+  "cases": [
+    {
+      "id": "agent-value-baseline-001",
+      "prompt": "开始优化 C500 Kernel 前，必须冻结哪些条件？",
+      "terms": ["同步点", "重复次数"],
+      "expected_pages": ["pattern-establish-performance-baseline"],
+      "required_sources": ["repo-mxmaca-performance-tuning-guide"],
+      "must_contain": ["硬件型号", "输入数据类型", "正确性与性能"],
+      "must_not_contain": ["已验证性能数字"]
+    },
+    {
+      "id": "agent-value-eval-001",
+      "prompt": "如何设计 PyTorch、TileLang、MXMACA++ 的算子比较？",
+      "terms": ["同步", "not_run"],
+      "expected_pages": ["evaluation-compare-operator-backends"],
+      "required_sources": ["doc-pytorch-operator-reference", "repo-mxmaca-performance-tuning-guide"],
+      "must_contain": ["正确性门禁", "speedup", "同一 C500 环境"],
+      "must_not_contain": ["TileLang 已经比 PyTorch 快"]
+    },
+    {
+      "id": "agent-value-environment-001",
+      "prompt": "MXMACA 环境可用性应该如何核对？",
+      "terms": ["版本", "官方"],
+      "expected_pages": ["recipe-verify-mxmaca-environment"],
+      "required_sources": ["doc-mxmaca-quick-start"],
+      "must_contain": ["版本化命令", "停止"],
+      "must_not_contain": ["通用安装命令"]
+    }
+  ]
+}

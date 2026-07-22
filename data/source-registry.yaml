@@ -1,0 +1,28 @@
+{
+  "sources": [
+    {
+      "id": "doc-mxmaca-quick-start",
+      "name": "MXMACA 快速上手指南公开预览",
+      "url": "https://developer.metax-tech.com/api/client/document/preview/459/index.html",
+      "access": "public-preview",
+      "license_status": "source-terms",
+      "capture_policy": "metadata-and-original-summary-only"
+    },
+    {
+      "id": "doc-pytorch-operator-reference",
+      "name": "PyTorch stable operator reference",
+      "url": "https://docs.pytorch.org/docs/stable/torch.html",
+      "access": "public",
+      "license_status": "source-terms",
+      "capture_policy": "metadata-and-links-only"
+    },
+    {
+      "id": "repo-mxmaca-performance-tuning-guide",
+      "name": "MXMACA Performance Optimization Guide",
+      "url": "https://gitee.com/metax-maca/mxmaca-performance-tuning-guide",
+      "access": "public",
+      "license_status": "unknown",
+      "capture_policy": "metadata-and-original-summary-only"
+    }
+  ]
+}

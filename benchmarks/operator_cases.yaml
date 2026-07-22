@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "dtype": "float32",
+  "seed": 20260722,
+  "profiles": {
+    "smoke": {"warmup": 2, "iterations": 5},
+    "c500": {"warmup": 20, "iterations": 100}
+  },
+  "operators": [
+    {
+      "name": "add",
+      "case_id": "add-f32-4096",
+      "shape": [4096],
+      "parameters": {"alpha": 1.0},
+      "tolerance": {"atol": 1e-5, "rtol": 1e-5}
+    },
+    {
+      "name": "softmax",
+      "case_id": "softmax-f32-64x128",
+      "shape": [64, 128],
+      "parameters": {"dim": -1},
+      "tolerance": {"atol": 1e-5, "rtol": 1e-5}
+    },
+    {
+      "name": "layer_norm",
+      "case_id": "layernorm-f32-64x128",
+      "shape": [64, 128],
+      "parameters": {"normalized_shape": [128], "eps": 1e-5},
+      "tolerance": {"atol": 2e-5, "rtol": 2e-5}
+    },
+    {
+      "name": "matmul",
+      "case_id": "matmul-f32-64x128x64",
+      "shape": [64, 128, 64],
+      "parameters": {},
+      "tolerance": {"atol": 2e-5, "rtol": 2e-5}
+    }
+  ]
+}

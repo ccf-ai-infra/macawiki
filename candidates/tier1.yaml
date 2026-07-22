@@ -1,0 +1,33 @@
+{
+  "cutoff_date": "2026-07-22",
+  "candidates": [
+    {
+      "id": "official-doc-center",
+      "url": "https://developer.metax-tech.com/doc",
+      "decision": "include",
+      "tier": 1,
+      "reason": "Primary public metadata source for MXMACA documentation; ingest metadata only until terms are reviewed."
+    },
+    {
+      "id": "mxmaca-performance-tuning-guide",
+      "url": "https://gitee.com/metax-maca/mxmaca-performance-tuning-guide",
+      "decision": "include",
+      "tier": 1,
+      "reason": "Public performance-method source; code assets remain deferred while repository license is unclear."
+    },
+    {
+      "id": "mxmaca-courses",
+      "url": "https://gitee.com/metax-maca/mxmaca-courses",
+      "decision": "defer",
+      "tier": 2,
+      "reason": "Useful onboarding source, but outside the two-source v0.1 corpus."
+    },
+    {
+      "id": "op-optimization",
+      "url": "https://gitee.com/metax-maca/op_optimization",
+      "decision": "defer",
+      "tier": 2,
+      "reason": "Useful Agent and benchmark scenario source; technical claims require case-by-case evidence review."
+    }
+  ]
+}

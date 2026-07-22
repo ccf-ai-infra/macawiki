@@ -1,0 +1,4 @@
+interface:
+  display_name: "Macawiki"
+  short_description: "查询带版本范围和公开证据的 MXMACA 知识并设计算子评估"
+  default_prompt: "Use $macawiki to answer this MXMACA question with version scope, cited evidence, and explicit evaluation limits."

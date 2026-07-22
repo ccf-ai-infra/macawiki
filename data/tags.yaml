@@ -1,0 +1,19 @@
+{
+  "status": ["draft", "reviewed", "deprecated", "superseded"],
+  "languages": ["zh-CN", "en"],
+  "hardware": ["c500", "c500-p", "c500x", "c550", "c280", "c290", "n260", "unspecified"],
+  "components": [
+    "mxmaca-sdk", "mxmaca-runtime", "mxcc", "mcprofiler", "mctracer", "mx-smi",
+    "mcpytorch", "mctriton", "mctilelang", "mctvm", "pytorch", "tilelang", "mxmaca-cpp", "vllm-metax", "sglang",
+    "mcblas", "mcdnn", "mccl", "diagnostics", "unspecified"
+  ],
+  "topic_tags": [
+    "quick-start", "installation", "programming-model", "runtime", "compiler",
+    "profiling", "diagnostics", "performance", "roofline", "kernel", "framework",
+    "migration", "compatibility", "memory", "benchmark", "correctness", "operator-evaluation", "community", "documentation"
+  ],
+  "confidence": ["verified", "source-reported", "corroborated", "inferred", "experimental", "unknown"],
+  "reproducibility": ["concept", "procedure", "snippet", "runnable", "benchmarked"],
+  "source_category": ["official-doc", "official-repo", "upstream-code", "official-example", "benchmark", "community-note"],
+  "license_status": ["project-license", "source-terms", "permissive", "restricted", "unknown"]
+}

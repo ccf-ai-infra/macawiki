@@ -1,0 +1,12 @@
+{
+  "c500": ["C500", "曦云C500", "MetaX C500"],
+  "mxmaca-sdk": ["MXMACA", "MACA", "MXMACA SDK"],
+  "mxmaca-runtime": ["MXMACA Runtime", "运行时API", "runtime api"],
+  "mxcc": ["MXMACA C/C++ Compiler", "编译器"],
+  "mcprofiler": ["mcProfiler", "profiler", "性能分析器"],
+  "mctracer": ["mcTracer", "tracer", "追踪工具"],
+  "mcpytorch": ["mcPyTorch", "MetaX PyTorch"],
+  "mctriton": ["mcTriton", "MetaX Triton"],
+  "mctilelang": ["mcTileLang", "MetaX TileLang"],
+  "vllm-metax": ["vLLM-MetaX", "MetaX vLLM"]
+}

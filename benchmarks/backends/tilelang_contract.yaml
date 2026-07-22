@@ -1,0 +1,15 @@
+{
+  "backend": "tilelang",
+  "status": "not_implemented_in_this_environment",
+  "source_policy": "pin_public_repo_commit_and_license_before_use",
+  "required_inputs": ["case_id", "shape", "dtype", "seed", "parameters"],
+  "required_outputs": ["status", "correctness", "timing", "environment", "source_ref"],
+  "must_record": ["tilelang_version", "compiler_command", "device_string", "synchronization_api", "source_commit"],
+  "correctness_reference": "pytorch",
+  "timing_unit": "ms",
+  "speedup_rule": "compare only with identical environment_fingerprint and case_id",
+  "notes": [
+    "Do not infer TileLang device or synchronization APIs from CUDA.",
+    "A not_run result is more honest than a synthetic benchmark."
+  ]
+}

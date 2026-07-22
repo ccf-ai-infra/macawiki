@@ -1,0 +1,44 @@
+{
+  "common_required": [
+    "id", "title", "type", "status", "summary", "languages", "tags",
+    "hardware", "mxmaca_versions", "components", "sources", "related", "verified_at"
+  ],
+  "page_types": {
+    "source-doc": {
+      "scope": "source",
+      "required": ["url", "source_category", "retrieved_at", "license_status"]
+    },
+    "source-repo": {
+      "scope": "source",
+      "required": ["url", "repo", "ref", "source_category", "retrieved_at", "license_status"]
+    },
+    "wiki-recipe": {
+      "scope": "wiki",
+      "required": ["confidence", "reproducibility", "prerequisites"]
+    },
+    "wiki-pattern": {
+      "scope": "wiki",
+      "required": ["confidence", "reproducibility", "prerequisites", "symptoms"]
+    },
+    "wiki-tool": {
+      "scope": "wiki",
+      "required": ["confidence", "reproducibility", "prerequisites"]
+    },
+    "wiki-framework": {
+      "scope": "wiki",
+      "required": ["confidence", "reproducibility", "prerequisites"]
+    },
+    "wiki-kernel": {
+      "scope": "wiki",
+      "required": ["confidence", "reproducibility", "prerequisites", "performance_claims"]
+    },
+    "wiki-migration": {
+      "scope": "wiki",
+      "required": ["confidence", "reproducibility", "prerequisites"]
+    }
+  },
+  "list_fields": [
+    "languages", "tags", "hardware", "mxmaca_versions", "components",
+    "sources", "related", "prerequisites", "aliases", "symptoms", "performance_claims"
+  ]
+}

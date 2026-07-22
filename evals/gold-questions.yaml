@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "questions": [
+    {
+      "id": "eval-environment-001",
+      "question": "如何确认 MXMACA 开发环境已经可用？",
+      "expected_pages": ["recipe-verify-mxmaca-environment"],
+      "required_sources": ["doc-mxmaca-quick-start"],
+      "must_state": ["version scope is unspecified", "official version-specific instructions are required"],
+      "must_not_state": ["a universal installation command"]
+    },
+    {
+      "id": "eval-performance-001",
+      "question": "开始优化 C500 Kernel 前应该先记录什么？",
+      "expected_pages": ["pattern-establish-performance-baseline"],
+      "required_sources": ["repo-mxmaca-performance-tuning-guide"],
+      "must_state": ["hardware and software versions", "input shape", "timing method"],
+      "must_not_state": ["an unverified performance number"]
+    },
+    {
+      "id": "eval-operator-backends-001",
+      "question": "如何用 PyTorch、TileLang、MXMACA++ 做算子对比？",
+      "expected_pages": ["evaluation-compare-operator-backends"],
+      "required_sources": ["doc-pytorch-operator-reference", "repo-mxmaca-performance-tuning-guide"],
+      "must_state": ["correctness gate", "same C500 environment", "not_run without C500"],
+      "must_not_state": ["a fabricated speedup"]
+    }
+  ]
+}

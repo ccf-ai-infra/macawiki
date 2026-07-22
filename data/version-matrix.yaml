@@ -1,0 +1,8 @@
+{
+  "matrix_version": 1,
+  "combinations": [],
+  "notes": [
+    "v0.1 does not infer compatibility from document listings or repository names.",
+    "Add a combination only after a maintainer reviews public evidence."
+  ]
+}
