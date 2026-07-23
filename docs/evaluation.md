@@ -92,7 +92,7 @@ python3 scripts/run_agent_value_eval.py
 
 ## 3. 第 2 层：Agent A/B 评估
 
-> ⚠️ **状态**：协议已定义，实现阻塞于 Claude API 付费授权（`MACAWIKI_RUN_PAID_EVAL=1`）。跟踪项：backlog b11（eval runner）、b12（ecosystem tasks）。
+> ⚠️ **状态**：已弃用（wontfix）。Macawiki 定位于本地 Agent CLI 工作流（Claude Code、Codex、OpenCode），付费 API A/B 评估不在此架构范围内。第 1 层确定性检索代理已提供充分的证据质量测量。
 
 ### 3.1 评估协议
 
@@ -199,8 +199,8 @@ MXMACA++ 后端：`not_run`（契约已定义，等待 SDK 环境重捕获）。
 | agent-value proxy | ✅ 已实现 | 9 cases, 7 positive + 2 negative |
 | gold-questions | ✅ 已实现 | 7 个问题，5 个领域 |
 | compare_benchmarks | ✅ 已实现 | 38 contract tests |
-| Claude A/B runner | ❌ 待实现 | Phase 2，阻塞于付费授权 |
-| Claude A/B scorer | ❌ 待实现 | Phase 2 |
+| Claude A/B runner | ❌ 已弃用 | wontfix：本地 Agent 优先架构 |
+| Claude A/B scorer | ❌ 已弃用 | wontfix |
 | CI/CD 自动评估 | ⚠️ 部分 | `make all` 包含 validate + test + agent-value |
 
 **下一步**：获得 Claude API 付费授权 → 实现 `run_claude_ab_eval.py` → 实现 `score_claude_eval.py` → 首次 A/B 评估运行 → 结果写入 `evals/claude/reports/`。

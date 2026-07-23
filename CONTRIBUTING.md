@@ -132,18 +132,32 @@ python3 scripts/repo_status.py                # 检查页面数量和类型分�
 - [ ] 未假设 CUDA 行为等价于 MXMACA
 - [ ] 生成文件未手动编辑
 - [ ] 不确定的事实标记为 `unspecified` / `not_run` / `not_comparable`
+- [ ] 无空正文或占位符页面（正文至少 50 字符）
+- [ ] 查询召回率未下降（`make recall` 达标，阈值 ≥ 70%）
 - [ ] PR 标题格式：`type: description`（feat: / fix: / docs: / refactor: / test: / chore:）
 - [ ] PR 正文：变更摘要 + 验证输出 + 未解决问题
+
+## 质量门控（advisory）
+
+以下门控通过 `make quality`、`make coverage`、`make recall`、`make freshness` 单独运行，当前为 advisory（不阻塞 PR），待 corpus 成熟后将逐步集成到 `make all`：
+
+| 门控 | 命令 | 说明 |
+|------|------|------|
+| 质量门控 | `make quality` | draft 比例、unspecified 版本比例、verified 置信度比例 |
+| 覆盖度报告 | `make coverage` | 受控词汇表覆盖度缺口 |
+| 召回率检查 | `make recall` | 基于 gold questions 的检索召回率 |
+| 来源新鲜度 | `make freshness` | URL 可达性、检索日期过期、许可证状态 |
 
 ## 审查流程
 
 1. 贡献者提交 PR
-2. CI 运行 `make all`（validate + indices + test + eval）
+2. CI 运行 `make all`（validate + indices + test + eval + doctor + status）
 3. 审查者检查来源可追溯性（每个 wiki 声明追溯至来源 ID）
 4. 审查者检查版本声明准确性（不推断，不编造）
 5. 审查者检查无伪造数字
 6. 审查者检查生成文件未手动编辑
-7. 通过后 squash-merge 到 master
+7. 审查者检查页面正文非空（≥ 50 字符）
+8. 通过后 squash-merge 到 master
 
 ## 状态术语
 

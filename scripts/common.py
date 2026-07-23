@@ -4,13 +4,14 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(os.environ.get("MACAWIKI_ROOT", Path(__file__).resolve().parent.parent))
 FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?)\n---\s*\n?", re.DOTALL)
 
 

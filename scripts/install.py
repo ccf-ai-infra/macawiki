@@ -8,7 +8,10 @@ import shutil
 import sys
 from pathlib import Path
 
-from common import ROOT
+try:
+    from .common import ROOT
+except ImportError:
+    from common import ROOT
 
 
 AGENT_PATHS = {

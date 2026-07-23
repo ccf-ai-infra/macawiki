@@ -4,6 +4,7 @@
     {
       "id": "eval-environment-001",
       "question": "如何确认 MXMACA 开发环境已经可用？",
+      "keywords": ["MXMACA", "环境", "验证", "driver", "maca", "SDK", "mxcc", "诊断"],
       "expected_pages": ["recipe-verify-mxmaca-environment"],
       "required_sources": ["doc-mxmaca-quick-start"],
       "must_state": ["version scope is unspecified", "official version-specific instructions are required"],
@@ -12,6 +13,7 @@
     {
       "id": "eval-performance-001",
       "question": "开始优化 C500 Kernel 前应该先记录什么？",
+      "keywords": ["性能", "基线", "C500", "benchmark", "baseline", "kernel", "优化", "warmup"],
       "expected_pages": ["pattern-establish-performance-baseline"],
       "required_sources": ["repo-mxmaca-performance-tuning-guide"],
       "must_state": ["hardware and software versions", "input shape", "timing method"],
@@ -20,6 +22,7 @@
     {
       "id": "eval-operator-backends-001",
       "question": "如何用 PyTorch、TileLang、MXMACA++ 做算子对比？",
+      "keywords": ["算子", "PyTorch", "TileLang", "MXMACA++", "对比", "backend", "correctness", "evaluation"],
       "expected_pages": ["evaluation-compare-operator-backends"],
       "required_sources": ["doc-pytorch-operator-reference", "repo-mxmaca-performance-tuning-guide"],
       "must_state": ["correctness gate", "same C500 environment", "not_run without C500"],
@@ -28,14 +31,16 @@
     {
       "id": "eval-compiler-001",
       "question": "MXMACA 编译器 mxcc 的主要作用是什么？",
-      "expected_pages": ["recipe-verify-mxmaca-environment"],
-      "required_sources": ["doc-mxmaca-quick-start"],
+      "keywords": ["mxcc", "编译器", "compiler", "编译", "MXMACA", "C/C++"],
+      "expected_pages": ["reference-mxcc-compiler-basics"],
+      "required_sources": ["doc-mxmaca-compiler-mxcc"],
       "must_state": ["mxcc compiles MACA code", "version scope"],
       "must_not_state": ["mxcc is a drop-in replacement for nvcc"]
     },
     {
       "id": "eval-runtime-001",
       "question": "MXMACA 运行时如何管理设备内存和 kernel 启动？",
+      "keywords": ["MXMACA", "runtime", "运行时", "maca", "sdk", "驱动", "quick-start", "验证"],
       "expected_pages": ["recipe-verify-mxmaca-environment"],
       "required_sources": ["doc-mxmaca-quick-start"],
       "must_state": ["runtime manages device", "API is version-dependent"],
@@ -44,7 +49,8 @@
     {
       "id": "eval-profiling-001",
       "question": "mcProfiler 在 MXMACA 性能分析中扮演什么角色？",
-      "expected_pages": ["pattern-establish-performance-baseline"],
+      "keywords": ["mcProfiler", "性能分析", "profiling", "roofline", "硬件计数器", "timeline", "C500"],
+      "expected_pages": ["diagnostics-mcprofiler-basics"],
       "required_sources": ["repo-mxmaca-performance-tuning-guide"],
       "must_state": ["mcProfiler collects hardware counters", "roofline model"],
       "must_not_state": ["mcProfiler works identically to nvprof"]
@@ -52,7 +58,8 @@
     {
       "id": "eval-insufficient-evidence-001",
       "question": "MXMACA++ 在最新版本中有哪些优化过的 BLAS 实现？",
-      "expected_pages": [],
+      "keywords": ["MXMACA++", "BLAS", "优化", "实现", "not_run", "not_comparable"],
+      "expected_pages": ["evaluation-compare-operator-backends"],
       "required_sources": [],
       "must_state": ["no evidence in corpus", "not_run", "not available"],
       "must_not_state": ["the optimized implementations are"]

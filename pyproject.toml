@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "macawiki"
+version = "0.3.0"
+description = "Evidence-first MXMACA knowledge base for AI agents"
+readme = "README.md"
+license = {text = "MulanPSL-2.0"}
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Mulan Permissive Software License v2 (MulanPSL-2.0)",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.scripts]
+macawiki-query = "scripts.query:main"
+macawiki-get = "scripts.get_page:main"
+macawiki-grep = "scripts.grep_wiki:main"
+macawiki-validate = "scripts.validate:main"
+macawiki-doctor = "scripts.doctor:main"
+macawiki-eval = "scripts.run_agent_value_eval:main"
+macawiki-status = "scripts.repo_status:main"
+macawiki-indices = "scripts.generate_indices:main"
+macawiki-compare = "scripts.compare_benchmarks:main"
+macawiki-install = "scripts.install:main"
+
+[tool.setuptools.packages.find]
+include = ["scripts*"]
+
+[tool.setuptools.package-data]
+scripts = ["../data/*.yaml", "../references/*.md", "../queries/*.md"]

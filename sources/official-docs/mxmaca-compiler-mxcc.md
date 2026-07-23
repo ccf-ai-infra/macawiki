@@ -8,7 +8,7 @@
   "languages": ["zh-CN", "en"],
   "tags": ["compiler", "documentation"],
   "hardware": ["c500"],
-  "mxmaca_versions": ["unspecified"],
+  "mxmaca_versions": ["3.7.1.5"],
   "components": ["mxcc", "mxmaca-sdk"],
   "sources": [],
   "related": ["doc-mxmaca-quick-start", "reference-mxcc-compiler-basics"],

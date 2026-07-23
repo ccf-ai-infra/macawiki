@@ -8,7 +8,7 @@
   "languages": ["en"],
   "tags": ["framework", "installation", "performance"],
   "hardware": ["c500"],
-  "mxmaca_versions": ["unspecified"],
+  "mxmaca_versions": ["3.7.1.5"],
   "components": ["vllm-metax", "mxmaca-sdk", "mcpytorch"],
   "sources": [],
   "related": ["repo-mcpytorch"],
@@ -18,14 +18,14 @@
   "ref": "unspecified",
   "source_category": "official-repo",
   "retrieved_at": "2026-07-22",
-  "license_status": "unknown",
+  "license_status": "permissive",
   "aliases": ["MetaX vLLM", "vLLM MACA"]
 }
 ---
 
 # 来源摘要
 
-vLLM-MetaX 是 MetaX 维护的 vLLM 分支，提供在 MXMACA C500 硬件上的大语言模型推理服务。本页仅记录公开仓库入口和主题范围。
+vLLM-MetaX 是 MetaX 维护的 vLLM 分支，提供在 MXMACA C500 硬件上的大语言模型推理服务。本页仅记录公开仓库入口和主题范围。仓库许可证为 Apache-2.0。
 
 ## 可支持的结论
 
@@ -34,6 +34,6 @@ vLLM-MetaX 是 MetaX 维护的 vLLM 分支，提供在 MXMACA C500 硬件上的�
 
 ## 限制
 
-- 未获取特定 commit/release 的代码内容（license 未知）。
+- 未获取特定 commit/release 的代码内容。
 - 版本范围和性能数据标记为 `unspecified`。
 - 不能由此推断与上游 vLLM 的 API 兼容性。

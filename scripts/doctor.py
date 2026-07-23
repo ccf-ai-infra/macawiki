@@ -11,7 +11,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from common import ROOT
+try:
+    from .common import ROOT
+except ImportError:
+    from common import ROOT
 
 
 REQUIRED = [

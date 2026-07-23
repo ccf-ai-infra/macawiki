@@ -17,7 +17,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from common import ROOT, Page, discover_pages, load_data, searchable_text
+try:
+    from .common import ROOT, Page, discover_pages, load_data, searchable_text
+except ImportError:
+    from common import ROOT, Page, discover_pages, load_data, searchable_text
 from query import search
 
 

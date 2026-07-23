@@ -25,12 +25,13 @@ Parameters (`/macawiki-iterate <param>`):
 2. Run `make all` as pre-check baseline
 3. Read `evals/claude/iteration-state.json` — pick highest priority backlog item
 4. Form a single falsifiable hypothesis
-5. Execute minimal related changes (one cluster)
-6. Run `make all` + any targeted tests
-7. Accept (metrics improved, no regression) or reject (no gain, instability, negative transfer)
-8. Write cycle report to `evals/claude/reports/cycle-NNN.md`
-9. Update `evals/claude/iteration-state.json`
-10. For `next`: stop here. For `run`: continue to next cycle.
+5. Prepare PR branch: `bash scripts/prepare_pr.sh <type> "<description>"` (if committing changes)
+6. Execute minimal related changes (one cluster)
+7. Run `make all` + `make check-advisory` + any targeted tests
+8. Accept (metrics improved, no regression) or reject (no gain, instability, negative transfer)
+9. Write cycle report to `evals/claude/reports/cycle-NNN.md`
+10. Update `evals/claude/iteration-state.json`
+11. For `next`: stop here. For `run`: continue to next cycle.
 
 ## Key constraints
 
