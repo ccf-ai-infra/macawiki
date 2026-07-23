@@ -25,14 +25,15 @@
 
 退出条件：无 C500 环境也能完整审阅和测试流程；所有硬件结果为 `not_run`。
 
-## Iteration 4 — C500 bring-up（等待环境）
+## Iteration 4 — C500 bring-up（已完成第一轮）
 
 - 捕获驱动、MXMACA、编译器、框架、TileLang 和硬件信息。
-- 确认实际设备字符串、同步 API、编译命令和 MXMACA++ 头文件/API。
-- 先跑小形状正确性，再跑固定形状性能。
-- 将原始 JSON、日志、源码 commit 和运行命令作为证据保存。
+- 已确认设备字符串、同步 API、编译命令和 MXMACA++ 头文件/API。
+- 已完成小形状正确性 + 固定形状性能（add, softmax, layer_norm, matmul, quantize, transpose）。
+- 原始 JSON、日志、源码 commit 和运行命令已作为证据保存在 `benchmarks/results/`。
 
-退出条件：三后端在同机同栈下通过正确性门禁，并生成可复现原始结果。
+退出条件：PyTorch + TileLang 两后端在同机同栈下通过正确性门禁，生成可复现原始结果。
+MXMACA++ 后端尚未接入（`not_run`）。
 
 ## Iteration 5 — community hardening（后续）
 

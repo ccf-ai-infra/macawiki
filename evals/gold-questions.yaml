@@ -24,6 +24,38 @@
       "required_sources": ["doc-pytorch-operator-reference", "repo-mxmaca-performance-tuning-guide"],
       "must_state": ["correctness gate", "same C500 environment", "not_run without C500"],
       "must_not_state": ["a fabricated speedup"]
+    },
+    {
+      "id": "eval-compiler-001",
+      "question": "MXMACA 编译器 mxcc 的主要作用是什么？",
+      "expected_pages": ["recipe-verify-mxmaca-environment"],
+      "required_sources": ["doc-mxmaca-quick-start"],
+      "must_state": ["mxcc compiles MACA code", "version scope"],
+      "must_not_state": ["mxcc is a drop-in replacement for nvcc"]
+    },
+    {
+      "id": "eval-runtime-001",
+      "question": "MXMACA 运行时如何管理设备内存和 kernel 启动？",
+      "expected_pages": ["recipe-verify-mxmaca-environment"],
+      "required_sources": ["doc-mxmaca-quick-start"],
+      "must_state": ["runtime manages device", "API is version-dependent"],
+      "must_not_state": ["CUDA runtime API copy"]
+    },
+    {
+      "id": "eval-profiling-001",
+      "question": "mcProfiler 在 MXMACA 性能分析中扮演什么角色？",
+      "expected_pages": ["pattern-establish-performance-baseline"],
+      "required_sources": ["repo-mxmaca-performance-tuning-guide"],
+      "must_state": ["mcProfiler collects hardware counters", "roofline model"],
+      "must_not_state": ["mcProfiler works identically to nvprof"]
+    },
+    {
+      "id": "eval-insufficient-evidence-001",
+      "question": "MXMACA++ 在最新版本中有哪些优化过的 BLAS 实现？",
+      "expected_pages": [],
+      "required_sources": [],
+      "must_state": ["no evidence in corpus", "not_run", "not available"],
+      "must_not_state": ["the optimized implementations are"]
     }
   ]
 }

@@ -14,10 +14,11 @@ import time
 from pathlib import Path
 from typing import Any
 
+CASES = Path(__file__).resolve().parent / "operator_cases.yaml"
+
 from env_capture import environment, provenance
 
 ROOT = Path(__file__).resolve().parent.parent
-CASES = ROOT / "benchmarks" / "operator_cases.yaml"
 
 
 def load_cases() -> dict[str, Any]:
@@ -57,7 +58,12 @@ def _run_op(torch: Any, case: dict[str, Any], x: Any, y: Any | None) -> Any:
         scale = params["scale"]
         return torch.clamp(torch.round(x / scale), -128, 127) * scale
     if name == "transpose":
-        return torch.t(x)
+        # torch.t() alone creates a view (stride change, no data movement)
+        # and would under-count the real cost vs a kernel that allocates and
+        # writes a full transposed result. .contiguous() materialises the
+        # output so the workload is equivalent to TileLang's tl_transpose
+        # which allocates Y=(N,M) and writes every element.
+        return torch.t(x).contiguous()
     if name == "moe_routing":
         # MoE top-k routing: softmax gate over experts, then top-k selection.
         # The comparable output is the top-k gate values tensor [tokens, topk];
@@ -117,6 +123,8 @@ def run_case(torch: Any, case: dict[str, Any], device: Any, warmup: int, iterati
         "output_summary": _tensor_summary(torch, output),
         "timing": None,
     }
+    if "contract" in case:
+        result["contract"] = case["contract"]
     if correctness_only:
         return result
     _sync(torch, device)
@@ -168,6 +176,9 @@ def main() -> int:
     profile = cases["profiles"][args.profile]
     warmup = max(0, args.warmup if args.warmup is not None else profile["warmup"])
     iterations = max(1, args.iterations if args.iterations is not None else profile["iterations"])
+    config_hash = hashlib.sha256(
+        CASES.read_bytes()
+    ).hexdigest()
     selected = [case for case in cases["operators"] if args.operator == "all" or case["name"] == args.operator]
     results = [run_case(torch, case, device, warmup, iterations, args.correctness_only) for case in selected]
     run_command = (
@@ -186,6 +197,7 @@ def main() -> int:
         "provenance": provenance(
             run_command,
             capture_command="python3 scripts/capture_environment.py --output benchmarks/results/environment.json",
+            config_hash=config_hash,
             notes=[
                 "PyTorch self-check is not independent backend validation; it is the correctness reference for the TileLang candidate.",
                 "CPU results are workflow checks, not C500 evidence; C500 evidence requires device.type == cuda on a MetaX C500.",

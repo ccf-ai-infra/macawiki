@@ -47,7 +47,11 @@
       "case_id": "transpose-f32-128x4096",
       "shape": [128, 4096],
       "parameters": {},
-      "tolerance": {"atol": 1e-6, "rtol": 1e-6}
+      "tolerance": {"atol": 1e-6, "rtol": 1e-6},
+      "contract": {
+        "output": "materialized",
+        "note": "Both backends must produce a materialised (contiguous) transposed output — views/stride-changes are not valid because they do not represent equivalent workloads. PyTorch baseline MUST use torch.t(x).contiguous(), not torch.t(x) alone."
+      }
     },
     {
       "name": "moe_routing",

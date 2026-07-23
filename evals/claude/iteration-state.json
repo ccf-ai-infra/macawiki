@@ -1,0 +1,471 @@
+{
+  "schema_version": 2,
+  "objective": "maximize measured Macawiki value without quality or safety regression",
+  "head_at_start": "3b1e9a6397af589ebb4bfbf5d90964818e3ec668",
+  "champion": {
+    "commit": "98e0a9db23f6d4c82e19a9752c0b0f04abd7b3c3",
+    "task_set_version": "1",
+    "metrics_file": "evals/claude/reports/verification-report-2026-07-23.md"
+  },
+  "next_cycle_id": 9,
+  "cycles": [
+    {
+      "cycle_id": 1,
+      "status": "accepted",
+      "hypothesis": "Fixing tl_quantize undefined accum and strengthening compare_benchmarks.py with schema/case/timing validation, missing case detection, and not_comparable reporting will eliminate known static defects and prevent future silent comparison errors.",
+      "workstream": "foundation",
+      "candidate_changes": [
+        "benchmarks/tilelang_candidate.py",
+        "scripts/compare_benchmarks.py",
+        "tests/test_repository.py"
+      ],
+      "dev_result": "evals/claude/reports/cycle-001.md",
+      "heldout_result": null,
+      "report": "evals/claude/reports/cycle-001.md",
+      "decision_reason": "Fixes hard accum defect; prevents silent compare failures; 12 new tests pass; no regression."
+    },
+    {
+      "cycle_id": 2,
+      "status": "accepted",
+      "hypothesis": "Synchronizing C500/MXMACA++ status across 6 documents will eliminate contradictory claims and reduce Agent confusion.",
+      "workstream": "maintenance",
+      "candidate_changes": [
+        "README.md",
+        "SKILL.md",
+        "docs/hardware-validation.md",
+        "docs/usage.md",
+        "docs/iteration-plan.md",
+        "benchmarks/README.md"
+      ],
+      "dev_result": "evals/claude/reports/verification-report-2026-07-23.md",
+      "heldout_result": null,
+      "report": "evals/claude/reports/verification-report-2026-07-23.md",
+      "decision_reason": "All 6 files unified; C500 results / not_run / not_comparable clearly distinguished; make all passes."
+    },
+    {
+      "cycle_id": 3,
+      "status": "accepted",
+      "hypothesis": "Building minimal iteration infrastructure (state file, cycle reports, macawiki-iterate skill) enables trackable, resumable optimization cycles.",
+      "workstream": "foundation",
+      "candidate_changes": [
+        "evals/claude/iteration-state.json",
+        "evals/claude/reports/cycle-001.md",
+        ".agents/skills/macawiki-iterate/SKILL.md",
+        ".claude/skills/macawiki-iterate/SKILL.md"
+      ],
+      "dev_result": null,
+      "heldout_result": null,
+      "report": "evals/claude/reports/cycle-001.md",
+      "decision_reason": "State file with 13 backlog items; skill for both Claude Code and Codex; all make targets pass."
+    },
+    {
+      "cycle_id": 4,
+      "status": "accepted",
+      "hypothesis": "Expanding agent-value-cases 3→9 (including negative-trigger and forbidden-claim) and gold-questions 3→7 will broaden retrieval/evidence validation coverage.",
+      "workstream": "eval",
+      "candidate_changes": [
+        "evals/agent-value-cases.yaml",
+        "evals/gold-questions.yaml",
+        "scripts/run_agent_value_eval.py",
+        "tests/test_repository.py"
+      ],
+      "dev_result": "evals/claude/reports/verification-report-2026-07-23.md",
+      "heldout_result": null,
+      "report": "evals/claude/reports/verification-report-2026-07-23.md",
+      "decision_reason": "9/9 agent-value cases pass (7 positive + 2 negative); 27 tests pass; negative-trigger prevents false MXMACA activation."
+    },
+    {
+      "cycle_id": 5,
+      "status": "accepted",
+      "hypothesis": "Expanding sources 3→8 and wiki pages 3→6 (mxcc, mcprofiler, first-program) plus populating version-claims 0→5 and version-matrix 0→1 will expand MXMACA stack coverage for Agent questions.",
+      "workstream": "corpus",
+      "candidate_changes": [
+        "data/source-registry.yaml",
+        "data/version-claims.yaml",
+        "data/version-matrix.yaml",
+        "data/aliases.yaml",
+        "wiki/tutorials/first-mxmaca-program.md",
+        "wiki/reference/mxcc-compiler-basics.md",
+        "wiki/diagnostics/mcprofiler-basics.md",
+        "sources/official-docs/mxmaca-programming-model.md",
+        "sources/official-docs/mxmaca-compiler-mxcc.md",
+        "sources/repos/mxmaca-runtime.md",
+        "sources/repos/mcpytorch.md",
+        "sources/repos/vllm-metax.md"
+      ],
+      "dev_result": "evals/claude/reports/verification-report-2026-07-23.md",
+      "heldout_result": null,
+      "report": "evals/claude/reports/verification-report-2026-07-23.md",
+      "decision_reason": "14 pages total; sources 8, wiki 6; version-claims 5 entries; version-matrix 1 combination; make all clean."
+    },
+    {
+      "cycle_id": 6,
+      "status": "accepted",
+      "hypothesis": "PR #3 round-2 review feedback + C500 benchmark completion: fixing C500 claims (P1), compare_benchmarks non-dict crash (P2), iteration-state staleness (P2), and running C500 benchmarks for all 7 case slots will pass re-review and provide complete evidence.",
+      "workstream": "foundation",
+      "candidate_changes": [
+        "docs/hardware-validation.md",
+        "evals/claude/reports/verification-report-2026-07-23.md",
+        "evals/claude/reports/quality-eval-2026-07-23.md",
+        "scripts/compare_benchmarks.py",
+        "tests/test_repository.py",
+        "evals/claude/iteration-state.json",
+        "benchmarks/results/pytorch_c500.json",
+        "benchmarks/results/tilelang_c500.json",
+        "benchmarks/results/compare_pytorch_vs_tilelang_c500.json"
+      ],
+      "dev_result": "evals/claude/reports/verification-report-2026-07-23.md",
+      "heldout_result": null,
+      "report": "evals/claude/reports/verification-report-2026-07-23.md",
+      "decision_reason": "P1: C500 benchmarks: 5/7 case slots completed with timing (add, softmax, layer_norm, quantize, transpose), 2/7 not_comparable (matmul codegen, moe_routing top-k). First TileLang win: quantize speedup=1.42. P2: isinstance(case,dict) guard + duplicate case_id + 2 regression tests. P3: champion→e706047, next_cycle_id→7. NOTE: transpose speedup=0.12 later found invalid (view vs materialized); fixed in round-3. 32/32 tests, 9/9 eval, make all clean."
+    },
+    {
+      "cycle_id": 7,
+      "status": "accepted",
+      "hypothesis": "PR #3 round-3 review: fixing transpose view-vs-materialized workload mismatch (P1 — torch.t→torch.t().contiguous()), correcting '7 operators all measured'→'7 cases have status records' wording (P2), and updating champion.commit to actual HEAD containing cycle 6+7 changes (P3) will make the PR mergeable.",
+      "workstream": "foundation",
+      "candidate_changes": [
+        "benchmarks/pytorch_baseline.py",
+        "benchmarks/tilelang_candidate.py",
+        "docs/hardware-validation.md",
+        "evals/claude/reports/verification-report-2026-07-23.md",
+        "evals/claude/reports/quality-eval-2026-07-23.md",
+        "evals/claude/iteration-state.json",
+        "scripts/compare_benchmarks.py",
+        "tests/test_repository.py"
+      ],
+      "dev_result": null,
+      "heldout_result": null,
+      "report": null,
+      "decision_reason": "P1: pytorch_baseline.py transpose now uses torch.t(x).contiguous() in working tree — workload equivalent to TileLang's materialized tl_transpose. TileLang _reference also updated for consistency. OLD speedup=0.12/0.0043ms INVALIDATED. ⚠️ POST-MORTEM: The .contiguous() runner code changes were NOT committed in cycle 7 (only result JSONs were committed in 5a1dcdb); reviewer caught this in round-4. Fixed in cycle 8. P2: 5 files updated — all '7 operators completed/measured' claims changed to '7 cases have status records: 5 with timing, 2 not_comparable'. Added view-vs-materialized warning in compare_benchmarks.py. Added transpose contract test."
+    },
+    {
+      "cycle_id": 8,
+      "status": "accepted",
+      "hypothesis": "PR #3 round-4 review: committing the .contiguous() runner code that was left in the working tree (P1.1), re-running C500 benchmarks from committed code with matching provenance (P1.2), regenerating compare JSON from source results (P1.2), and synchronizing all docs/reports/state to the new C500 numbers (P1.3, P2) will achieve the 'code → results → compare JSON → docs/state' reproducible chain the reviewer requires.",
+      "workstream": "foundation",
+      "candidate_changes": [
+        "benchmarks/pytorch_baseline.py",
+        "benchmarks/tilelang_candidate.py",
+        "benchmarks/operator_cases.yaml",
+        "scripts/compare_benchmarks.py",
+        "tests/test_repository.py",
+        "benchmarks/results/pytorch_c500.json",
+        "benchmarks/results/tilelang_c500.json",
+        "benchmarks/results/compare_pytorch_vs_tilelang_c500.json",
+        "docs/hardware-validation.md",
+        "evals/claude/reports/quality-eval-2026-07-23.md",
+        "evals/claude/reports/verification-report-2026-07-23.md",
+        "evals/claude/iteration-state.json"
+      ],
+      "dev_result": null,
+      "heldout_result": null,
+      "report": null,
+      "decision_reason": "P1.1: Runner .contiguous() fix committed to ae1431f (was working-tree-only in cycle 7). P1.2: C500 benchmarks re-run from committed code; provenance now points to actual fix commit. P1.3: compare JSON regenerated from source results (not hand-edited). P1.4: hardware-validation.md, quality-eval, verification-report all synced to latest C500 values (transpose speedup=1.00, quantize speedup=1.59). P2: champion.commit updated to ae1431f, next_cycle_id→9. P2: TileLang wording fixed — '7 cases have status records: 5 with timing, 2 not_comparable' across all 4 files. Reproducible chain: code → C500 raw results → compare JSON → docs/state is now complete."
+    }
+  ],
+  "backlog": [
+    {
+      "id": "b01",
+      "description": "Fix tl_quantize undefined accum in tilelang_candidate.py:178-179",
+      "workstream": "foundation",
+      "severity": "P0",
+      "frequency": "always",
+      "expected_gain": "eliminate static code defect",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b02",
+      "description": "Strengthen compare_benchmarks.py: schema validation, case field checks, timing contract, missing case detection, not_run/not_comparable reporting",
+      "workstream": "foundation",
+      "severity": "P0",
+      "frequency": "always",
+      "expected_gain": "prevent silent comparison failures",
+      "confidence": "high",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b03",
+      "description": "Sync C500/MXMACA++ status across README.md, SKILL.md, docs/hardware-validation.md, docs/usage.md, docs/iteration-plan.md, benchmarks/README.md",
+      "workstream": "maintenance",
+      "severity": "P0",
+      "frequency": "always",
+      "expected_gain": "eliminate contradictory doc claims",
+      "confidence": "high",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b04",
+      "description": "Build iteration infrastructure: evals/claude/iteration-state.json, cycle reports, macawiki-iterate skill",
+      "workstream": "foundation",
+      "severity": "P1",
+      "frequency": "once",
+      "expected_gain": "trackable, resumable optimization cycles",
+      "confidence": "high",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b05",
+      "description": "Expand agent-value-cases from 3 to >=8: version-claim, negative-prompt, source-citation, multi-page synthesis, forbidden-claim cases",
+      "workstream": "eval",
+      "severity": "P1",
+      "frequency": "always",
+      "expected_gain": "broader retrieval/evidence validation coverage",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b06",
+      "description": "Expand gold-questions from 3 to >=6: compiler, runtime, profiling subdomains",
+      "workstream": "eval",
+      "severity": "P1",
+      "frequency": "once",
+      "expected_gain": "wider MXMACA domain coverage",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b07",
+      "description": "Enhance run_agent_value_eval.py with negative-trigger check and source citation chain validation",
+      "workstream": "eval",
+      "severity": "P1",
+      "frequency": "always",
+      "expected_gain": "stronger guardrails against false triggers and citation gaps",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependencies": [
+        "b05",
+        "b06"
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "b08",
+      "description": "Add tests for version-claim integrity, no fabricated C500 numbers, source URL existence, negative-trigger protection",
+      "workstream": "foundation",
+      "severity": "P1",
+      "frequency": "always",
+      "expected_gain": "automated regression for evidence quality",
+      "confidence": "high",
+      "effort": "medium",
+      "dependencies": [
+        "b05"
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "b09",
+      "description": "Expand sources 3->>=8 and wiki pages 3->>=6: mxcc, mxmaca-runtime, TileLang upstream, programming model, profiling",
+      "workstream": "corpus",
+      "severity": "P1",
+      "frequency": "once",
+      "expected_gain": "wider MXMACA stack coverage for Agent questions",
+      "confidence": "medium",
+      "effort": "high",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b10",
+      "description": "Populate version-claims and version-matrix from existing and new sources",
+      "workstream": "corpus",
+      "severity": "P1",
+      "frequency": "once",
+      "expected_gain": "version-scoped knowledge for Agent responses",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependencies": [
+        "b09"
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "b11",
+      "description": "Build Claude A/B eval runner: run_claude_ab_eval.py + score_claude_eval.py + tasks/rubric/fixtures",
+      "workstream": "eval",
+      "severity": "P2",
+      "frequency": "once",
+      "expected_gain": "real Claude loaded-vs-unloaded value measurement",
+      "confidence": "medium",
+      "effort": "high",
+      "dependencies": [],
+      "status": "blocked"
+    },
+    {
+      "id": "b12",
+      "description": "Build ecosystem task scaffolding: mcPytorch, vLLM-metax, cu-bridge mock/CPU-oracle tasks",
+      "workstream": "ecosystem",
+      "severity": "P2",
+      "frequency": "once",
+      "expected_gain": "upstream/downstream MXMACA task coverage",
+      "confidence": "low",
+      "effort": "high",
+      "dependencies": [],
+      "status": "blocked"
+    },
+    {
+      "id": "b13",
+      "description": "Source freshness, link validity, and license check script",
+      "workstream": "maintenance",
+      "severity": "P3",
+      "frequency": "periodic",
+      "expected_gain": "detect stale/expired references",
+      "confidence": "high",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "pending"
+    },
+    {
+      "id": "b14",
+      "description": "Fix compare_benchmarks.py: correctness failure with timing=null falsely rejected as schema_error (PR #3 review)",
+      "workstream": "foundation",
+      "severity": "P1",
+      "frequency": "always",
+      "expected_gain": "real C500 matmul not_comparable case correctly processed",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b15",
+      "description": "Fix run_agent_value_eval.py: source scoping false positives (required_sources checked against whole corpus) and multi-page requires-all enforcement",
+      "workstream": "eval",
+      "severity": "P1",
+      "frequency": "always",
+      "expected_gain": "eliminate false positives in agent value evaluation",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b16",
+      "description": "Fix iteration-state.json: write back 5 completed cycles, update champion, backlog status, next_cycle_id",
+      "workstream": "maintenance",
+      "severity": "P2",
+      "frequency": "once",
+      "expected_gain": "resumable iteration; macawiki-iterate next picks correct cycle",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b17",
+      "description": "Downgrade C500 benchmark claims for quantize/transpose/moe_routing from 'tested' to 'implementation ready, awaiting C500 HW verification'; sync docs with actual 4-case results JSON (PR #3 round-2 review P1)",
+      "workstream": "foundation",
+      "severity": "P1",
+      "frequency": "always",
+      "expected_gain": "eliminate unsupported hardware claims; docs match evidence",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b18",
+      "description": "Fix compare_benchmarks.py non-dict case crash: add isinstance(case,dict) guard + duplicate case_id rejection + regression tests (PR #3 round-2 review P2)",
+      "workstream": "foundation",
+      "severity": "P2",
+      "frequency": "always",
+      "expected_gain": "graceful schema_error instead of TypeError traceback on malformed input",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b19",
+      "description": "Update iteration-state.json champion→e706047, next_cycle_id→7, record cycle 6 (PR #3 round-2 review P2)",
+      "workstream": "maintenance",
+      "severity": "P2",
+      "frequency": "once",
+      "expected_gain": "champion tracks validated commit; iteration infrastructure consistent",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b20",
+      "description": "Complete C500 benchmarks for 7 case slots: run PyTorch baseline + TileLang candidate for quantize, transpose, moe_routing on MetaX C500 (MACA 3.7.1.5); update docs with real results. NOTE: 5/7 completed with timing; 2/7 not_comparable; transpose needs re-run with .contiguous() baseline.",
+      "workstream": "foundation",
+      "severity": "P1",
+      "frequency": "once",
+      "expected_gain": "complete operator benchmark evidence; eliminate unsupported claims",
+      "confidence": "high",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b21",
+      "description": "PR #3 round-3 P1 follow-up: re-run PyTorch transpose baseline on C500 with torch.t(x).contiguous(), regenerate pytorch_c500.json and compare JSON, then update speedup numbers in verification-report, quality-eval, hardware-validation.md, and iteration-state.json",
+      "workstream": "foundation",
+      "severity": "P1",
+      "frequency": "once",
+      "expected_gain": "valid transpose speedup comparison; unblock PR #3 merge",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b22",
+      "description": "Add case contract field (e.g. output_layout or semantics) to operator_cases.yaml to prevent view-vs-materialized mismatches in future comparisons",
+      "workstream": "foundation",
+      "severity": "P2",
+      "frequency": "once",
+      "expected_gain": "defense-in-depth against workload mismatches in new operators",
+      "confidence": "medium",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b23",
+      "description": "PR #3 round-3: verify champion.commit SHA after round-3 commit is pushed; replace ROUND3_FIX_SHA_PLACEHOLDER with actual SHA",
+      "workstream": "maintenance",
+      "severity": "P2",
+      "frequency": "once",
+      "expected_gain": "champion tracks actual validated commit",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    }
+  ],
+  "external_blockers": [
+    {
+      "id": "ext-01",
+      "description": "Claude API paid authorization required for real A/B eval (MACAWIKI_RUN_PAID_EVAL=1 or explicit user authorization)",
+      "affects": [
+        "b11"
+      ],
+      "status": "awaiting"
+    },
+    {
+      "id": "ext-02",
+      "description": "MXMACA++ SDK and C500 environment re-capture needed for MXMACA++ backend connection",
+      "affects": [
+        "b12"
+      ],
+      "status": "awaiting"
+    }
+  ],
+  "decision": "continue"
+}

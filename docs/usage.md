@@ -36,7 +36,7 @@ $macawiki 为 matmul 设计 PyTorch、TileLang、MXMACA++ 三后端对比。
 
 ### 三后端算子评估
 
-先读 `evaluation-compare-operator-backends` 和 `benchmarks/README.md`。本地无 C500 时可以：
+先读 `evaluation-compare-operator-backends` 和 `benchmarks/README.md`。本地无 C500 或仅作流程检查时可以：
 
 1. 审阅算子、形状、容差和结果 schema；
 2. 运行 PyTorch CPU 流程检查；

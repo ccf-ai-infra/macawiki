@@ -1,3 +1,44 @@
 {
-  "claims": []
+  "claims": [
+    {
+      "id": "vc-001",
+      "statement": "MXMACA SDK provides device management, memory operations, and kernel launch APIs whose exact signatures vary by version. No version-independent API contract is claimed.",
+      "scope": "mxmaca-sdk",
+      "versions": ["unspecified"],
+      "sources": ["doc-mxmaca-quick-start"],
+      "confidence": "source-reported"
+    },
+    {
+      "id": "vc-002",
+      "statement": "mxcc is the MXMACA C/C++ compiler; its command-line options and optimization levels are version-specific and are not nvcc-compatible.",
+      "scope": "mxcc",
+      "versions": ["unspecified"],
+      "sources": ["doc-mxmaca-compiler-mxcc", "doc-mxmaca-quick-start"],
+      "confidence": "source-reported"
+    },
+    {
+      "id": "vc-003",
+      "statement": "mcProfiler collects hardware performance counters and generates timeline traces. Its output format and available metrics change across MXMACA versions.",
+      "scope": "mcprofiler",
+      "versions": ["unspecified"],
+      "sources": ["repo-mxmaca-performance-tuning-guide"],
+      "confidence": "source-reported"
+    },
+    {
+      "id": "vc-004",
+      "statement": "MXMACA PyTorch integration maps to the torch.cuda device namespace. Compatibility with upstream PyTorch versions is not guaranteed without MXMACA-specific verification.",
+      "scope": "mcpytorch",
+      "versions": ["unspecified"],
+      "sources": ["doc-pytorch-operator-reference"],
+      "confidence": "inferred"
+    },
+    {
+      "id": "vc-005",
+      "statement": "TileLang/maca target can express elementwise, reduction, and tiled operators, but has known codegen gaps (e.g. tf32 mma intrinsic mis-emit) and lacks a validated per-row top-k primitive.",
+      "scope": "mctilelang",
+      "versions": ["unspecified"],
+      "sources": ["repo-mxmaca-performance-tuning-guide"],
+      "confidence": "experimental"
+    }
+  ]
 }

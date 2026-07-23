@@ -131,14 +131,65 @@ def environment(torch_module: Any | None, device: Any | None, *, backend: str, i
     return env
 
 
-def provenance(run_command: str, *, capture_command: str | None = None, notes: list[str] | None = None) -> dict[str, Any]:
+def provenance(run_command: str, *, capture_command: str | None = None, notes: list[str] | None = None, config_hash: str | None = None) -> dict[str, Any]:
     """Record how a result was produced, for the ``docs/hardware-validation.md``
-    report gate (run command, capture command, and any caveats)."""
+    report gate (run command, capture command, git provenance, and any caveats).
+
+    ``config_hash`` is a pre-computed sha256 of the operator case config
+    (operator_cases.yaml) that must match between baseline and candidate for
+    the comparison to be valid."""
+    import datetime
+
+    # Git provenance: commit SHA and dirty status for the macawiki repo
+    git_commit = None
+    git_dirty = None
+    git_branch = None
+    try:
+        git_result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            text=True, capture_output=True, check=False, timeout=10,
+            cwd=str(ROOT),
+        )
+        if git_result.returncode == 0:
+            git_commit = git_result.stdout.strip() or None
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    try:
+        status_result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            text=True, capture_output=True, check=False, timeout=10,
+            cwd=str(ROOT),
+        )
+        if status_result.returncode == 0:
+            git_dirty = bool(status_result.stdout.strip())
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    try:
+        branch_result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            text=True, capture_output=True, check=False, timeout=10,
+            cwd=str(ROOT),
+        )
+        if branch_result.returncode == 0:
+            git_branch = branch_result.stdout.strip() or None
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
     facts: dict[str, Any] = {
         "run_command": run_command,
-        "capture_command": capture_command,
         "captured_by": "benchmarks/env_capture.py",
     }
+    if capture_command is not None:
+        facts["capture_command"] = capture_command
+    if git_commit is not None:
+        facts["git_commit"] = git_commit
+    if git_dirty is not None:
+        facts["git_dirty"] = git_dirty
+    if git_branch is not None:
+        facts["git_branch"] = git_branch
+    facts["captured_at_utc"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    if config_hash is not None:
+        facts["config_hash"] = config_hash
     if notes:
         facts["notes"] = notes
     return facts
