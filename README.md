@@ -48,7 +48,7 @@ python3 scripts/doctor.py
 | 数据契约 | [references/schema.md](references/schema.md) |
 | 查询示例集 | [references/examples.md](references/examples.md) |
 | 评估方法 | [docs/evaluation.md](docs/evaluation.md) |
-| 贡献与维护规则 | `CONTRIBUTING.md` ⚠ 建设中 |
+| 贡献与维护规则 | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
 ## 内容模型
 
