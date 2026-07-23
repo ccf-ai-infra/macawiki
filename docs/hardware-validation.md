@@ -3,8 +3,8 @@
 C500 与 MXMACA 已就绪。`benchmarks/results/` 下保存了在 MetaX C500 上实测的 PyTorch 基线与 TileLang 候选结果（环境指纹、硬件型号、MACA/mxcc 版本与运行命令见各 JSON 的 `environment`/`provenance` 字段）。以下门禁仍是一致性的硬约束，不是已完成报告的免责声明。
 
 **当前状态汇总**:
-- PyTorch 基线：7 个算子均已在 C500 上完成实测（add, softmax, layer_norm, matmul, quantize, transpose, moe_routing）；结果见 `benchmarks/results/pytorch_c500.json`。
-- TileLang 候选：7 个算子均已在 C500 上完成实测（add, softmax, layer_norm, quantize, transpose 通过正确性与计时门禁；matmul 因 TileLang/maca codegen 差距标记为 `not_comparable`；moe_routing 因 TileLang 缺少 top-k 原语标记为 `not_comparable`）；结果见 `benchmarks/results/tilelang_c500.json`。
+- PyTorch 基线：7 个 case 均已在 C500 上完成实测（add, softmax, layer_norm, matmul, quantize, transpose, moe_routing）；结果见 `benchmarks/results/pytorch_c500.json`。transpose 基线已从 `torch.t(x)`（view）修正为 `torch.t(x).contiguous()`（物化输出），C500 已重跑，当前 median=0.0325ms。
+- TileLang 候选：7 个 case 均有状态记录（add, softmax, layer_norm, quantize, transpose 通过正确性与计时门禁；matmul 因 TileLang/maca codegen 差距标记为 `not_comparable`；moe_routing 因 TileLang 缺少 top-k 原语标记为 `not_comparable`）；结果见 `benchmarks/results/tilelang_c500.json`。
 - MXMACA++ 后端：契约已定义（`backends/mxmacacpp_contract.yaml`），后端未接入（`not_run`）。
 
 ## 目标与基线算子
@@ -15,8 +15,8 @@ C500 与 MXMACA 已就绪。`benchmarks/results/` 下保存了在 MetaX C500 上
 | `softmax` | `torch.softmax` | 归约与数值稳定性 | comparable ✅ |
 | `layer_norm` | `torch.nn.functional.layer_norm` | 归约、仿射、融合机会 | comparable ✅ |
 | `matmul` | `torch.matmul` | 计算密集、库与自定义核对比 | not_comparable（codegen） |
-| `quantize` | fake-quant + dequant | 逐元素、INT8 对称量化 | comparable ✅ (speedup=1.42) |
-| `transpose` | 2D tile transpose | 共享内存分块转置 | comparable ✅ (speedup=0.12) |
+| `quantize` | fake-quant + dequant | 逐元素、INT8 对称量化 | comparable ✅ (speedup=1.59) |
+| `transpose` | 2D tile transpose（物化 contiguous 输出） | 共享内存分块转置 | comparable ✅ (speedup=1.00) |
 | `moe_routing` | softmax + top-k selection | 混合专家路由 | not_comparable（top-k） |
 
 参考接口：[torch.add](https://docs.pytorch.org/docs/stable/generated/torch.add.html)、[torch.softmax](https://docs.pytorch.org/docs/stable/generated/torch.softmax.html)、[LayerNorm](https://docs.pytorch.org/docs/stable/generated/torch.nn.LayerNorm.html)、[torch.matmul](https://docs.pytorch.org/docs/stable/generated/torch.matmul.html)。

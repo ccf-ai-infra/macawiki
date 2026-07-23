@@ -3,11 +3,11 @@
   "objective": "maximize measured Macawiki value without quality or safety regression",
   "head_at_start": "3b1e9a6397af589ebb4bfbf5d90964818e3ec668",
   "champion": {
-    "commit": "e706047c460f7d9533f9e156f9e65d541a3361e2",
+    "commit": "ae1431faec5899e25f7b6b46efc555030eb7f3d4",
     "task_set_version": "1",
     "metrics_file": "evals/claude/reports/verification-report-2026-07-23.md"
   },
-  "next_cycle_id": 7,
+  "next_cycle_id": 9,
   "cycles": [
     {
       "cycle_id": 1,
@@ -101,7 +101,7 @@
     {
       "cycle_id": 6,
       "status": "accepted",
-      "hypothesis": "PR #3 round-2 review feedback + C500 benchmark completion: fixing C500 claims (P1), compare_benchmarks non-dict crash (P2), iteration-state staleness (P2), and running real C500 benchmarks for all 7 operators will pass re-review and provide complete evidence.",
+      "hypothesis": "PR #3 round-2 review feedback + C500 benchmark completion: fixing C500 claims (P1), compare_benchmarks non-dict crash (P2), iteration-state staleness (P2), and running C500 benchmarks for all 7 case slots will pass re-review and provide complete evidence.",
       "workstream": "foundation",
       "candidate_changes": [
         "docs/hardware-validation.md",
@@ -114,10 +114,54 @@
         "benchmarks/results/tilelang_c500.json",
         "benchmarks/results/compare_pytorch_vs_tilelang_c500.json"
       ],
+      "dev_result": "evals/claude/reports/verification-report-2026-07-23.md",
+      "heldout_result": null,
+      "report": "evals/claude/reports/verification-report-2026-07-23.md",
+      "decision_reason": "P1: C500 benchmarks: 5/7 case slots completed with timing (add, softmax, layer_norm, quantize, transpose), 2/7 not_comparable (matmul codegen, moe_routing top-k). First TileLang win: quantize speedup=1.42. P2: isinstance(case,dict) guard + duplicate case_id + 2 regression tests. P3: champion→e706047, next_cycle_id→7. NOTE: transpose speedup=0.12 later found invalid (view vs materialized); fixed in round-3. 32/32 tests, 9/9 eval, make all clean."
+    },
+    {
+      "cycle_id": 7,
+      "status": "accepted",
+      "hypothesis": "PR #3 round-3 review: fixing transpose view-vs-materialized workload mismatch (P1 — torch.t→torch.t().contiguous()), correcting '7 operators all measured'→'7 cases have status records' wording (P2), and updating champion.commit to actual HEAD containing cycle 6+7 changes (P3) will make the PR mergeable.",
+      "workstream": "foundation",
+      "candidate_changes": [
+        "benchmarks/pytorch_baseline.py",
+        "benchmarks/tilelang_candidate.py",
+        "docs/hardware-validation.md",
+        "evals/claude/reports/verification-report-2026-07-23.md",
+        "evals/claude/reports/quality-eval-2026-07-23.md",
+        "evals/claude/iteration-state.json",
+        "scripts/compare_benchmarks.py",
+        "tests/test_repository.py"
+      ],
       "dev_result": null,
       "heldout_result": null,
       "report": null,
-      "decision_reason": "P1: C500 benchmarks completed for all 7 operators. quantize comparable (speedup=1.42, first TileLang win), transpose comparable (speedup=0.12), moe_routing not_comparable (top-k). P2: isinstance(case,dict) guard + duplicate case_id + 2 regression tests. P3: champion→e706047, next_cycle_id→7. 32/32 tests, 9/9 eval, make all clean."
+      "decision_reason": "P1: pytorch_baseline.py transpose now uses torch.t(x).contiguous() in working tree — workload equivalent to TileLang's materialized tl_transpose. TileLang _reference also updated for consistency. OLD speedup=0.12/0.0043ms INVALIDATED. ⚠️ POST-MORTEM: The .contiguous() runner code changes were NOT committed in cycle 7 (only result JSONs were committed in 5a1dcdb); reviewer caught this in round-4. Fixed in cycle 8. P2: 5 files updated — all '7 operators completed/measured' claims changed to '7 cases have status records: 5 with timing, 2 not_comparable'. Added view-vs-materialized warning in compare_benchmarks.py. Added transpose contract test."
+    },
+    {
+      "cycle_id": 8,
+      "status": "accepted",
+      "hypothesis": "PR #3 round-4 review: committing the .contiguous() runner code that was left in the working tree (P1.1), re-running C500 benchmarks from committed code with matching provenance (P1.2), regenerating compare JSON from source results (P1.2), and synchronizing all docs/reports/state to the new C500 numbers (P1.3, P2) will achieve the 'code → results → compare JSON → docs/state' reproducible chain the reviewer requires.",
+      "workstream": "foundation",
+      "candidate_changes": [
+        "benchmarks/pytorch_baseline.py",
+        "benchmarks/tilelang_candidate.py",
+        "benchmarks/operator_cases.yaml",
+        "scripts/compare_benchmarks.py",
+        "tests/test_repository.py",
+        "benchmarks/results/pytorch_c500.json",
+        "benchmarks/results/tilelang_c500.json",
+        "benchmarks/results/compare_pytorch_vs_tilelang_c500.json",
+        "docs/hardware-validation.md",
+        "evals/claude/reports/quality-eval-2026-07-23.md",
+        "evals/claude/reports/verification-report-2026-07-23.md",
+        "evals/claude/iteration-state.json"
+      ],
+      "dev_result": null,
+      "heldout_result": null,
+      "report": null,
+      "decision_reason": "P1.1: Runner .contiguous() fix committed to ae1431f (was working-tree-only in cycle 7). P1.2: C500 benchmarks re-run from committed code; provenance now points to actual fix commit. P1.3: compare JSON regenerated from source results (not hand-edited). P1.4: hardware-validation.md, quality-eval, verification-report all synced to latest C500 values (transpose speedup=1.00, quantize speedup=1.59). P2: champion.commit updated to ae1431f, next_cycle_id→9. P2: TileLang wording fixed — '7 cases have status records: 5 with timing, 2 not_comparable' across all 4 files. Reproducible chain: code → C500 raw results → compare JSON → docs/state is now complete."
     }
   ],
   "backlog": [
@@ -358,13 +402,49 @@
     },
     {
       "id": "b20",
-      "description": "Complete C500 benchmarks for all 7 operators: run PyTorch baseline + TileLang candidate for quantize, transpose, moe_routing on MetaX C500 (MACA 3.7.1.5); update docs with real results",
+      "description": "Complete C500 benchmarks for 7 case slots: run PyTorch baseline + TileLang candidate for quantize, transpose, moe_routing on MetaX C500 (MACA 3.7.1.5); update docs with real results. NOTE: 5/7 completed with timing; 2/7 not_comparable; transpose needs re-run with .contiguous() baseline.",
       "workstream": "foundation",
       "severity": "P1",
       "frequency": "once",
       "expected_gain": "complete operator benchmark evidence; eliminate unsupported claims",
       "confidence": "high",
       "effort": "medium",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b21",
+      "description": "PR #3 round-3 P1 follow-up: re-run PyTorch transpose baseline on C500 with torch.t(x).contiguous(), regenerate pytorch_c500.json and compare JSON, then update speedup numbers in verification-report, quality-eval, hardware-validation.md, and iteration-state.json",
+      "workstream": "foundation",
+      "severity": "P1",
+      "frequency": "once",
+      "expected_gain": "valid transpose speedup comparison; unblock PR #3 merge",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b22",
+      "description": "Add case contract field (e.g. output_layout or semantics) to operator_cases.yaml to prevent view-vs-materialized mismatches in future comparisons",
+      "workstream": "foundation",
+      "severity": "P2",
+      "frequency": "once",
+      "expected_gain": "defense-in-depth against workload mismatches in new operators",
+      "confidence": "medium",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b23",
+      "description": "PR #3 round-3: verify champion.commit SHA after round-3 commit is pushed; replace ROUND3_FIX_SHA_PLACEHOLDER with actual SHA",
+      "workstream": "maintenance",
+      "severity": "P2",
+      "frequency": "once",
+      "expected_gain": "champion tracks actual validated commit",
+      "confidence": "high",
+      "effort": "low",
       "dependencies": [],
       "status": "completed"
     }

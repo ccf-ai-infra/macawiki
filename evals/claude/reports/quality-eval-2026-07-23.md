@@ -95,11 +95,11 @@ def tl_quantize(X, scale: float, BLOCK_N, dtype, out_dtype, threads):
 | softmax-f32-64x128 | ✅ | ✅ | comparable (speedup=0.76) |
 | layernorm-f32-64x128 | ✅ | ✅ | comparable (speedup=0.84) |
 | matmul-f32-64x128x64 | ✅ | ✅ | not_comparable (codegen) |
-| quantize-f32-8192 | ✅ | ✅ | comparable (**speedup=1.42**) |
-| transpose-f32-128x4096 | ✅ | ✅ | comparable (speedup=0.12) |
+| quantize-f32-8192 | ✅ | ✅ | comparable (**speedup=1.59**) |
+| transpose-f32-128x4096 | ✅ | ✅ | comparable (speedup=1.00) |
 | moe-routing-f32-1024x8-top2 | ✅ | ✅ | not_comparable (top-k) |
 
-**全部 7 个 case 已补全 C500 实测**。quantize 是 TileLang 首个超过 PyTorch 基线的算子；transpose TileLang 明显落后（8×）；moe_routing 因 TileLang 缺少 top-k 原语正确性未通过。
+**全部 7 个 case 均有 C500 状态记录**：5 个完成正确性与计时实测（add、softmax、layer_norm、quantize、transpose），2 个因实现/代码生成缺口标记为 `not_comparable`（matmul、moe_routing）。quantize 是 TileLang 首个超过 PyTorch 基线的算子（speedup=1.59）。transpose 基线已修正为 `.contiguous()`（物化输出），C500 重跑后 speedup=1.00，两个后端测量等价工作量。
 
 ---
 

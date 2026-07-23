@@ -5,16 +5,16 @@
     {
       "case_id": "add-f32-4096",
       "status": "comparable",
-      "baseline_median_ms": 0.022475142031908035,
-      "candidate_median_ms": 0.030700117349624634,
-      "speedup": 0.7320865186263803
+      "baseline_median_ms": 0.02227933146059513,
+      "candidate_median_ms": 0.030342023819684982,
+      "speedup": 0.7342730858361853
     },
     {
       "case_id": "layernorm-f32-64x128",
       "status": "comparable",
-      "baseline_median_ms": 0.02565723843872547,
-      "candidate_median_ms": 0.030721072107553482,
-      "speedup": 0.8351674169736104
+      "baseline_median_ms": 0.025485409423708916,
+      "candidate_median_ms": 0.030875205993652344,
+      "speedup": 0.8254328547297297
     },
     {
       "case_id": "matmul-f32-64x128x64",
@@ -29,23 +29,23 @@
     {
       "case_id": "quantize-f32-8192",
       "status": "comparable",
-      "baseline_median_ms": 0.04670699127018452,
-      "candidate_median_ms": 0.032937852665781975,
-      "speedup": 1.4180338877618102
+      "baseline_median_ms": 0.04668952897191048,
+      "candidate_median_ms": 0.029425835236907005,
+      "speedup": 1.5866849180665121
     },
     {
       "case_id": "softmax-f32-64x128",
       "status": "comparable",
-      "baseline_median_ms": 0.022888416424393654,
-      "candidate_median_ms": 0.030209776014089584,
-      "speedup": 0.7576493256262042
+      "baseline_median_ms": 0.02271239645779133,
+      "candidate_median_ms": 0.03038579598069191,
+      "speedup": 0.7474675493847026
     },
     {
       "case_id": "transpose-f32-128x4096",
       "status": "comparable",
-      "baseline_median_ms": 0.004324130713939667,
-      "candidate_median_ms": 0.03491947427392006,
-      "speedup": 0.12383149528597527
+      "baseline_median_ms": 0.03251573070883751,
+      "candidate_median_ms": 0.03244704566895962,
+      "speedup": 1.0021168349371048
     }
   ]
 }

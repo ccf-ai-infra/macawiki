@@ -2,7 +2,7 @@
 
 **测试日期**: 2026-07-23
 **测试环境**: Linux 5.15.0-58-generic, Python 3.12.11
-**仓库 commit**: `3b1e9a6` + 本地未提交改动（5-cycle 迭代）
+**仓库 commit**: `3b1e9a6` + 本地未提交改动（5-cycle 迭代）+ PR #3 round-3 修正
 **测试分支**: master
 
 ---
@@ -13,7 +13,7 @@
 |--------|------|------|
 | 页面验证 (validate.py) | ✅ PASS | 14 pages validated, 0 errors |
 | 生成索引 (indices) | ✅ PASS | 4 indices current |
-| 单元测试 (unittest) | ✅ PASS | 27/27 tests (1.325s) |
+| 单元测试 (unittest) | ✅ PASS | 32/32 tests |
 | Agent 价值评估 | ✅ PASS | 9/9 cases |
 | 环境医生 (doctor.py) | ✅ PASS | 5/5 checks |
 | 仓库状态 (repo_status) | ✅ PASS | pages:14, sources:8, wiki:6 |
@@ -121,20 +121,20 @@
 
 ## 5. 算子 Benchmark 状态
 
-**C500 实测（7/7）**：全部 7 个算子已在 MetaX C500 上完成 PyTorch 基线与 TileLang 候选实测。
+**C500 实测**：7 个 case 均有状态记录。5 个完成正确性与计时实测（add、softmax、layer_norm、quantize、transpose），2 个因实现/代码生成缺口标记为 `not_comparable`（matmul、moe_routing）。
 环境：MACA 3.7.1.5, PyTorch 2.8.0+metax3.7.1.3, mxcc 1.0.0, driver 3.8.30。
 
 | 算子 | case_id | PyTorch (ms) | TileLang (ms) | Speedup | 状态 |
 |------|---------|-------------|---------------|---------|------|
-| add | add-f32-4096 | 0.0225 | 0.0307 | 0.73 | comparable |
-| softmax | softmax-f32-64x128 | 0.0229 | 0.0302 | 0.76 | comparable |
-| layer_norm | layernorm-f32-64x128 | 0.0257 | 0.0307 | 0.84 | comparable |
-| matmul | matmul-f32-64x128x64 | 0.0254 | — | — | not_comparable (codegen) |
-| quantize | quantize-f32-8192 | 0.0467 | 0.0329 | **1.42** | comparable |
-| transpose | transpose-f32-128x4096 | 0.0043 | 0.0349 | 0.12 | comparable |
-| moe_routing | moe-routing-f32-1024x8-top2 | 0.0920 | — | — | not_comparable (top-k) |
+| add | add-f32-4096 | 0.0223 | 0.0303 | 0.73 | comparable |
+| softmax | softmax-f32-64x128 | 0.0227 | 0.0304 | 0.75 | comparable |
+| layer_norm | layernorm-f32-64x128 | 0.0255 | 0.0309 | 0.83 | comparable |
+| matmul | matmul-f32-64x128x64 | 0.0250 | — | — | not_comparable (codegen) |
+| quantize | quantize-f32-8192 | 0.0467 | 0.0294 | **1.59** | comparable |
+| transpose | transpose-f32-128x4096 | 0.0325 | 0.0324 | 1.00 | comparable |
+| moe_routing | moe-routing-f32-1024x8-top2 | 0.0974 | — | — | not_comparable (top-k) |
 
-**tl_quantize accum bug**: ✅ 已修复（`accum = T.float32` 已添加），quantize 正确性通过，speedup=1.42 为 TileLang 首个超过 PyTorch 的算子。
+**transpose view-vs-materialized 修复**: ✅ 已修复。PyTorch baseline 从 `torch.t(x)`（view, ~0.004ms）改为 `torch.t(x).contiguous()`（物化输出, 0.032ms），TileLang reference 同步。修复后 speedup=1.00，两后端测量等价工作量。旧 speedup=0.12 / "慢 8×" 结论已撤回。
 
 ---
 
@@ -166,7 +166,7 @@
 ## 8. 已知限制
 
 1. **多词搜索**: 当前 `query.py` 要求 ALL 词出现在同一页，如 "profiling 性能" 返回空（"profiling" 和 "性能" 分别在不同页面但无页面同时包含二词）。这是设计行为，非回归问题。
-2. **环境**: C500 环境已就绪（MACA 3.7.1.5, driver 3.8.30），7/7 算子 benchmark 已补全。
+2. **环境**: C500 环境已就绪（MACA 3.7.1.5, driver 3.8.30），7 个 case 均有状态记录（5 个完成实测，2 个标记为 not_comparable）。transpose 基线已修正为物化 `.contiguous()`，待 C500 重跑更新计时。
 3. **来源深度**: 新增 5 个来源记录的是公开入口和主题范围，未获取具体 commit 代码（5 个标记为 unknown license）。
 4. **Claude A/B 评测**: `run_claude_ab_eval.py` / `score_claude_eval.py` 尚未建设（Phase 2 阻塞项）。
 
