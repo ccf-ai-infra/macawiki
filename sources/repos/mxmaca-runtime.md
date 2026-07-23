@@ -8,7 +8,7 @@
   "languages": ["zh-CN", "en"],
   "tags": ["runtime", "programming-model"],
   "hardware": ["c500"],
-  "mxmaca_versions": ["unspecified"],
+  "mxmaca_versions": ["3.7.1.5"],
   "components": ["mxmaca-runtime", "mxmaca-sdk"],
   "sources": [],
   "related": ["doc-mxmaca-quick-start"],

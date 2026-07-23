@@ -75,14 +75,43 @@ python3 scripts/grep_wiki.py "quantize|transpose|contiguous"
 python3 scripts/grep_wiki.py "mxcc|__builtin_mxc"
 ```
 
+## 模糊搜索（n-gram Jaccard 相似度）
+
+```bash
+# 精确搜索无结果时，使用模糊匹配
+python3 scripts/query.py "kernel" "tuning" "roofline" --fuzzy --compact
+
+# 自动回退：精确搜索返回 0 时自动启用模糊模式
+python3 scripts/query.py "MXMACA" "BLAS" "优化" --auto-fuzzy --compact
+```
+
+`--fuzzy` 使用字符 bigram Jaccard 相似度评分，无需精确子串匹配。适合关键词拼写不精确、跨语言或探索性搜索场景。`--auto-fuzzy` 在精确 AND/OR 返回 0 结果时自动回退。
+
 ## 组合查询
 
 ```bash
 # 查找 C500 上的算子评估
 python3 scripts/query.py "算子" --hardware c500 --type wiki-pattern --compact
 
-# 查找环境诊断方法
-python3 scripts/query.py "环境 验证" --type wiki-recipe --compact
+# 查找环境诊断方法（OR 模式提升召回率）
+python3 scripts/query.py "环境 验证" --type wiki-recipe --mode or --compact
+```
+
+## 质量门控
+
+```bash
+# 快速 pre-commit 检查（仅 validate + test）
+make check
+
+# 完整硬性检查（CI 门控）
+make all
+
+# Advisory 质量检查（不阻塞合并，用于了解 corpus 健康度）
+make check-advisory
+make quality      # 质量指标（draft 比例等）
+make coverage     # 覆盖度报告
+make recall       # 检索召回率
+make freshness    # 来源新鲜度
 ```
 
 ## Agent 触发模式
@@ -94,6 +123,14 @@ python3 scripts/query.py "环境 验证" --type wiki-recipe --compact
 ```
 
 Skill 会通过描述匹配自动加载；也可显式输入 `/macawiki` 激活。
+
+### Codex / OpenCode
+
+```text
+$macawiki <任意 MXMACA 相关问题>
+```
+
+Skill 通过 `$macawiki` 前缀显式激活，或根据描述自动匹配。OpenCode 与 Codex 共享同一 skill 适配器目录。
 
 ### Codex
 

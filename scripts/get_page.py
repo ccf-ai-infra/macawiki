@@ -7,7 +7,10 @@ import argparse
 import json
 from pathlib import Path
 
-from common import ROOT, Page, discover_pages
+try:
+    from .common import ROOT, Page, discover_pages
+except ImportError:
+    from common import ROOT, Page, discover_pages
 
 
 def resolve_page(target: str, pages: list[Page]) -> Page:

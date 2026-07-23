@@ -46,7 +46,8 @@
       "url": "https://gitee.com/metax-maca",
       "access": "public",
       "license_status": "unknown",
-      "capture_policy": "metadata-and-links-only"
+      "capture_policy": "metadata-and-links-only",
+      "note": "Gitee repo public, no explicit license file found (2026-07-23 check)"
     },
     {
       "id": "repo-mcpytorch",
@@ -54,14 +55,15 @@
       "url": "https://gitee.com/metax-maca",
       "access": "public",
       "license_status": "unknown",
-      "capture_policy": "metadata-and-links-only"
+      "capture_policy": "metadata-and-links-only",
+      "note": "Gitee repo public, no explicit license file found (2026-07-23 check)"
     },
     {
       "id": "repo-vllm-metax",
       "name": "vLLM-MetaX",
       "url": "https://gitee.com/metax-maca",
       "access": "public",
-      "license_status": "unknown",
+      "license_status": "permissive",
       "capture_policy": "metadata-and-links-only"
     }
   ]

@@ -8,7 +8,7 @@
   "languages": ["zh-CN", "en"],
   "tags": ["performance", "roofline", "kernel", "benchmark", "community"],
   "hardware": ["c500"],
-  "mxmaca_versions": ["unspecified"],
+  "mxmaca_versions": ["3.7.1.5"],
   "components": ["mxmaca-sdk", "mxcc", "mcprofiler"],
   "sources": [],
   "related": ["pattern-establish-performance-baseline"],

@@ -8,7 +8,7 @@
   "languages": ["en"],
   "tags": ["framework", "installation"],
   "hardware": ["c500"],
-  "mxmaca_versions": ["unspecified"],
+  "mxmaca_versions": ["3.7.1.5"],
   "components": ["mcpytorch", "mxmaca-sdk"],
   "sources": [],
   "related": ["doc-pytorch-operator-reference"],

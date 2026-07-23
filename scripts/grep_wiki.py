@@ -6,7 +6,10 @@ from __future__ import annotations
 import argparse
 import re
 
-from common import discover_pages
+try:
+    from .common import discover_pages
+except ImportError:
+    from common import discover_pages
 
 
 def main() -> int:

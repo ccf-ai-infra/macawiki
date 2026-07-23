@@ -5,7 +5,10 @@ from __future__ import annotations
 
 from collections import Counter
 
-from common import discover_pages
+try:
+    from .common import discover_pages
+except ImportError:
+    from common import discover_pages
 
 
 def _print_counter(title: str, values: Counter[str]) -> None:

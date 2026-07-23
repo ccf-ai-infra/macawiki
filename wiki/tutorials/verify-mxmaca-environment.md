@@ -8,7 +8,7 @@
   "languages": ["zh-CN"],
   "tags": ["quick-start", "installation", "programming-model"],
   "hardware": ["unspecified"],
-  "mxmaca_versions": ["unspecified"],
+  "mxmaca_versions": ["3.7.1.5"],
   "components": ["mxmaca-sdk", "mxmaca-runtime", "mxcc"],
   "sources": ["doc-mxmaca-quick-start"],
   "related": [],

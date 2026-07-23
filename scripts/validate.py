@@ -12,7 +12,10 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from common import ROOT, Page, discover_pages, load_data
+try:
+    from .common import ROOT, Page, discover_pages, load_data
+except ImportError:
+    from common import ROOT, Page, discover_pages, load_data
 
 
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
@@ -125,6 +128,9 @@ def _validate_pages() -> tuple[list[Page], list[str]]:
         _check_vocabulary(page, vocab, errors)
         _check_dates(page, errors)
         _check_links(page, errors)
+        # Minimum body length guard
+        if len(page.body.strip()) < 50:
+            errors.append(f"{page.relative_path}: body too short ({len(page.body.strip())} chars, minimum 50)")
 
     claim_ids = {item["id"] for item in load_data(ROOT / "data" / "version-claims.yaml")["claims"]}
     for page in pages:

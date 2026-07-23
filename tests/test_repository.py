@@ -33,6 +33,38 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("pattern-establish-performance-baseline", result.stdout)
 
+    def test_query_or_mode_improves_recall(self) -> None:
+        # AND mode: multi-concept queries like "性能 基线" may return 0 results
+        # because no single page contains all search terms simultaneously.
+        and_result = run_script("scripts/query.py", "性能", "基线", "--mode", "and", "--paths-only")
+        self.assertEqual(and_result.returncode, 0, and_result.stderr)
+        # OR mode: same terms should return results when at least one term matches.
+        or_result = run_script("scripts/query.py", "性能", "基线", "--mode", "or", "--paths-only")
+        self.assertEqual(or_result.returncode, 0, or_result.stderr)
+        or_pages = [line for line in or_result.stdout.strip().split("\n") if line]
+        # OR mode must not return fewer results than AND mode.
+        and_pages = [line for line in and_result.stdout.strip().split("\n") if line]
+        self.assertGreaterEqual(len(or_pages), len(and_pages))
+
+    def test_query_fuzzy_mode_finds_pages(self) -> None:
+        """Fuzzy search with n-gram Jaccard should return results even for non-exact terms."""
+        # Search with a slightly different term that fuzzy matching should still catch
+        result = run_script("scripts/query.py", "kernel", "roofline", "--fuzzy", "--paths-only")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        # Should find performance-related pages via n-gram similarity
+        pages = [line for line in result.stdout.strip().split("\n") if line]
+        self.assertGreater(len(pages), 0, "Fuzzy search should return results")
+        # The top result should be the performance pattern page
+        self.assertIn("wiki/optimization-patterns/establish-performance-baseline.md", result.stdout)
+
+    def test_query_auto_fuzzy_fallback(self) -> None:
+        """Auto-fuzzy should fall back when exact AND returns 0 results."""
+        # A query that won't match exactly in any single page
+        result = run_script("scripts/query.py", "MXMACA", "BLAS", "优化", "--mode", "and", "--auto-fuzzy", "--paths-only")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        pages = [line for line in result.stdout.strip().split("\n") if line]
+        self.assertGreater(len(pages), 0, "Auto-fuzzy should return results when exact AND returns 0")
+
     def test_alias_filter_is_normalized(self) -> None:
         result = run_script("scripts/query.py", "--component", "mcProfiler", "--paths-only")
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -50,6 +82,17 @@ class RepositoryTests(unittest.TestCase):
     def test_generated_indices_are_current(self) -> None:
         result = run_script("scripts/generate_indices.py", "--check")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_minimum_page_count(self) -> None:
+        """Corpus must not shrink below usable threshold."""
+        result = run_script("scripts/repo_status.py")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        # repo_status outputs "pages: N" on the first line
+        import re
+        match = re.search(r"pages:\s*(\d+)", result.stdout)
+        self.assertIsNotNone(match, f"Could not find page count in output: {result.stdout}")
+        count = int(match.group(1))
+        self.assertGreaterEqual(count, 12, f"Corpus has {count} pages, minimum is 12")
 
     def test_agent_value_proxy_passes(self) -> None:
         result = run_script("scripts/run_agent_value_eval.py")
@@ -341,6 +384,9 @@ class RepositoryTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertGreaterEqual(report["total"], 8)
         self.assertTrue(report["all_passed"], f"Some cases failed: {report}")
+        # Verify each individual case passed
+        for case in report["cases"]:
+            self.assertTrue(case.get("loaded_pass"), f"Case {case.get('id', '?')} did not pass: {case}")
         # Verify negative cases exist
         negative_cases = [
             c for c in report["cases"]
