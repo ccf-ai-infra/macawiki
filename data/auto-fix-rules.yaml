@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "rules": {
+    "alias_addition": {
+      "enabled": true,
+      "description": "Add aliases when fuzzy search finds results for terms that exact search misses",
+      "min_signal_count": 3,
+      "max_aliases_per_fix": 5,
+      "fuzzy_threshold": 0.3,
+      "min_confidence": "source-reported"
+    },
+    "freshness_update": {
+      "enabled": true,
+      "description": "Update retrieved_at when source content is unchanged",
+      "check_source_content_hash": false,
+      "max_age_days": 365
+    },
+    "gold_question_keyword_update": {
+      "enabled": true,
+      "description": "Update gold question keywords when recall drops below threshold",
+      "min_recall_threshold": 0.70,
+      "max_keywords_per_question": 15,
+      "term_source": "query_log"
+    },
+    "vocabulary_gap_fill": {
+      "enabled": false,
+      "description": "Auto-add uncovered vocabulary terms to pages (disabled: requires human semantic judgment)",
+      "min_confidence": "source-reported"
+    }
+  },
+  "safety": {
+    "max_diff_lines": 50,
+    "require_clean_git": true,
+    "require_make_all_green": true,
+    "min_recall_threshold": 0.70,
+    "max_auto_fixes_per_run": 5
+  }
+}

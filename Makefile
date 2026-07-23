@@ -1,4 +1,4 @@
-.PHONY: validate test indices status eval doctor quality freshness coverage recall report check check-advisory all
+.PHONY: validate test indices status eval doctor quality freshness coverage recall signals signals-merge self-improve-check self-improve evolve report check check-advisory all
 
 validate:
 	python3 scripts/validate.py
@@ -53,6 +53,27 @@ check-advisory:
 report: check-advisory status
 	@echo ""
 	@echo "=== Full health report written to evals/ ==="
+
+# Signal aggregation — analyze query logs, print report (no state changes).
+signals:
+	python3 scripts/signal_aggregator.py --check
+
+# Signal aggregation + merge — process signals into backlog items.
+signals-merge:
+	python3 scripts/signal_aggregator.py --merge
+
+# Self-improvement dry-run — preview auto-fixable items.
+self-improve-check:
+	python3 scripts/self_improve.py --dry-run
+
+# Self-improvement apply — process auto-fixable backlog items with safety gates.
+self-improve:
+	python3 scripts/self_improve.py --apply
+
+# Evolve: aggregate signals + preview auto-fixes (combined advisory gate).
+evolve: signals self-improve-check
+	@echo ""
+	@echo "=== Self-evolution: signals analyzed, auto-fixes previewed ==="
 
 # Fast pre-commit check (validate + test only, no index regeneration).
 check: validate test

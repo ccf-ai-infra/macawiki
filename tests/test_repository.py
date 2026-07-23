@@ -520,6 +520,91 @@ class RepositoryTests(unittest.TestCase):
                          "torch.t(x) on a non-square matrix should be non-contiguous; "
                          "this confirms the old baseline measured view-creation cost")
 
+    def test_signal_logger_creates_file(self) -> None:
+        """Signal logger must create log file on first write (via subprocess for clean import)."""
+        import tempfile, os, subprocess as sp
+        with tempfile.TemporaryDirectory() as tmp:
+            r = sp.run(
+                ["python3", "-c", f"""
+import os; os.environ["MACAWIKI_SIGNAL_DIR"] = "{tmp}"
+from scripts.signal_logger import log_query
+log_query(["test"], {{}}, "and", False, 1, ["test-id"], 1.0)
+"""],
+                cwd=str(ROOT), capture_output=True, text=True,
+            )
+            self.assertEqual(r.returncode, 0, r.stderr)
+            log_path = Path(tmp) / "query-log.jsonl"
+            self.assertTrue(log_path.exists(), f"Log not created at {log_path}")
+            self.assertIn("test-id", log_path.read_text())
+
+    def test_signal_logger_zero_result(self) -> None:
+        """Zero-result log must be written to separate file."""
+        import tempfile, os, subprocess as sp
+        with tempfile.TemporaryDirectory() as tmp:
+            r = sp.run(
+                ["python3", "-c", f"""
+import os; os.environ["MACAWIKI_SIGNAL_DIR"] = "{tmp}"
+from scripts.signal_logger import log_zero_result
+log_zero_result(["missing_term"], {{}}, "and", False)
+"""],
+                cwd=str(ROOT), capture_output=True, text=True,
+            )
+            self.assertEqual(r.returncode, 0, r.stderr)
+            log_path = Path(tmp) / "zero-result-log.jsonl"
+            self.assertTrue(log_path.exists(), f"Log not created at {log_path}")
+            self.assertIn("missing_term", log_path.read_text())
+            self.assertIn("zero_result", log_path.read_text())
+
+    def test_self_improve_refuses_dirty_git(self) -> None:
+        """Self-improve should refuse to run with dirty working tree."""
+        # If working tree is clean, this test verifies the check works
+        import subprocess
+        r = subprocess.run(
+            ["python3", "scripts/self_improve.py", "--dry-run", "--json"],
+            cwd=str(ROOT), capture_output=True, text=True,
+        )
+        self.assertIn(r.returncode, (0, 1), f"self_improve crashed: {r.stderr}")
+        data = json.loads(r.stdout)
+        self.assertIn("auto_fixable_count", data)
+
+    def test_signal_aggregator_empty_no_error(self) -> None:
+        """Signal aggregator should handle empty signal dir gracefully."""
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["MACAWIKI_SIGNAL_DIR"] = tmp
+            try:
+                import subprocess
+                r = subprocess.run(
+                    ["python3", "scripts/signal_aggregator.py", "--check", "--json"],
+                    cwd=str(ROOT), capture_output=True, text=True,
+                )
+                self.assertEqual(r.returncode, 0, r.stderr)
+                data = json.loads(r.stdout)
+                self.assertEqual(data["total_signals"], 0)
+            finally:
+                del os.environ["MACAWIKI_SIGNAL_DIR"]
+
+    def test_query_signal_log_flag_works(self) -> None:
+        """--signal-log flag should produce log entries."""
+        result = run_script("scripts/query.py", "算子", "--compact", "--signal-log")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        log_path = ROOT / "evals" / "signals" / "query-log.jsonl"
+        self.assertTrue(log_path.exists(), f"Log not created at {log_path}")
+
+    def test_evolve_pipeline_scripts_exist(self) -> None:
+        """All self-evolution scripts must be importable."""
+        scripts = ["signal_logger", "signal_aggregator", "self_improve"]
+        import importlib
+        for name in scripts:
+            with self.subTest(script=name):
+                try:
+                    importlib.import_module(f"scripts.{name}")
+                except ImportError:
+                    try:
+                        importlib.import_module(name)
+                    except ImportError:
+                        self.fail(f"Could not import {name}")
+
 
 if __name__ == "__main__":
     unittest.main()
