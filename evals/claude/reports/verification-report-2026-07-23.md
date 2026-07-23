@@ -21,7 +21,7 @@
 
 ---
 
-## 2. 单元测试明细 (27 tests)
+## 2. 单元测试明细 (35 tests)
 
 ### 回归测试 (9 项 — 全部通过)
 
@@ -37,7 +37,7 @@
 | test_installer_is_idempotence_safe | ✅ | 安装器幂等安全 |
 | test_operator_fixture_is_listable | ✅ | 算子列表可用 |
 
-### compare_benchmarks 合约测试 (12 项 — 全部通过)
+### compare_benchmarks 合约测试 (15 项 — 全部通过)
 
 | 测试 | 状态 | 说明 |
 |------|------|------|
@@ -52,9 +52,20 @@
 | test_compare_detects_contract_mismatch | ✅ | shape 不匹配被检测 |
 | test_compare_passes_valid_input | ✅ | 有效输入正确返回 speedup |
 | test_compare_rejects_correctness_failure | ✅ | 正确性失败标记 not_comparable |
+| test_compare_accepts_null_timing_on_correctness_failure | ✅ | 正确性失败+timing=null 正确处理 |
+| test_compare_rejects_non_dict_case | ✅ | 非 dict case 被拒绝 |
+| test_compare_rejects_duplicate_case_id | ✅ | 重复 case_id 被拒绝 |
 | test_tilelang_list_runs_without_import_error | ✅ | TileLang --list 无导入错误 |
 
-### 证据完整性测试 (6 项 — 全部通过)
+### Transpose 工作负载合约测试 (3 项 — 全部通过)
+
+| 测试 | 状态 | 说明 |
+|------|------|------|
+| test_transpose_baseline_output_is_contiguous | ✅ | PyTorch transpose 输出为 contiguous |
+| test_transpose_reference_output_is_contiguous | ✅ | TileLang transpose reference 输出为 contiguous |
+| test_transpose_view_is_not_contiguous | ✅ | 确认 torch.t(x) 无 .contiguous() 为非 contiguous |
+
+### 证据完整性测试 (8 项 — 全部通过)
 
 | 测试 | 状态 | 说明 |
 |------|------|------|
@@ -64,6 +75,8 @@
 | test_no_fabricated_c500_numbers | ✅ | wiki 中无伪造 C500 性能数字 |
 | test_source_registry_urls_are_plausible | ✅ | 8 个来源均有 URL 和 ID |
 | test_version_claim_integrity | ✅ | 5 个 version claims 格式正确 |
+| test_eval_source_scoped_to_target_pages | ✅ | 来源仅限于目标页面 |
+| test_eval_multi_page_requires_all | ✅ | 多页面 case 要求全部命中 |
 
 ---
 

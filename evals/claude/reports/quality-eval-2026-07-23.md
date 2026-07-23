@@ -11,7 +11,7 @@
 
 | 维度 | 评分 | 状态 |
 |------|------|------|
-| 确定性测试 (9 tests) | 9/9 | ✅ PASS |
+| 确定性测试 (35 tests) | 35/35 | ✅ PASS |
 | Agent 价值演练 (3 cases) | 3/3 | ✅ PASS |
 | 页面验证 (6 pages) | 0 errors | ✅ PASS |
 | 查询召回率 (6 queries) | 4/6 | ⚠️ 67% |
@@ -25,19 +25,7 @@
 
 ## 2. 测试结果
 
-### 2.1 单元测试: ✅ 9/9 PASS
-
-```
-test_validator_passes                  ✅
-test_query_finds_performance_pattern   ✅
-test_alias_filter_is_normalized        ✅
-test_get_page_follows_sources          ✅
-test_generated_indices_are_current     ✅
-test_agent_value_proxy_passes          ✅
-test_doctor_passes_without_pytorch     ✅
-test_installer_is_idempotence_safe     ✅
-test_operator_fixture_is_listable      ✅
-```
+### 2.1 单元测试: ✅ 35/35 PASS（回归 9 + compare 15 + transpose 3 + 证据 8）
 
 ### 2.2 Agent 价值演练: ✅ 3/3 PASS
 
@@ -83,7 +71,7 @@ def tl_quantize(X, scale: float, BLOCK_N, dtype, out_dtype, threads):
             qf = T.max(lo, T.min(hi, T.Cast(accum, T.round(qf))))  # ← 同上
 ```
 
-`tl_softmax` (line 80) 和 `tl_layernorm` (line 108) 各自定义了 `accum = T.float32`，但 `tl_quantize` 遗漏了。当前因无 C500 环境运行 TileLang kernel，该 bug 未被硬件测试捕获。
+`tl_softmax` (line 80) 和 `tl_layernorm` (line 108) 各自定义了 `accum = T.float32`，但 `tl_quantize` 遗漏了。该 bug 已在 PR #3 迭代中修复 (`accum = T.float32` 已添加)，C500 环境已就绪且 quantize 正确性通过。
 
 ---
 
@@ -92,8 +80,8 @@ def tl_quantize(X, scale: float, BLOCK_N, dtype, out_dtype, threads):
 | operator_cases.yaml | PyTorch C500 | TileLang C500 | 对比状态 |
 |---------------------|-------------|--------------|---------|
 | add-f32-4096 | ✅ | ✅ | comparable (speedup=0.73) |
-| softmax-f32-64x128 | ✅ | ✅ | comparable (speedup=0.76) |
-| layernorm-f32-64x128 | ✅ | ✅ | comparable (speedup=0.84) |
+| softmax-f32-64x128 | ✅ | ✅ | comparable (speedup=0.75) |
+| layernorm-f32-64x128 | ✅ | ✅ | comparable (speedup=0.83) |
 | matmul-f32-64x128x64 | ✅ | ✅ | not_comparable (codegen) |
 | quantize-f32-8192 | ✅ | ✅ | comparable (**speedup=1.59**) |
 | transpose-f32-128x4096 | ✅ | ✅ | comparable (speedup=1.00) |
