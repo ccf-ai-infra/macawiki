@@ -79,35 +79,33 @@ def check_case(case: dict[str, Any], pages: list[Page]) -> dict[str, Any]:
 
     # Positive retrieval case
     target_pages = [page for page in loaded if page.metadata.get("id") in expected]
-    # Also find pages from all discovered pages for source chain validation
-    all_expected_found = expected & loaded_ids
 
-    # Collect corpus text from all loaded pages (for multi-page synthesis)
-    corpus_text = _pages_text(target_pages) if target_pages else ""
-    # Also search across all pages for source chain validation
-    all_source_ids: set[str] = set()
-    for page in pages:
+    # Collect sources only from the matched *target* pages, not the entire corpus
+    target_source_ids: set[str] = set()
+    for page in target_pages:
         for sid in page.metadata.get("sources", []):
-            all_source_ids.add(sid)
+            target_source_ids.add(sid)
 
+    # Check required sources against target pages only
     missing_sources = sorted(
-        set(case["required_sources"]) - all_source_ids
+        set(case["required_sources"]) - target_source_ids
     )
+
+    # must_contain / must_not_contain scoped to target page text
+    target_text = _pages_text(target_pages)
     missing_content = [
         item for item in case["must_contain"]
-        if item.casefold() not in _pages_text(loaded)
+        if item.casefold() not in target_text
     ]
     forbidden_found = [
         item for item in case["must_not_contain"]
         if item.casefold() in _pages_text(loaded)
     ]
 
-    # For single-page cases: all expected pages must be in loaded
-    # For multi-page: at least one expected page found + required sources present
+    # Multi-page cases: require ALL expected pages to be found
+    pages_ok = bool(expected & loaded_ids) if expected else True
     if len(expected) > 1:
-        pages_ok = bool(expected & loaded_ids)
-    else:
-        pages_ok = bool(expected & loaded_ids) if expected else True
+        pages_ok = expected.issubset(loaded_ids)
 
     loaded_pass = (
         pages_ok
@@ -127,7 +125,7 @@ def check_case(case: dict[str, Any], pages: list[Page]) -> dict[str, Any]:
         "expected_pages_missing": sorted(expected - loaded_ids),
         "loaded_pass": loaded_pass,
         "evidence": {
-            "sources": sorted(all_source_ids),
+            "sources": sorted(target_source_ids),
             "missing_sources": missing_sources,
             "missing_content": missing_content,
             "forbidden_found": forbidden_found,

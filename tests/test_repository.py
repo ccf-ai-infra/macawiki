@@ -212,6 +212,21 @@ class RepositoryTests(unittest.TestCase):
         parsed = json.loads(result.stdout)
         self.assertEqual(parsed["comparisons"][0]["status"], "not_comparable")
 
+    def test_compare_accepts_null_timing_on_correctness_failure(self) -> None:
+        """Real C500 TileLang matmul result: passed=false, timing=null."""
+        base = self._make_result()
+        cand = self._make_result()
+        cand["cases"][0]["correctness"]["passed"] = False
+        cand["cases"][0]["timing"] = None
+        result = self._run_compare(base, cand)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        parsed = json.loads(result.stdout)
+        self.assertEqual(parsed["comparisons"][0]["status"], "not_comparable")
+        self.assertNotEqual(
+            parsed.get("status"), "schema_error",
+            "correctness failure with timing=null should not be schema_error"
+        )
+
     # ── version-claim and evidence integrity tests ────────────────────
 
     def test_version_claim_integrity(self) -> None:
@@ -294,6 +309,53 @@ class RepositoryTests(unittest.TestCase):
             len(questions), 6,
             f"Expected >=6 gold questions, got {len(questions)}"
         )
+
+    # ── agent value eval regression tests ─────────────────────────────
+
+    def test_eval_source_scoped_to_target_pages(self) -> None:
+        """Evidence sources should only include target page sources, not whole corpus."""
+        result = run_script("scripts/run_agent_value_eval.py", "--json")
+        report = json.loads(result.stdout)
+        # The baseline case only targets pattern-establish-performance-baseline,
+        # which only has source repo-mxmaca-performance-tuning-guide
+        baseline = next(
+            (c for c in report["cases"] if c["id"] == "agent-value-baseline-001"),
+            None,
+        )
+        self.assertIsNotNone(baseline)
+        sources = baseline["evidence"]["sources"]
+        # Should NOT include sources from unrelated pages
+        num_unrelated = sum(
+            1 for s in sources
+            if s not in ("repo-mxmaca-performance-tuning-guide",)
+        )
+        # The target page only has repo-mxmaca-performance-tuning-guide;
+        # other sources like doc-pytorch-operator-reference should not appear
+        self.assertNotIn("doc-pytorch-operator-reference", sources,
+                         "Sources must be scoped to target pages only")
+        # At most 1 source should be from the target page
+        self.assertLessEqual(len(sources), 2,
+                            "Too many sources: not scoped to target pages")
+        self.assertTrue(baseline["loaded_pass"])
+
+    def test_eval_multi_page_requires_all(self) -> None:
+        """Multi-page case: existing case should have both pages found."""
+        result = run_script("scripts/run_agent_value_eval.py", "--json")
+        report = json.loads(result.stdout)
+        multi = next(
+            (c for c in report["cases"] if c["id"] == "agent-value-multi-page-001"),
+            None,
+        )
+        self.assertIsNotNone(multi)
+        # If any expected pages are missing, loaded_pass must be false
+        missing = set(multi.get("expected_pages_missing", []))
+        if missing:
+            self.assertFalse(multi["loaded_pass"],
+                             f"Multi-page with missing pages {missing} must FAIL, "
+                             f"found: {multi.get('expected_pages_found', [])}")
+        else:
+            self.assertTrue(multi["loaded_pass"],
+                            "All expected pages found, should pass")
 
 
 if __name__ == "__main__":

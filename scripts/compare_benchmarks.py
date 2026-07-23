@@ -22,7 +22,7 @@ from typing import Any
 
 REQUIRED_TOP_KEYS = ["status", "environment", "cases"]
 REQUIRED_ENV_KEYS = ["environment_fingerprint"]
-REQUIRED_CASE_KEYS = ["case_id", "operator", "correctness", "timing"]
+REQUIRED_CASE_KEYS = ["case_id", "operator", "correctness"]
 REQUIRED_CORRECTNESS_KEYS = ["passed"]
 REQUIRED_TIMING_KEYS = ["median_ms", "warmup", "iterations"]
 
@@ -66,10 +66,12 @@ def _validate_case(case: dict[str, Any], index: int) -> list[str]:
             for key in REQUIRED_CORRECTNESS_KEYS:
                 if key not in corr:
                     issues.append(f"{label}: missing correctness key '{key}'")
-    if "timing" in case:
+    # timing is optional when correctness.passed=false (valid not_comparable result);
+    # when present, it must be an object with required sub-keys
+    if "timing" in case and case["timing"] is not None:
         tim = case["timing"]
         if not isinstance(tim, dict):
-            issues.append(f"{label}: 'timing' must be an object")
+            issues.append(f"{label}: 'timing' must be an object or null")
         else:
             for key in REQUIRED_TIMING_KEYS:
                 if key not in tim:
@@ -92,14 +94,16 @@ def _check_contract_match(
             issues.append(
                 f"case {case_id}: {field} mismatch: baseline={lv}, candidate={rv}"
             )
-    lw = left.get("timing", {}).get("warmup")
-    rw = right.get("timing", {}).get("warmup")
+    l_timing = left.get("timing") or {}
+    r_timing = right.get("timing") or {}
+    lw = l_timing.get("warmup")
+    rw = r_timing.get("warmup")
     if lw is not None and rw is not None and lw != rw:
         issues.append(
             f"case {case_id}: warmup mismatch: baseline={lw}, candidate={rw}"
         )
-    li = left.get("timing", {}).get("iterations")
-    ri = right.get("timing", {}).get("iterations")
+    li = l_timing.get("iterations")
+    ri = r_timing.get("iterations")
     if li is not None and ri is not None and li != ri:
         issues.append(
             f"case {case_id}: iterations mismatch: baseline={li}, candidate={ri}"
@@ -218,8 +222,19 @@ def main() -> int:
             })
             continue
 
-        # 7. Timing gate
-        l_ms, r_ms = left["timing"]["median_ms"], right["timing"]["median_ms"]
+        # 7. Timing gate (timing may be null when correctness fails — already
+        #    caught by the correctness gate above, so this is a defense-in-depth)
+        l_timing = left.get("timing")
+        r_timing = right.get("timing")
+        if not isinstance(l_timing, dict) or not isinstance(r_timing, dict):
+            rows.append({
+                "case_id": case_id,
+                "status": "not_comparable",
+                "reason": "missing or null timing",
+            })
+            continue
+        l_ms = l_timing.get("median_ms")
+        r_ms = r_timing.get("median_ms")
         if not isinstance(l_ms, (int, float)) or not isinstance(r_ms, (int, float)):
             rows.append({
                 "case_id": case_id,
@@ -234,20 +249,13 @@ def main() -> int:
                 "reason": "median_ms must be positive",
             })
             continue
-        if l_ms > 0 and r_ms > 0:
-            rows.append({
-                "case_id": case_id,
-                "status": "comparable",
-                "baseline_median_ms": l_ms,
-                "candidate_median_ms": r_ms,
-                "speedup": l_ms / r_ms,
-            })
-        else:
-            rows.append({
-                "case_id": case_id,
-                "status": "not_comparable",
-                "reason": "median_ms is zero or negative",
-            })
+        rows.append({
+            "case_id": case_id,
+            "status": "comparable",
+            "baseline_median_ms": l_ms,
+            "candidate_median_ms": r_ms,
+            "speedup": l_ms / r_ms,
+        })
 
     report: dict[str, Any] = {
         "baseline": str(args.baseline),

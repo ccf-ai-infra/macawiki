@@ -3,12 +3,102 @@
   "objective": "maximize measured Macawiki value without quality or safety regression",
   "head_at_start": "3b1e9a6397af589ebb4bfbf5d90964818e3ec668",
   "champion": {
-    "commit": "3b1e9a6397af589ebb4bfbf5d90964818e3ec668",
+    "commit": "f3aec7d26809cf2432c7f7b53c58bc3a5a4d4371",
     "task_set_version": "1",
-    "metrics_file": null
+    "metrics_file": "evals/claude/reports/verification-report-2026-07-23.md"
   },
-  "next_cycle_id": 1,
-  "cycles": [],
+  "next_cycle_id": 6,
+  "cycles": [
+    {
+      "cycle_id": 1,
+      "status": "accepted",
+      "hypothesis": "Fixing tl_quantize undefined accum and strengthening compare_benchmarks.py with schema/case/timing validation, missing case detection, and not_comparable reporting will eliminate known static defects and prevent future silent comparison errors.",
+      "workstream": "foundation",
+      "candidate_changes": [
+        "benchmarks/tilelang_candidate.py",
+        "scripts/compare_benchmarks.py",
+        "tests/test_repository.py"
+      ],
+      "dev_result": "evals/claude/reports/cycle-001.md",
+      "heldout_result": null,
+      "report": "evals/claude/reports/cycle-001.md",
+      "decision_reason": "Fixes hard accum defect; prevents silent compare failures; 12 new tests pass; no regression."
+    },
+    {
+      "cycle_id": 2,
+      "status": "accepted",
+      "hypothesis": "Synchronizing C500/MXMACA++ status across 6 documents will eliminate contradictory claims and reduce Agent confusion.",
+      "workstream": "maintenance",
+      "candidate_changes": [
+        "README.md",
+        "SKILL.md",
+        "docs/hardware-validation.md",
+        "docs/usage.md",
+        "docs/iteration-plan.md",
+        "benchmarks/README.md"
+      ],
+      "dev_result": "evals/claude/reports/verification-report-2026-07-23.md",
+      "heldout_result": null,
+      "report": "evals/claude/reports/verification-report-2026-07-23.md",
+      "decision_reason": "All 6 files unified; C500 results / not_run / not_comparable clearly distinguished; make all passes."
+    },
+    {
+      "cycle_id": 3,
+      "status": "accepted",
+      "hypothesis": "Building minimal iteration infrastructure (state file, cycle reports, macawiki-iterate skill) enables trackable, resumable optimization cycles.",
+      "workstream": "foundation",
+      "candidate_changes": [
+        "evals/claude/iteration-state.json",
+        "evals/claude/reports/cycle-001.md",
+        ".agents/skills/macawiki-iterate/SKILL.md",
+        ".claude/skills/macawiki-iterate/SKILL.md"
+      ],
+      "dev_result": null,
+      "heldout_result": null,
+      "report": "evals/claude/reports/cycle-001.md",
+      "decision_reason": "State file with 13 backlog items; skill for both Claude Code and Codex; all make targets pass."
+    },
+    {
+      "cycle_id": 4,
+      "status": "accepted",
+      "hypothesis": "Expanding agent-value-cases 3→9 (including negative-trigger and forbidden-claim) and gold-questions 3→7 will broaden retrieval/evidence validation coverage.",
+      "workstream": "eval",
+      "candidate_changes": [
+        "evals/agent-value-cases.yaml",
+        "evals/gold-questions.yaml",
+        "scripts/run_agent_value_eval.py",
+        "tests/test_repository.py"
+      ],
+      "dev_result": "evals/claude/reports/verification-report-2026-07-23.md",
+      "heldout_result": null,
+      "report": "evals/claude/reports/verification-report-2026-07-23.md",
+      "decision_reason": "9/9 agent-value cases pass (7 positive + 2 negative); 27 tests pass; negative-trigger prevents false MXMACA activation."
+    },
+    {
+      "cycle_id": 5,
+      "status": "accepted",
+      "hypothesis": "Expanding sources 3→8 and wiki pages 3→6 (mxcc, mcprofiler, first-program) plus populating version-claims 0→5 and version-matrix 0→1 will expand MXMACA stack coverage for Agent questions.",
+      "workstream": "corpus",
+      "candidate_changes": [
+        "data/source-registry.yaml",
+        "data/version-claims.yaml",
+        "data/version-matrix.yaml",
+        "data/aliases.yaml",
+        "wiki/tutorials/first-mxmaca-program.md",
+        "wiki/reference/mxcc-compiler-basics.md",
+        "wiki/diagnostics/mcprofiler-basics.md",
+        "sources/official-docs/mxmaca-programming-model.md",
+        "sources/official-docs/mxmaca-compiler-mxcc.md",
+        "sources/repos/mxmaca-runtime.md",
+        "sources/repos/mcpytorch.md",
+        "sources/repos/vllm-metax.md"
+      ],
+      "dev_result": "evals/claude/reports/verification-report-2026-07-23.md",
+      "heldout_result": null,
+      "report": "evals/claude/reports/verification-report-2026-07-23.md",
+      "decision_reason": "14 pages total; sources 8, wiki 6; version-claims 5 entries; version-matrix 1 combination; make all clean."
+    }
+  ],
   "backlog": [
     {
       "id": "b01",
@@ -20,7 +110,7 @@
       "confidence": "high",
       "effort": "low",
       "dependencies": [],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "b02",
@@ -32,7 +122,7 @@
       "confidence": "high",
       "effort": "medium",
       "dependencies": [],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "b03",
@@ -44,7 +134,7 @@
       "confidence": "high",
       "effort": "medium",
       "dependencies": [],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "b04",
@@ -56,7 +146,7 @@
       "confidence": "high",
       "effort": "medium",
       "dependencies": [],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "b05",
@@ -68,7 +158,7 @@
       "confidence": "medium",
       "effort": "medium",
       "dependencies": [],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "b06",
@@ -80,7 +170,7 @@
       "confidence": "medium",
       "effort": "medium",
       "dependencies": [],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "b07",
@@ -92,7 +182,7 @@
       "confidence": "medium",
       "effort": "medium",
       "dependencies": ["b05", "b06"],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "b08",
@@ -104,7 +194,7 @@
       "confidence": "high",
       "effort": "medium",
       "dependencies": ["b05"],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "b09",
@@ -116,7 +206,7 @@
       "confidence": "medium",
       "effort": "high",
       "dependencies": [],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "b10",
@@ -128,7 +218,7 @@
       "confidence": "medium",
       "effort": "medium",
       "dependencies": ["b09"],
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "b11",
@@ -165,6 +255,42 @@
       "effort": "medium",
       "dependencies": [],
       "status": "pending"
+    },
+    {
+      "id": "b14",
+      "description": "Fix compare_benchmarks.py: correctness failure with timing=null falsely rejected as schema_error (PR #3 review)",
+      "workstream": "foundation",
+      "severity": "P1",
+      "frequency": "always",
+      "expected_gain": "real C500 matmul not_comparable case correctly processed",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b15",
+      "description": "Fix run_agent_value_eval.py: source scoping false positives (required_sources checked against whole corpus) and multi-page requires-all enforcement",
+      "workstream": "eval",
+      "severity": "P1",
+      "frequency": "always",
+      "expected_gain": "eliminate false positives in agent value evaluation",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
+    },
+    {
+      "id": "b16",
+      "description": "Fix iteration-state.json: write back 5 completed cycles, update champion, backlog status, next_cycle_id",
+      "workstream": "maintenance",
+      "severity": "P2",
+      "frequency": "once",
+      "expected_gain": "resumable iteration; macawiki-iterate next picks correct cycle",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "completed"
     }
   ],
   "external_blockers": [
