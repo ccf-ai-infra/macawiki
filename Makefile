@@ -70,10 +70,22 @@ self-improve-check:
 self-improve:
 	python3 scripts/self_improve.py --apply
 
+# Environment detection — probe C500/MXMACA hardware and software versions.
+env-probe:
+	python3 scripts/env_detector.py
+
+# Performance signals — analyze operator performance logs and detect regressions.
+perf-signals:
+	python3 scripts/signal_aggregator.py --check
+
+# Token consumption report — identify expensive query patterns.
+token-report:
+	python3 scripts/token_report.py
+
 # Evolve: aggregate signals + preview auto-fixes (combined advisory gate).
-evolve: signals self-improve-check
+evolve: env-probe signals self-improve-check
 	@echo ""
-	@echo "=== Self-evolution: signals analyzed, auto-fixes previewed ==="
+	@echo "=== Self-evolution: env probed, signals analyzed, auto-fixes previewed ==="
 
 # Fast pre-commit check (validate + test only, no index regeneration).
 check: validate test

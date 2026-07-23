@@ -121,6 +121,122 @@ def _detect_staleness(freshness_days: int = 180) -> list[dict[str, Any]]:
     return items
 
 
+def _group_perf_regressions(signals: list[dict], min_count: int = 2) -> list[dict[str, Any]]:
+    """Group performance regression signals by (operator, backend).
+
+    Regressions must appear at least *min_count* times to produce a backlog
+    item, avoiding noise from single-run variance.
+    """
+    groups: dict[tuple, list[dict]] = defaultdict(list)
+    for s in signals:
+        if s.get("type") == "performance":
+            key = (s.get("operator", "?"), s.get("backend", "?"))
+            groups[key].append(s)
+
+    items: list[dict[str, Any]] = []
+    for (operator, backend), sigs in groups.items():
+        if len(sigs) < min_count:
+            continue
+        # Compare latest median against the earliest in this batch
+        medians = [sig.get("median_ms", 0) for sig in sigs]
+        latest = medians[-1]
+        earliest = medians[0]
+        if earliest > 0 and latest > earliest * 1.15:
+            ratio = round(latest / earliest, 2)
+            items.append({
+                "source": "signal",
+                "signal_type": "perf_regression",
+                "signal_count": len(sigs),
+                "signal_query_terms": [operator, backend],
+                "signal_filters": {},
+                "auto_fixable": False,
+                "auto_fix_hint": (
+                    f"Operator {operator} on {backend}: median {latest}ms vs {earliest}ms "
+                    f"(×{ratio}); may need re-benchmarking or investigation"
+                ),
+            })
+    return items
+
+
+def _group_token_hotspots(signals: list[dict], min_count: int = 3, threshold_tokens_per_result: float = 300.0) -> list[dict[str, Any]]:
+    """Identify high-token-cost query patterns.
+
+    Groups token-log entries by (terms, mode) and flags patterns with
+    consistently high token consumption per result.
+    """
+    groups: dict[tuple, list[dict]] = defaultdict(list)
+    for s in signals:
+        if s.get("type") == "token_usage":
+            key = (tuple(sorted(s.get("query_terms", []))), s.get("mode", "?"))
+            groups[key].append(s)
+
+    items: list[dict[str, Any]] = []
+    for (terms_tuple, mode), sigs in groups.items():
+        if len(sigs) < min_count:
+            continue
+        avg_tpr = sum(s.get("tokens_per_result", 0) for s in sigs) / len(sigs)
+        if avg_tpr >= threshold_tokens_per_result:
+            terms = list(terms_tuple)
+            items.append({
+                "source": "signal",
+                "signal_type": "token_hotspot",
+                "signal_count": len(sigs),
+                "signal_query_terms": terms,
+                "signal_filters": {"mode": mode},
+                "auto_fixable": True,
+                "auto_fix_strategy": "token_efficiency_hint",
+                "auto_fix_hint": (
+                    f"Query '{' '.join(terms)}' in {mode} mode averages "
+                    f"{avg_tpr:.0f} tokens/result ({len(sigs)} occurrences). "
+                    f"Consider adding aliases or narrowing with filters."
+                ),
+            })
+    return items
+
+
+def _group_env_changes(signals: list[dict]) -> list[dict[str, Any]]:
+    """Track environment version changes between snapshots.
+
+    Generates informational backlog items when MACA, driver, mxcc, or
+    PyTorch versions change.
+    """
+    env_signals = [s for s in signals if s.get("type") == "environment"]
+    if len(env_signals) < 2:
+        return []
+
+    items: list[dict[str, Any]] = []
+    previous = env_signals[-2]
+    current = env_signals[-1]
+
+    VERSION_FIELDS = [
+        ("maca_version", "MACA"),
+        ("driver_version", "Driver"),
+        ("mxcc_version", "mxcc"),
+        ("pytorch_version", "PyTorch"),
+        ("tilelang_version", "TileLang"),
+    ]
+
+    for field, label in VERSION_FIELDS:
+        old_v = previous.get(field)
+        new_v = current.get(field)
+        if old_v and new_v and old_v != new_v:
+            items.append({
+                "source": "signal",
+                "signal_type": "env_change",
+                "signal_count": 1,
+                "signal_query_terms": [label, old_v, new_v],
+                "signal_filters": {},
+                "auto_fixable": True,
+                "auto_fix_strategy": "perf_baseline_update",
+                "auto_fix_hint": (
+                    f"{label} changed: {old_v} → {new_v}. "
+                    f"Benchmark baselines may need updating."
+                ),
+            })
+
+    return items
+
+
 def _deduplicate(new_items: list[dict], existing_backlog: list[dict]) -> list[dict]:
     """Remove items that already have equivalent open backlog entries."""
     existing_keys: set[tuple] = set()
@@ -159,11 +275,17 @@ def aggregate(max_items: int = 10, min_count: int = 3) -> dict[str, Any]:
     total = len(signals)
     zero_count = sum(1 for s in signals if s.get("type") == "zero_result")
     gap_count = sum(1 for s in signals if s.get("type") == "coverage_gap")
+    perf_count = sum(1 for s in signals if s.get("type") == "performance")
+    token_count = sum(1 for s in signals if s.get("type") == "token_usage")
+    env_count = sum(1 for s in signals if s.get("type") == "environment")
 
     new_items = (
         _group_zero_results(signals, min_count=min_count)
         + _group_coverage_gaps(signals)
         + _detect_staleness()
+        + _group_perf_regressions(signals, min_count=max(2, min_count - 1))
+        + _group_token_hotspots(signals, min_count=min_count)
+        + _group_env_changes(signals)
     )
 
     # Load existing backlog for dedup
@@ -176,18 +298,25 @@ def aggregate(max_items: int = 10, min_count: int = 3) -> dict[str, Any]:
     new_items = _deduplicate(new_items, existing)[:max_items]
 
     # Assign IDs
+    ID_PREFIX_MAP = {
+        "zero_result": "auto-sig-",
+        "coverage_gap": "auto-cov-",
+        "staleness": "auto-stale-",
+        "perf_regression": "auto-perf-",
+        "token_hotspot": "auto-token-",
+        "env_change": "auto-env-",
+    }
     for item in new_items:
-        if item["signal_type"] == "zero_result":
-            item["id"] = _next_auto_id(existing + new_items, "auto-sig-")
-        elif item["signal_type"] == "coverage_gap":
-            item["id"] = _next_auto_id(existing + new_items, "auto-cov-")
-        elif item["signal_type"] == "staleness":
-            item["id"] = _next_auto_id(existing + new_items, "auto-stale-")
+        prefix = ID_PREFIX_MAP.get(item["signal_type"], "auto-unk-")
+        item["id"] = _next_auto_id(existing + new_items, prefix)
 
     return {
         "total_signals": total,
         "zero_results": zero_count,
         "coverage_gaps": gap_count,
+        "perf_signals": perf_count,
+        "token_signals": token_count,
+        "env_signals": env_count,
         "new_items": len(new_items),
         "items": new_items,
     }
@@ -205,20 +334,34 @@ def merge_backlog() -> dict[str, Any]:
 
     # Append new items to backlog
     backlog = state.get("backlog", [])
+    SEVERITY_MAP = {
+        "zero_result": "P2",
+        "coverage_gap": "P3",
+        "staleness": "P3",
+        "perf_regression": "P2",
+        "token_hotspot": "P3",
+        "env_change": "P3",
+    }
     for item in report["items"]:
+        stype = item["signal_type"]
+        if stype in ("zero_result", "coverage_gap", "token_hotspot"):
+            desc = f"{stype}: terms={item['signal_query_terms']} ({item['signal_count']} occurrences)"
+        elif stype == "perf_regression":
+            desc = f"{stype}: {item['auto_fix_hint']}"
+        elif stype == "staleness":
+            desc = item["auto_fix_hint"]
+        elif stype == "env_change":
+            desc = item["auto_fix_hint"]
+        else:
+            desc = f"{stype}: {item['signal_query_terms']} ({item['signal_count']} occurrences)"
+
         backlog.append({
             "id": item["id"],
-            "description": (
-                f"{item['signal_type']}: " + (
-                    f"terms={item['signal_query_terms']} ({item['signal_count']} occurrences)"
-                    if item["signal_type"] != "staleness"
-                    else item["auto_fix_hint"]
-                )
-            ),
+            "description": desc,
             "workstream": "auto-signal",
-            "severity": "P2" if item["signal_type"] == "zero_result" else "P3",
+            "severity": SEVERITY_MAP.get(stype, "P3"),
             "source": item["source"],
-            "signal_type": item["signal_type"],
+            "signal_type": stype,
             "signal_count": item["signal_count"],
             "signal_query_terms": item["signal_query_terms"],
             "signal_filters": item["signal_filters"],
@@ -226,7 +369,7 @@ def merge_backlog() -> dict[str, Any]:
             "auto_fix_hint": item["auto_fix_hint"],
             "auto_fix_strategy": item.get("auto_fix_strategy"),
             "status": "open",
-            "confidence": "medium" if item["signal_type"] == "zero_result" else "high",
+            "confidence": "medium" if stype == "zero_result" else "high",
             "effort": "low" if item.get("auto_fix_strategy") else "medium",
             "dependencies": [],
             "created_at": datetime.now(timezone.utc).isoformat(),

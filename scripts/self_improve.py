@@ -216,10 +216,115 @@ def _strategy_keyword_update(item: dict[str, Any], rules: dict[str, Any]) -> tup
     return False, "no keyword gaps found", []
 
 
+def _strategy_perf_baseline_update(item: dict[str, Any], rules: dict[str, Any]) -> tuple[bool, str, list[str]]:
+    """Strategy 4: Update version references in wiki pages when MXMACA environment changes.
+
+    Finds wiki pages referencing the old environment version and updates
+    their frontmatter version references, marking them as draft for
+    re-validation on the new environment.
+    """
+    terms = item.get("signal_query_terms", [])
+    if len(terms) < 3:
+        return False, "insufficient version change data", []
+
+    component, old_v, new_v = terms[0], terms[1], terms[2]
+    cfg = rules.get("rules", {}).get("perf_baseline_update", {})
+    max_pages = cfg.get("max_pages_per_fix", 3)
+
+    # Find wiki pages referencing the old version
+    from common import discover_pages as dp
+    pages = dp()
+    wiki_pages = [p for p in pages if str(p.metadata.get("type", "")).startswith("wiki-")]
+    changed: list[str] = []
+    updated = 0
+
+    for p in wiki_pages:
+        if updated >= max_pages:
+            break
+        content = p.path.read_text(encoding="utf-8")
+        if old_v not in content:
+            continue
+
+        # For MACA/driver version changes: update frontmatter mxmaca_versions
+        if component in ("MACA", "mxcc") and f'"{old_v}"' in content:
+            new_content = content.replace(f'"{old_v}"', f'"{new_v}"')
+            p.path.write_text(new_content, encoding="utf-8")
+            changed.append(str(p.relative_path))
+            updated += 1
+
+    if changed:
+        return True, f"updated {component} version references ({old_v} → {new_v}) in {updated} page(s)", changed
+
+    return False, f"no pages found referencing {component} {old_v}", []
+
+
+def _strategy_token_efficiency_hint(item: dict[str, Any], rules: dict[str, Any]) -> tuple[bool, str, list[str]]:
+    """Strategy 5: Add aliases for expensive query terms to improve token efficiency.
+
+    Analyzes high-token-cost query patterns and adds aliases to reduce the
+    token cost of finding information.  Reuses alias addition patterns from
+    ``_strategy_alias_addition`` but is driven by token cost data.
+    """
+    terms = item.get("signal_query_terms", [])
+    if not terms:
+        return False, "no query terms in signal", []
+
+    # Check if these terms already have good aliases
+    aliases_data = load_data(ROOT / "data" / "aliases.yaml")
+    new_aliases: dict[str, list[str]] = {}
+    changed = []
+
+    for term in terms:
+        term_cf = term.casefold()
+        already_aliased = False
+        for variants in aliases_data.values():
+            if isinstance(variants, list):
+                if term_cf in (v.casefold() for v in variants):
+                    already_aliased = True
+                    break
+            elif isinstance(variants, str):
+                if term_cf == variants.casefold():
+                    already_aliased = True
+                    break
+        if already_aliased:
+            continue
+
+        # Run fuzzy search to find best matching page
+        r = _run([sys.executable, "scripts/query.py", term, "--fuzzy", "--limit", "3", "--json"])
+        try:
+            results = json.loads(r.stdout)
+            if results:
+                best = results[0]
+                page_id = best.get("id", "")
+                if page_id:
+                    if page_id in aliases_data:
+                        existing = list(aliases_data[page_id]) if isinstance(aliases_data[page_id], list) else [aliases_data[page_id]]
+                        if term not in existing:
+                            existing.append(term)
+                            aliases_data[page_id] = existing
+                            new_aliases[page_id] = existing
+                    else:
+                        aliases_data[page_id] = [term]
+                        new_aliases[page_id] = [term]
+        except (json.JSONDecodeError, KeyError):
+            continue
+
+    if new_aliases:
+        changed.append(str(ROOT / "data" / "aliases.yaml"))
+        aliases_path = ROOT / "data" / "aliases.yaml"
+        aliases_path.write_text(json.dumps(aliases_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        desc = ", ".join(f"{k} → {v}" for k, v in new_aliases.items())
+        return True, f"token-efficiency aliases added: {desc}", changed
+
+    return False, "no new aliases found for token-hotspot terms", []
+
+
 STRATEGIES = {
     "alias_addition": _strategy_alias_addition,
     "freshness_update": _strategy_freshness_update,
     "gold_question_keyword_update": _strategy_keyword_update,
+    "perf_baseline_update": _strategy_perf_baseline_update,
+    "token_efficiency_hint": _strategy_token_efficiency_hint,
 }
 
 
