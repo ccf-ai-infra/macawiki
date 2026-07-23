@@ -34,6 +34,21 @@ python3 scripts/doctor.py
 
 完整的安装、升级、卸载与故障排查见 [安装指南](docs/installation.md)，常见提问方式见 [使用指南](docs/usage.md)。
 
+## 文档导航
+
+| 目的 | 文档 |
+|------|------|
+| 首次使用安装 | [docs/installation.md](docs/installation.md) |
+| 查询与使用方式 | [docs/usage.md](docs/usage.md) |
+| Agent 使用契约 | [SKILL.md](SKILL.md) |
+| Agent 行为约束 | [AGENTS.md](AGENTS.md) |
+| C500 算子验证计划 | [docs/hardware-validation.md](docs/hardware-validation.md) |
+| 迭代计划 | [docs/iteration-plan.md](docs/iteration-plan.md) |
+| v0.3 项目章程 | [docs/charter.md](docs/charter.md) |
+| 数据契约 | [references/schema.md](references/schema.md) |
+| 查询示例集 | [references/examples.md](references/examples.md) |
+| 贡献与维护规则 | `CONTRIBUTING.md` ⚠ 建设中 |
+
 ## 内容模型
 
 - `sources/`：忠实记录单一公开来源的元数据与摘要。
@@ -52,8 +67,9 @@ python3 scripts/doctor.py
 - 不复制官方文档附件，不批量抓取仓库，不保存许可证不明的代码资产。
 - 所有性能知识均为方法性说明，没有独立 Benchmark 就不标记为已验证。
 - C500 与 MXMACA 已就绪；`benchmarks/results/` 下的 C500 结果为同环境相对计时（非官方规格），环境指纹、硬件型号、MACA/mxcc 版本与运行命令随结果 JSON 保存，可由 `scripts/compare_benchmarks.py` 复算。仓库不含任何伪造性能数字。
+- 全仓库统一使用以下状态术语（定义见 [硬件验证计划](docs/hardware-validation.md)）：`verified`、`recorded`、`implemented`、`not_run`、`not_comparable`。
 
-详细治理规则见 [AGENTS.md](AGENTS.md)，Agent 使用方式见 [SKILL.md](SKILL.md)，数据契约见 [references/schema.md](references/schema.md)，后续硬件验证门禁见 [评估计划](docs/hardware-validation.md)。
+详细治理规则见 [AGENTS.md](AGENTS.md)，Agent 使用方式见 [SKILL.md](SKILL.md)，数据契约见 [references/schema.md](references/schema.md)，硬件验证门禁见 [C500 算子验证计划](docs/hardware-validation.md)。
 
 ## 公开参考入口
 
