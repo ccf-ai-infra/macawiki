@@ -181,6 +181,8 @@ class RepositoryTests(unittest.TestCase):
         cand["cases"][0]["case_id"] = "softmax-f32-64x128"
         cand["cases"][0]["operator"] = "softmax"
         result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0,
+                            "missing cases should produce non-zero exit code")
         self.assertIn("baseline_only", result.stdout)
         self.assertIn("candidate_only", result.stdout)
 
@@ -190,8 +192,42 @@ class RepositoryTests(unittest.TestCase):
         # same case_id but different shape
         cand["cases"][0]["shape"] = [2048]
         result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0,
+                            "contract mismatch should produce non-zero exit code")
         self.assertIn("shape mismatch", result.stdout)
         self.assertIn("not_comparable", result.stdout)
+
+    def test_compare_detects_parameter_mismatch(self) -> None:
+        base = self._make_result()
+        cand = self._make_result()
+        # same case_id/operator/shape but different parameters
+        base["cases"][0]["parameters"] = {"scale": 0.1}
+        cand["cases"][0]["parameters"] = {"scale": 0.2}
+        result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0,
+                            "parameter mismatch should produce non-zero exit code")
+        self.assertIn("parameter 'scale' mismatch", result.stdout)
+
+    def test_compare_detects_seed_mismatch(self) -> None:
+        base = self._make_result()
+        cand = self._make_result()
+        base["cases"][0]["seed"] = 20260722
+        cand["cases"][0]["seed"] = 99999999
+        result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0,
+                            "seed mismatch should produce non-zero exit code")
+        self.assertIn("seed mismatch", result.stdout)
+
+    def test_compare_detects_tolerance_mismatch(self) -> None:
+        base = self._make_result()
+        cand = self._make_result()
+        # same case but different correctness tolerance
+        base["cases"][0].setdefault("correctness", {})["atol"] = 1e-5
+        cand["cases"][0].setdefault("correctness", {})["atol"] = 1e-3
+        result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0,
+                            "tolerance mismatch should produce non-zero exit code")
+        self.assertIn("atol mismatch", result.stdout)
 
     def test_compare_passes_valid_input(self) -> None:
         base = self._make_result()
@@ -384,16 +420,23 @@ class RepositoryTests(unittest.TestCase):
         """PyTorch transpose baseline must return a contiguous (materialised)
         output, not a view — otherwise the timing comparison is not valid
         against TileLang's tl_transpose which allocates and writes every element.
+
+        Calls the actual production function pytorch_baseline._run_op() so that
+        if the production code regresses (e.g. removing .contiguous()), this
+        test fails rather than silently passing on a hand-rolled copy.
         """
         try:
             import torch
         except ImportError:
             raise unittest.SkipTest("PyTorch not installed")
+        # Import the production function that the PyTorch runner uses
+        sys.path.insert(0, str(ROOT / "benchmarks"))
+        from pytorch_baseline import _run_op  # type: ignore[import-not-found]
         x = torch.randn(128, 4096)
-        # Simulate the exact logic from pytorch_baseline.py _run_op
-        out = torch.t(x).contiguous()
+        case = {"name": "transpose", "parameters": {}}
+        out = _run_op(torch, case, x, None)
         self.assertTrue(out.is_contiguous(),
-                        "transpose output must be contiguous (materialised), "
+                        "transpose output from _run_op must be contiguous (materialised), "
                         "not a stride-change view")
         # Values must match torch.t(x)
         torch.testing.assert_close(out, torch.t(x))
@@ -401,16 +444,21 @@ class RepositoryTests(unittest.TestCase):
     def test_transpose_reference_output_is_contiguous(self) -> None:
         """TileLang candidate _reference for transpose must also return a
         contiguous tensor so the correctness check compares materialised outputs.
+
+        Calls the actual production function tilelang_candidate._reference() so
+        that if the reference regresses, this test catches it.
         """
         try:
             import torch
         except ImportError:
             raise unittest.SkipTest("PyTorch not installed")
+        sys.path.insert(0, str(ROOT / "benchmarks"))
+        from tilelang_candidate import _reference  # type: ignore[import-not-found]
         x = torch.randn(128, 4096)
-        # Simulate the exact logic from tilelang_candidate.py _reference
-        out = torch.t(x).contiguous()
+        case = {"name": "transpose", "parameters": {}}
+        out = _reference(torch, case, x, None)
         self.assertTrue(out.is_contiguous(),
-                        "transpose reference must be contiguous")
+                        "transpose reference from _reference must be contiguous")
         torch.testing.assert_close(out, torch.t(x))
 
     def test_transpose_view_is_not_contiguous(self) -> None:

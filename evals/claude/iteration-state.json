@@ -3,7 +3,7 @@
   "objective": "maximize measured Macawiki value without quality or safety regression",
   "head_at_start": "3b1e9a6397af589ebb4bfbf5d90964818e3ec668",
   "champion": {
-    "commit": "ae1431faec5899e25f7b6b46efc555030eb7f3d4",
+    "commit": "98e0a9db23f6d4c82e19a9752c0b0f04abd7b3c3",
     "task_set_version": "1",
     "metrics_file": "evals/claude/reports/verification-report-2026-07-23.md"
   },

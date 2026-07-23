@@ -90,12 +90,48 @@ def _check_contract_match(
     left: dict[str, Any], right: dict[str, Any], case_id: str
 ) -> list[str]:
     issues: list[str] = []
-    for field in ("operator", "shape", "dtype"):
+    for field in ("operator", "shape", "dtype", "seed"):
         lv = left.get(field)
         rv = right.get(field)
         if lv is not None and rv is not None and lv != rv:
             issues.append(
                 f"case {case_id}: {field} mismatch: baseline={lv}, candidate={rv}"
+            )
+    # parameters is a dict — compare key-by-key for clear diagnostics
+    lp = left.get("parameters") or {}
+    rp = right.get("parameters") or {}
+    all_param_keys = sorted(set(lp.keys()) | set(rp.keys()))
+    for pk in all_param_keys:
+        lpv = lp.get(pk)
+        rpv = rp.get(pk)
+        if lpv != rpv:
+            issues.append(
+                f"case {case_id}: parameter '{pk}' mismatch: baseline={lpv}, candidate={rpv}"
+            )
+    # contract (output semantics: view vs materialised, etc.)
+    lc = left.get("contract")
+    rc = right.get("contract")
+    if lc is not None and rc is not None and lc != rc:
+        issues.append(
+            f"case {case_id}: contract mismatch: baseline={lc}, candidate={rc}"
+        )
+    elif lc is not None and rc is None:
+        issues.append(
+            f"case {case_id}: contract present in baseline but missing in candidate: {lc}"
+        )
+    elif lc is None and rc is not None:
+        issues.append(
+            f"case {case_id}: contract present in candidate but missing in baseline: {rc}"
+        )
+    # tolerance (correctness threshold must match so both sides judge the same bar)
+    l_corr = left.get("correctness") or {}
+    r_corr = right.get("correctness") or {}
+    for tol_key in ("atol", "rtol"):
+        ltv = l_corr.get(tol_key)
+        rtv = r_corr.get(tol_key)
+        if ltv is not None and rtv is not None and ltv != rtv:
+            issues.append(
+                f"case {case_id}: correctness.{tol_key} mismatch: baseline={ltv}, candidate={rtv}"
             )
     l_timing = left.get("timing") or {}
     r_timing = right.get("timing") or {}
@@ -327,6 +363,13 @@ def main() -> int:
         report["warnings"] = warnings
 
     print(json.dumps(report, ensure_ascii=False, indent=2))
+
+    # Exit code: non-zero when the comparison is structurally incomplete
+    # (missing cases, contract mismatches) so CI pipelines can gate on it.
+    # Correctness failures within comparable cases are NOT structural —
+    # the tool correctly identified them as not_comparable, so they stay 0.
+    if baseline_only or candidate_only or issues:
+        return 3
     return 0
 
 

@@ -2,8 +2,8 @@
 
 **测试日期**: 2026-07-23
 **测试环境**: Linux 5.15.0-58-generic, Python 3.12.11
-**仓库 commit**: `3b1e9a6` + 本地未提交改动（5-cycle 迭代）+ PR #3 round-3 修正
-**测试分支**: master
+**仓库 commit**: `98e0a9d`（PR #3 round-3 review 修正，基于 cycle 1-8 全部改动）
+**测试分支**: issue2-iteration-round3
 
 ---
 
@@ -13,7 +13,7 @@
 |--------|------|------|
 | 页面验证 (validate.py) | ✅ PASS | 14 pages validated, 0 errors |
 | 生成索引 (indices) | ✅ PASS | 4 indices current |
-| 单元测试 (unittest) | ✅ PASS | 32/32 tests |
+| 单元测试 (unittest) | ✅ PASS | 38 tests (35 passed + 3 skipped: PyTorch not installed) |
 | Agent 价值评估 | ✅ PASS | 9/9 cases |
 | 环境医生 (doctor.py) | ✅ PASS | 5/5 checks |
 | 仓库状态 (repo_status) | ✅ PASS | pages:14, sources:8, wiki:6 |
@@ -21,7 +21,7 @@
 
 ---
 
-## 2. 单元测试明细 (35 tests)
+## 2. 单元测试明细 (38 tests)
 
 ### 回归测试 (9 项 — 全部通过)
 
@@ -37,7 +37,7 @@
 | test_installer_is_idempotence_safe | ✅ | 安装器幂等安全 |
 | test_operator_fixture_is_listable | ✅ | 算子列表可用 |
 
-### compare_benchmarks 合约测试 (15 项 — 全部通过)
+### compare_benchmarks 合约测试 (18 项 — 全部通过)
 
 | 测试 | 状态 | 说明 |
 |------|------|------|
@@ -56,6 +56,9 @@
 | test_compare_rejects_non_dict_case | ✅ | 非 dict case 被拒绝 |
 | test_compare_rejects_duplicate_case_id | ✅ | 重复 case_id 被拒绝 |
 | test_tilelang_list_runs_without_import_error | ✅ | TileLang --list 无导入错误 |
+| test_compare_detects_parameter_mismatch | ✅ | 参数不匹配被检测 |
+| test_compare_detects_seed_mismatch | ✅ | seed 不匹配被检测 |
+| test_compare_detects_tolerance_mismatch | ✅ | 容差不匹配被检测 |
 
 ### Transpose 工作负载合约测试 (3 项 — 全部通过)
 
@@ -179,7 +182,7 @@
 ## 8. 已知限制
 
 1. **多词搜索**: 当前 `query.py` 要求 ALL 词出现在同一页，如 "profiling 性能" 返回空（"profiling" 和 "性能" 分别在不同页面但无页面同时包含二词）。这是设计行为，非回归问题。
-2. **环境**: C500 环境已就绪（MACA 3.7.1.5, driver 3.8.30），7 个 case 均有状态记录（5 个完成实测，2 个标记为 not_comparable）。transpose 基线已修正为物化 `.contiguous()`，待 C500 重跑更新计时。
+2. **环境**: C500 环境已就绪（MACA 3.7.1.5, driver 3.8.30），7 个 case 均有状态记录（5 个完成实测，2 个标记为 not_comparable）。transpose 基线已修正为物化 `.contiguous()` 且已在 C500 上重跑（commit ae1431f），当前 speedup=1.00。
 3. **来源深度**: 新增 5 个来源记录的是公开入口和主题范围，未获取具体 commit 代码（5 个标记为 unknown license）。
 4. **Claude A/B 评测**: `run_claude_ab_eval.py` / `score_claude_eval.py` 尚未建设（Phase 2 阻塞项）。
 
@@ -187,4 +190,4 @@
 
 ## 9. 结论
 
-**所有验证门禁通过，无回归问题。** Phase 1（5 cycles）的全部改动经过 27 项自动化测试和 9 项 Agent 价值演练验证。Phase 2 等待 Claude API 付费授权（`MACAWIKI_RUN_PAID_EVAL=1`）后启动。
+**所有验证门禁通过，无回归问题。** Phase 1（5 cycles）的全部改动经过 38 项自动化测试（本环境 3 项因 PyTorch 未安装跳过）和 9 项 Agent 价值演练验证。Phase 2 等待 Claude API 付费授权（`MACAWIKI_RUN_PAID_EVAL=1`）后启动。

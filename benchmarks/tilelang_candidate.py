@@ -287,7 +287,7 @@ def _build_kernel(tilelang: Any, T: Any, kernels: dict[str, Any], case: dict[str
 
 
 def _not_run_case(case: dict[str, Any], reason: str) -> dict[str, Any]:
-    return {
+    result: dict[str, Any] = {
         "case_id": case["case_id"],
         "operator": case["name"],
         "shape": case["shape"],
@@ -300,6 +300,9 @@ def _not_run_case(case: dict[str, Any], reason: str) -> dict[str, Any]:
         "output_summary": None,
         "timing": None,
     }
+    if "contract" in case:
+        result["contract"] = case["contract"]
+    return result
 
 
 def _reference(torch: Any, case: dict[str, Any], x: Any, y: Any | None) -> Any:
@@ -391,6 +394,8 @@ def run_case(torch: Any, tilelang: Any, T: Any, kernels: dict[str, Any], case: d
         "output_summary": _tensor_summary(torch, output),
         "timing": None,
     }
+    if "contract" in case:
+        result["contract"] = case["contract"]
     if correctness_only:
         return result
 
@@ -461,6 +466,9 @@ def main() -> int:
     warmup = max(0, args.warmup if args.warmup is not None else profile["warmup"])
     iterations = max(1, args.iterations if args.iterations is not None else profile["iterations"])
     selected = [c for c in cases["operators"] if args.operator == "all" or c["name"] == args.operator]
+    config_hash = hashlib.sha256(
+        CASES.read_bytes()
+    ).hexdigest()
     results = [run_case(torch, tilelang, T, kernels, c, device, warmup, iterations, args.correctness_only) for c in selected]
 
     run_command = (
@@ -484,6 +492,7 @@ def main() -> int:
         "provenance": provenance(
             run_command,
             capture_command="python3 scripts/capture_environment.py --output benchmarks/results/environment.json",
+            config_hash=config_hash,
             notes=[
                 "Timed on the same C500 host and software stack as the PyTorch baseline; treat as same-environment relative timing, not an official C500 spec.",
                 "matmul is recorded as not_comparable because of a TileLang/maca codegen gap; see MATMUL_NOT_RUN_REASON in the source.",
