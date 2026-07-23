@@ -160,3 +160,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# Macawiki self-evolution signals (raw logs, not aggregated results)
+evals/signals/*.jsonl
+evals/signals/archive/
+

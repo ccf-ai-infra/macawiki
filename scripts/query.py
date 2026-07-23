@@ -16,6 +16,7 @@ import argparse
 import json
 import pickle
 import sys
+import time
 from typing import Any
 
 try:
@@ -252,9 +253,11 @@ def main() -> int:
     parser.add_argument("--compact", action="store_true")
     parser.add_argument("--paths-only", action="store_true")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--signal-log", action="store_true", help="Log query telemetry to evals/signals/ for self-evolution")
     args = parser.parse_args()
     filters = {name: getattr(args, name) for name in FILTER_FIELDS}
     active_filters = {k: v for k, v in filters.items() if v is not None}
+    t0 = time.perf_counter()
 
     if args.fuzzy:
         # Fuzzy mode: use n-gram Jaccard similarity
@@ -274,6 +277,50 @@ def main() -> int:
             page_map = {str(p.metadata.get("id", "")): p for p in all_pages}
             raw_results = _fuzzy_search(normalized_terms, all_pages, filters, aliases, page_map, limit=max(args.limit, 0))
             results = [(int(score * 1000), page) for score, page in raw_results]
+
+    # Signal capture for self-evolution
+    elapsed_ms = (time.perf_counter() - t0) * 1000
+    if args.signal_log:
+        result_ids_sig = []
+        for _, page in results:
+            rid = page.metadata.get("id")
+            if rid:
+                result_ids_sig.append(str(rid))
+        try:
+            from signal_logger import log_query, log_zero_result, log_coverage_gap
+        except ImportError:
+            from scripts.signal_logger import log_query, log_zero_result, log_coverage_gap
+
+        log_query(
+            list(args.terms), active_filters, args.mode,
+            bool(args.fuzzy or args.auto_fuzzy),
+            len(results), result_ids_sig, round(elapsed_ms, 3),
+        )
+        if not results and args.terms:
+            log_zero_result(
+                list(args.terms), active_filters, args.mode,
+                bool(args.fuzzy or args.auto_fuzzy),
+            )
+        # Coverage gap: terms not in vocabulary or aliases
+        if args.terms:
+            try:
+                tags_data = load_data(ROOT / "data" / "tags.yaml")
+                all_vocab = set()
+                for field in ("components", "topic_tags", "hardware"):
+                    vals = tags_data.get(field, [])
+                    if isinstance(vals, list):
+                        all_vocab.update(str(v).casefold() for v in vals)
+                aliases_data = load_data(ROOT / "data" / "aliases.yaml")
+                for variants in aliases_data.values():
+                    if isinstance(variants, list):
+                        all_vocab.update(str(v).casefold() for v in variants)
+                    elif isinstance(variants, str):
+                        all_vocab.add(variants.casefold())
+                unmatched = [t for t in args.terms if t.casefold() not in all_vocab]
+                if unmatched:
+                    log_coverage_gap(list(args.terms), unmatched, len(results))
+            except Exception:
+                pass
 
     # Smart hints when no results found (stderr, doesn't affect output parsing)
     if not results:

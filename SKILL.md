@@ -14,19 +14,19 @@ Use the repository-local knowledge base to answer MXMACA questions with explicit
 
    ```bash
    # Precise multi-term search (all terms must match -- default AND mode):
-   python3 scripts/query.py "性能分析" --compact
-   python3 scripts/query.py --component mcprofiler --type wiki-pattern
-   python3 scripts/query.py --hardware c500 --version unspecified
+   python3 scripts/query.py "性能分析" --compact --signal-log
+   python3 scripts/query.py --component mcprofiler --type wiki-pattern --signal-log
+   python3 scripts/query.py --hardware c500 --version unspecified --signal-log
 
    # Broad multi-concept search (any term may match -- OR mode, better recall):
-   python3 scripts/query.py "性能 基线 算子" --mode or --compact
+   python3 scripts/query.py "性能 基线 算子" --mode or --compact --signal-log
    ```
 
    Prefer `--mode or` for broad topic exploration or when a multi-word AND query returns zero results.
 
    # Fuzzy search with n-gram similarity (when exact search fails):
-   python3 scripts/query.py "kernel" "tuning" "roofline" --fuzzy --compact
-   python3 scripts/query.py "算子" "优化" "内存" --auto-fuzzy --compact
+   python3 scripts/query.py "kernel" "tuning" "roofline" --fuzzy --compact --signal-log
+   python3 scripts/query.py "算子" "优化" "内存" --auto-fuzzy --compact --signal-log
 
    Use `--fuzzy` for approximate matching or `--auto-fuzzy` to automatically
    fall back when exact AND/OR returns zero results.
