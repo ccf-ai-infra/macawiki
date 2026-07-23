@@ -5,16 +5,16 @@
     {
       "case_id": "add-f32-4096",
       "status": "comparable",
-      "baseline_median_ms": 0.021976884454488754,
-      "candidate_median_ms": 0.029594404622912407,
-      "speedup": 0.7426026890729858
+      "baseline_median_ms": 0.022475142031908035,
+      "candidate_median_ms": 0.030700117349624634,
+      "speedup": 0.7320865186263803
     },
     {
       "case_id": "layernorm-f32-64x128",
       "status": "comparable",
-      "baseline_median_ms": 0.025220448151230812,
-      "candidate_median_ms": 0.029969261959195137,
-      "speedup": 0.8415438520164392
+      "baseline_median_ms": 0.02565723843872547,
+      "candidate_median_ms": 0.030721072107553482,
+      "speedup": 0.8351674169736104
     },
     {
       "case_id": "matmul-f32-64x128x64",
@@ -22,11 +22,30 @@
       "reason": "correctness gate failed"
     },
     {
+      "case_id": "moe-routing-f32-1024x8-top2",
+      "status": "not_comparable",
+      "reason": "correctness gate failed"
+    },
+    {
+      "case_id": "quantize-f32-8192",
+      "status": "comparable",
+      "baseline_median_ms": 0.04670699127018452,
+      "candidate_median_ms": 0.032937852665781975,
+      "speedup": 1.4180338877618102
+    },
+    {
       "case_id": "softmax-f32-64x128",
       "status": "comparable",
-      "baseline_median_ms": 0.022981083020567894,
-      "candidate_median_ms": 0.02944888547062874,
-      "speedup": 0.7803719106275991
+      "baseline_median_ms": 0.022888416424393654,
+      "candidate_median_ms": 0.030209776014089584,
+      "speedup": 0.7576493256262042
+    },
+    {
+      "case_id": "transpose-f32-128x4096",
+      "status": "comparable",
+      "baseline_median_ms": 0.004324130713939667,
+      "candidate_median_ms": 0.03491947427392006,
+      "speedup": 0.12383149528597527
     }
   ]
 }

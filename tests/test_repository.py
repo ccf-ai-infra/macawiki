@@ -227,6 +227,27 @@ class RepositoryTests(unittest.TestCase):
             "correctness failure with timing=null should not be schema_error"
         )
 
+    def test_compare_rejects_non_dict_case(self) -> None:
+        """Non-dict case element should be rejected as schema_error."""
+        base = self._make_result()
+        cand = self._make_result()
+        cand["cases"] = [None]
+        result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0)
+        parsed = json.loads(result.stdout)
+        self.assertIn("must be an object", result.stdout)
+        self.assertEqual(parsed.get("status"), "schema_error")
+
+    def test_compare_rejects_duplicate_case_id(self) -> None:
+        """Duplicate case_id within a single result should be rejected."""
+        base = self._make_result()
+        base_case = base["cases"][0]
+        base["cases"] = [base_case, base_case]
+        cand = self._make_result()
+        result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("duplicate case_id", result.stdout)
+
     # ── version-claim and evidence integrity tests ────────────────────
 
     def test_version_claim_integrity(self) -> None:

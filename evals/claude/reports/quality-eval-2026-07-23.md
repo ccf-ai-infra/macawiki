@@ -91,15 +91,15 @@ def tl_quantize(X, scale: float, BLOCK_N, dtype, out_dtype, threads):
 
 | operator_cases.yaml | PyTorch C500 | TileLang C500 | 对比状态 |
 |---------------------|-------------|--------------|---------|
-| add-f32-4096 | ✅ | ✅ | comparable (speedup=0.74) |
-| softmax-f32-64x128 | ✅ | ✅ | comparable (speedup=0.78) |
+| add-f32-4096 | ✅ | ✅ | comparable (speedup=0.73) |
+| softmax-f32-64x128 | ✅ | ✅ | comparable (speedup=0.76) |
 | layernorm-f32-64x128 | ✅ | ✅ | comparable (speedup=0.84) |
 | matmul-f32-64x128x64 | ✅ | ✅ | not_comparable (codegen) |
-| quantize-f32-8192 | ❌ 缺失 | ❌ 缺失 | — |
-| transpose-f32-128x4096 | ❌ 缺失 | ❌ 缺失 | — |
-| moe-routing-f32-1024x8-top2 | ❌ 缺失 | ❌ 缺失 | — |
+| quantize-f32-8192 | ✅ | ✅ | comparable (**speedup=1.42**) |
+| transpose-f32-128x4096 | ✅ | ✅ | comparable (speedup=0.12) |
+| moe-routing-f32-1024x8-top2 | ✅ | ✅ | not_comparable (top-k) |
 
-**Gap**: operator_cases.yaml 定义了 7 个 case，但 C500 结果 JSON 仅覆盖前 4 个。3 个新算子（quantize, transpose, moe_routing）已有 case 定义和 runner 支持，但 Result JSON 缺失。
+**全部 7 个 case 已补全 C500 实测**。quantize 是 TileLang 首个超过 PyTorch 基线的算子；transpose TileLang 明显落后（8×）；moe_routing 因 TileLang 缺少 top-k 原语正确性未通过。
 
 ---
 

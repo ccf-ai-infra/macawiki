@@ -49,9 +49,12 @@ def _validate_environment(data: dict[str, Any]) -> list[str]:
     return issues
 
 
-def _validate_case(case: dict[str, Any], index: int) -> list[str]:
+def _validate_case(case: Any, index: int) -> list[str]:
     issues: list[str] = []
     label = f"cases[{index}]"
+    if not isinstance(case, dict):
+        issues.append(f"{label}: case must be an object, got {type(case).__name__}")
+        return issues
     for key in REQUIRED_CASE_KEYS:
         if key not in case:
             issues.append(f"{label}: missing required key '{key}'")
@@ -176,6 +179,14 @@ def main() -> int:
     for i, case in enumerate(cand_cases_raw):
         all_issues += [f"candidate: {i}" for i in _validate_case(case, i)]
 
+    # 3b. Reject non-dict items before dict comprehension
+    for label, cases_raw in [("baseline", base_cases_raw), ("candidate", cand_cases_raw)]:
+        for i, case in enumerate(cases_raw):
+            if not isinstance(case, dict):
+                all_issues.append(f"{label}: cases[{i}] must be an object, got {type(case).__name__}")
+            elif "case_id" not in case:
+                all_issues.append(f"{label}: cases[{i}] missing required key 'case_id'")
+
     if all_issues:
         print(json.dumps({
             "baseline": str(args.baseline),
@@ -186,8 +197,28 @@ def main() -> int:
         }, ensure_ascii=False, indent=2))
         return 1
 
-    base_cases = {item["case_id"]: item for item in base_cases_raw}
-    cand_cases = {item["case_id"]: item for item in cand_cases_raw}
+    base_cases: dict[str, dict[str, Any]] = {}
+    for i, item in enumerate(base_cases_raw):
+        cid = item["case_id"]
+        if cid in base_cases:
+            all_issues.append(f"baseline: duplicate case_id '{cid}' at cases[{i}]")
+        base_cases[cid] = item
+    cand_cases: dict[str, dict[str, Any]] = {}
+    for i, item in enumerate(cand_cases_raw):
+        cid = item["case_id"]
+        if cid in cand_cases:
+            all_issues.append(f"candidate: duplicate case_id '{cid}' at cases[{i}]")
+        cand_cases[cid] = item
+
+    if all_issues:
+        print(json.dumps({
+            "baseline": str(args.baseline),
+            "candidate": str(args.candidate),
+            "status": "schema_error",
+            "issues": all_issues,
+            "comparisons": [],
+        }, ensure_ascii=False, indent=2))
+        return 1
 
     # 4. Detect missing cases
     base_ids = set(base_cases.keys())
