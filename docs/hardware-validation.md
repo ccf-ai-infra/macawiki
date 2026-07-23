@@ -2,6 +2,18 @@
 
 C500 与 MXMACA 已就绪。`benchmarks/results/` 下保存了在 MetaX C500 上实测的 PyTorch 基线与 TileLang 候选结果（环境指纹、硬件型号、MACA/mxcc 版本与运行命令见各 JSON 的 `environment`/`provenance` 字段）。以下门禁仍是一致性的硬约束，不是已完成报告的免责声明。
 
+## 状态术语定义
+
+以下术语在 Macawiki 所有文档中统一使用，本页为权威定义来源：
+
+| 术语 | 含义 | 适用对象 | 示例 |
+|------|------|---------|------|
+| `verified` | 在目标硬件上通过正确性+计时门禁，结果可复现 | 算子性能结论 | add-f32-4096 (C500, speedup=0.73) |
+| `recorded` | 仓库有带环境指纹+来源信息的历史结果 | C500 历史结果 | benchmarks/results/pytorch_c500.json |
+| `implemented` | 代码/案例存在，但未在目标环境验证 | 算子案例、后端实现 | PyTorch CPU smoke test |
+| `not_run` | 已定义契约/计划，尚未在目标环境执行 | MXMACA++ 后端、未跑过的算子 | MXMACA++ backend |
+| `not_comparable` | 环境/形状/精度/实现不同，禁止比较 | 有已知差距的算子 | matmul (codegen gap), moe_routing (top-k) |
+
 **当前状态汇总**:
 - PyTorch 基线：7 个 case 均已在 C500 上完成实测（add, softmax, layer_norm, matmul, quantize, transpose, moe_routing）；结果见 `benchmarks/results/pytorch_c500.json`。transpose 基线已从 `torch.t(x)`（view）修正为 `torch.t(x).contiguous()`（物化输出），C500 已重跑，当前 median=0.0325ms。
 - TileLang 候选：7 个 case 均有状态记录（add, softmax, layer_norm, quantize, transpose 通过正确性与计时门禁；matmul 因 TileLang/maca codegen 差距标记为 `not_comparable`；moe_routing 因 TileLang 缺少 top-k 原语标记为 `not_comparable`）；结果见 `benchmarks/results/tilelang_c500.json`。
