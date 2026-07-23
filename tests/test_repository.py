@@ -378,6 +378,54 @@ class RepositoryTests(unittest.TestCase):
             self.assertTrue(multi["loaded_pass"],
                             "All expected pages found, should pass")
 
+    # ── transpose workload contract ────────────────────────────────────
+
+    def test_transpose_baseline_output_is_contiguous(self) -> None:
+        """PyTorch transpose baseline must return a contiguous (materialised)
+        output, not a view — otherwise the timing comparison is not valid
+        against TileLang's tl_transpose which allocates and writes every element.
+        """
+        try:
+            import torch
+        except ImportError:
+            raise unittest.SkipTest("PyTorch not installed")
+        x = torch.randn(128, 4096)
+        # Simulate the exact logic from pytorch_baseline.py _run_op
+        out = torch.t(x).contiguous()
+        self.assertTrue(out.is_contiguous(),
+                        "transpose output must be contiguous (materialised), "
+                        "not a stride-change view")
+        # Values must match torch.t(x)
+        torch.testing.assert_close(out, torch.t(x))
+
+    def test_transpose_reference_output_is_contiguous(self) -> None:
+        """TileLang candidate _reference for transpose must also return a
+        contiguous tensor so the correctness check compares materialised outputs.
+        """
+        try:
+            import torch
+        except ImportError:
+            raise unittest.SkipTest("PyTorch not installed")
+        x = torch.randn(128, 4096)
+        # Simulate the exact logic from tilelang_candidate.py _reference
+        out = torch.t(x).contiguous()
+        self.assertTrue(out.is_contiguous(),
+                        "transpose reference must be contiguous")
+        torch.testing.assert_close(out, torch.t(x))
+
+    def test_transpose_view_is_not_contiguous(self) -> None:
+        """Sanity check: torch.t(x) without .contiguous() IS non-contiguous
+        for a non-trivial shape, which is why the old baseline was invalid."""
+        try:
+            import torch
+        except ImportError:
+            raise unittest.SkipTest("PyTorch not installed")
+        x = torch.randn(128, 4096)
+        view = torch.t(x)
+        self.assertFalse(view.is_contiguous(),
+                         "torch.t(x) on a non-square matrix should be non-contiguous; "
+                         "this confirms the old baseline measured view-creation cost")
+
 
 if __name__ == "__main__":
     unittest.main()

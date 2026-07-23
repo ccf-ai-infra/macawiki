@@ -317,7 +317,10 @@ def _reference(torch: Any, case: dict[str, Any], x: Any, y: Any | None) -> Any:
         scale = p["scale"]
         return torch.clamp(torch.round(x / scale), -128, 127) * scale
     if name == "transpose":
-        return torch.t(x)
+        # Match pytorch_baseline.py: .contiguous() materialises the output
+        # so the reference is an equivalent workload (alloc + full write),
+        # not just a stride-change view.
+        return torch.t(x).contiguous()
     if name == "moe_routing":
         gate = torch.softmax(x, dim=p["dim"])
         vals, _idx = torch.topk(gate, k=p["topk"], dim=p["dim"])

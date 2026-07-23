@@ -57,7 +57,12 @@ def _run_op(torch: Any, case: dict[str, Any], x: Any, y: Any | None) -> Any:
         scale = params["scale"]
         return torch.clamp(torch.round(x / scale), -128, 127) * scale
     if name == "transpose":
-        return torch.t(x)
+        # torch.t() alone creates a view (stride change, no data movement)
+        # and would under-count the real cost vs a kernel that allocates and
+        # writes a full transposed result. .contiguous() materialises the
+        # output so the workload is equivalent to TileLang's tl_transpose
+        # which allocates Y=(N,M) and writes every element.
+        return torch.t(x).contiguous()
     if name == "moe_routing":
         # MoE top-k routing: softmax gate over experts, then top-k selection.
         # The comparable output is the top-k gate values tensor [tokens, topk];

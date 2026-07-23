@@ -229,6 +229,7 @@ def main() -> int:
 
     rows: list[dict[str, Any]] = []
     issues: list[str] = []
+    warnings: list[str] = []
 
     for case_id in sorted(common):
         left, right = base_cases[case_id], cand_cases[case_id]
@@ -280,6 +281,28 @@ def main() -> int:
                 "reason": "median_ms must be positive",
             })
             continue
+
+        # 7b. Defense-in-depth: flag suspiciously-low timing that may indicate
+        #     a view-vs-materialized mismatch (e.g. torch.t() vs a real kernel).
+        #     Threshold: < 0.01 ms for an op with > 1000 elements is almost
+        #     certainly a view, not a materialised output.
+        l_summary = left.get("output_summary") or {}
+        r_summary = right.get("output_summary") or {}
+        l_numel = l_summary.get("numel", 0)
+        r_numel = r_summary.get("numel", 0)
+        MIN_REAL_TIMING_MS = 0.01
+        MIN_REAL_NUMEL = 1000
+        if l_numel > MIN_REAL_NUMEL and l_ms < MIN_REAL_TIMING_MS:
+            warnings.append(
+                f"case {case_id}: baseline median_ms={l_ms}ms for {l_numel} elements "
+                "is suspiciously low — may be a view rather than a materialised output"
+            )
+        if r_numel > MIN_REAL_NUMEL and r_ms < MIN_REAL_TIMING_MS:
+            warnings.append(
+                f"case {case_id}: candidate median_ms={r_ms}ms for {r_numel} elements "
+                "is suspiciously low — may be a view rather than a materialised output"
+            )
+
         rows.append({
             "case_id": case_id,
             "status": "comparable",
@@ -300,6 +323,8 @@ def main() -> int:
         report["candidate_only"] = candidate_only
     if issues:
         report["issues"] = issues
+    if warnings:
+        report["warnings"] = warnings
 
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0
