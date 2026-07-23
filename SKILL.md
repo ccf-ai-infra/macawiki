@@ -43,7 +43,8 @@ For operator comparison work, read `benchmarks/README.md` and
 - Distinguish `verified`, `source-reported`, `corroborated`, `inferred`, and `experimental` claims.
 - Treat performance figures without complete benchmark metadata as non-comparable.
 - Label CPU-only PyTorch runs as workflow checks, never as C500 performance evidence.
-- Keep TileLang and MXMACA++ results `not_run` until their implementations execute in the same captured C500 environment.
+- Keep TileLang results that have not passed correctness + timing gates as `not_comparable`.
+- Keep MXMACA++ results as `not_run` until the MXMACA++ backend is connected to a captured C500 environment.
 - Say that the corpus has no reliable conclusion when evidence is absent.
 - Never assume CUDA behavior is identical on MXMACA.
 

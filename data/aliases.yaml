@@ -2,11 +2,14 @@
   "c500": ["C500", "曦云C500", "MetaX C500"],
   "mxmaca-sdk": ["MXMACA", "MACA", "MXMACA SDK"],
   "mxmaca-runtime": ["MXMACA Runtime", "运行时API", "runtime api"],
-  "mxcc": ["MXMACA C/C++ Compiler", "编译器"],
-  "mcprofiler": ["mcProfiler", "profiler", "性能分析器"],
+  "mxcc": ["MXMACA C/C++ Compiler", "编译器", "mxcc 编译器"],
+  "mcprofiler": ["mcProfiler", "profiler", "性能分析器", "profiling"],
   "mctracer": ["mcTracer", "tracer", "追踪工具"],
   "mcpytorch": ["mcPyTorch", "MetaX PyTorch"],
   "mctriton": ["mcTriton", "MetaX Triton"],
   "mctilelang": ["mcTileLang", "MetaX TileLang"],
-  "vllm-metax": ["vLLM-MetaX", "MetaX vLLM"]
+  "vllm-metax": ["vLLM-MetaX", "MetaX vLLM"],
+  "tutorial-first-mxmaca-program": ["第一个 MXMACA 程序", "hello world", "入门教程", "first program"],
+  "reference-mxcc-compiler-basics": ["mxcc 基础", "编译器参考", "compiler reference", "mxcc 使用"],
+  "diagnostics-mcprofiler-basics": ["mcProfiler 使用", "profiling 基础", "性能分析入门"]
 }

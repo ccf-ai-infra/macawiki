@@ -1,0 +1,185 @@
+{
+  "schema_version": 2,
+  "objective": "maximize measured Macawiki value without quality or safety regression",
+  "head_at_start": "3b1e9a6397af589ebb4bfbf5d90964818e3ec668",
+  "champion": {
+    "commit": "3b1e9a6397af589ebb4bfbf5d90964818e3ec668",
+    "task_set_version": "1",
+    "metrics_file": null
+  },
+  "next_cycle_id": 1,
+  "cycles": [],
+  "backlog": [
+    {
+      "id": "b01",
+      "description": "Fix tl_quantize undefined accum in tilelang_candidate.py:178-179",
+      "workstream": "foundation",
+      "severity": "P0",
+      "frequency": "always",
+      "expected_gain": "eliminate static code defect",
+      "confidence": "high",
+      "effort": "low",
+      "dependencies": [],
+      "status": "pending"
+    },
+    {
+      "id": "b02",
+      "description": "Strengthen compare_benchmarks.py: schema validation, case field checks, timing contract, missing case detection, not_run/not_comparable reporting",
+      "workstream": "foundation",
+      "severity": "P0",
+      "frequency": "always",
+      "expected_gain": "prevent silent comparison failures",
+      "confidence": "high",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "pending"
+    },
+    {
+      "id": "b03",
+      "description": "Sync C500/MXMACA++ status across README.md, SKILL.md, docs/hardware-validation.md, docs/usage.md, docs/iteration-plan.md, benchmarks/README.md",
+      "workstream": "maintenance",
+      "severity": "P0",
+      "frequency": "always",
+      "expected_gain": "eliminate contradictory doc claims",
+      "confidence": "high",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "pending"
+    },
+    {
+      "id": "b04",
+      "description": "Build iteration infrastructure: evals/claude/iteration-state.json, cycle reports, macawiki-iterate skill",
+      "workstream": "foundation",
+      "severity": "P1",
+      "frequency": "once",
+      "expected_gain": "trackable, resumable optimization cycles",
+      "confidence": "high",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "pending"
+    },
+    {
+      "id": "b05",
+      "description": "Expand agent-value-cases from 3 to >=8: version-claim, negative-prompt, source-citation, multi-page synthesis, forbidden-claim cases",
+      "workstream": "eval",
+      "severity": "P1",
+      "frequency": "always",
+      "expected_gain": "broader retrieval/evidence validation coverage",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "pending"
+    },
+    {
+      "id": "b06",
+      "description": "Expand gold-questions from 3 to >=6: compiler, runtime, profiling subdomains",
+      "workstream": "eval",
+      "severity": "P1",
+      "frequency": "once",
+      "expected_gain": "wider MXMACA domain coverage",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "pending"
+    },
+    {
+      "id": "b07",
+      "description": "Enhance run_agent_value_eval.py with negative-trigger check and source citation chain validation",
+      "workstream": "eval",
+      "severity": "P1",
+      "frequency": "always",
+      "expected_gain": "stronger guardrails against false triggers and citation gaps",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependencies": ["b05", "b06"],
+      "status": "pending"
+    },
+    {
+      "id": "b08",
+      "description": "Add tests for version-claim integrity, no fabricated C500 numbers, source URL existence, negative-trigger protection",
+      "workstream": "foundation",
+      "severity": "P1",
+      "frequency": "always",
+      "expected_gain": "automated regression for evidence quality",
+      "confidence": "high",
+      "effort": "medium",
+      "dependencies": ["b05"],
+      "status": "pending"
+    },
+    {
+      "id": "b09",
+      "description": "Expand sources 3->>=8 and wiki pages 3->>=6: mxcc, mxmaca-runtime, TileLang upstream, programming model, profiling",
+      "workstream": "corpus",
+      "severity": "P1",
+      "frequency": "once",
+      "expected_gain": "wider MXMACA stack coverage for Agent questions",
+      "confidence": "medium",
+      "effort": "high",
+      "dependencies": [],
+      "status": "pending"
+    },
+    {
+      "id": "b10",
+      "description": "Populate version-claims and version-matrix from existing and new sources",
+      "workstream": "corpus",
+      "severity": "P1",
+      "frequency": "once",
+      "expected_gain": "version-scoped knowledge for Agent responses",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependencies": ["b09"],
+      "status": "pending"
+    },
+    {
+      "id": "b11",
+      "description": "Build Claude A/B eval runner: run_claude_ab_eval.py + score_claude_eval.py + tasks/rubric/fixtures",
+      "workstream": "eval",
+      "severity": "P2",
+      "frequency": "once",
+      "expected_gain": "real Claude loaded-vs-unloaded value measurement",
+      "confidence": "medium",
+      "effort": "high",
+      "dependencies": [],
+      "status": "blocked"
+    },
+    {
+      "id": "b12",
+      "description": "Build ecosystem task scaffolding: mcPytorch, vLLM-metax, cu-bridge mock/CPU-oracle tasks",
+      "workstream": "ecosystem",
+      "severity": "P2",
+      "frequency": "once",
+      "expected_gain": "upstream/downstream MXMACA task coverage",
+      "confidence": "low",
+      "effort": "high",
+      "dependencies": [],
+      "status": "blocked"
+    },
+    {
+      "id": "b13",
+      "description": "Source freshness, link validity, and license check script",
+      "workstream": "maintenance",
+      "severity": "P3",
+      "frequency": "periodic",
+      "expected_gain": "detect stale/expired references",
+      "confidence": "high",
+      "effort": "medium",
+      "dependencies": [],
+      "status": "pending"
+    }
+  ],
+  "external_blockers": [
+    {
+      "id": "ext-01",
+      "description": "Claude API paid authorization required for real A/B eval (MACAWIKI_RUN_PAID_EVAL=1 or explicit user authorization)",
+      "affects": ["b11"],
+      "status": "awaiting"
+    },
+    {
+      "id": "ext-02",
+      "description": "MXMACA++ SDK and C500 environment re-capture needed for MXMACA++ backend connection",
+      "affects": ["b12"],
+      "status": "awaiting"
+    }
+  ],
+  "decision": "continue"
+}

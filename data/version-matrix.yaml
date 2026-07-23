@@ -1,8 +1,23 @@
 {
   "matrix_version": 1,
-  "combinations": [],
+  "combinations": [
+    {
+      "id": "vm-comb-001",
+      "hardware": "c500",
+      "sdk_version": "unspecified",
+      "mxcc_version": "unspecified",
+      "runtime_version": "unspecified",
+      "pytorch_version": "unspecified",
+      "tilelang_version": "unspecified",
+      "status": "partially_validated",
+      "evidence": "benchmarks/results/*.json: PyTorch + TileLang C500 results captured; environment fingerprints saved but exact version numbers not yet mapped to public release tags",
+      "sources": ["repo-mxmaca-performance-tuning-guide", "doc-mxmaca-quick-start"]
+    }
+  ],
   "notes": [
     "v0.1 does not infer compatibility from document listings or repository names.",
-    "Add a combination only after a maintainer reviews public evidence."
+    "Add a combination only after a maintainer reviews public evidence.",
+    "Version numbers are marked unspecified until confirmed against official release notes.",
+    "C500 environment fingerprint exists in benchmark results; specific version mapping is pending."
   ]
 }

@@ -28,6 +28,62 @@
       "required_sources": ["doc-mxmaca-quick-start"],
       "must_contain": ["版本化命令", "停止"],
       "must_not_contain": ["通用安装命令"]
+    },
+    {
+      "id": "agent-value-version-001",
+      "prompt": "MXMACA SDK 的版本信息从哪里获取？",
+      "terms": ["版本", "SDK", "maca"],
+      "expected_pages": ["recipe-verify-mxmaca-environment"],
+      "required_sources": ["doc-mxmaca-quick-start"],
+      "must_contain": ["unspecified", "官方"],
+      "must_not_contain": ["当前最新版本是"]
+    },
+    {
+      "id": "agent-value-negative-001",
+      "prompt": "How do I optimize CUDA kernels with nvprof on an NVIDIA GPU?",
+      "terms": ["CUDA", "nvprof", "NVIDIA"],
+      "expected_pages": [],
+      "required_sources": [],
+      "must_contain": [],
+      "must_not_contain": ["C500", "MXMACA", "mcprofiler"],
+      "negative_trigger": "This prompt is about CUDA/NVIDIA, not MXMACA. No Macawiki pages should be returned."
+    },
+    {
+      "id": "agent-value-negative-002",
+      "prompt": "请提供 MetaX 内部未公开的下一代芯片规格和性能数据。",
+      "terms": ["内部", "未公开", "芯片规格"],
+      "expected_pages": [],
+      "required_sources": [],
+      "must_contain": [],
+      "must_not_contain": ["C500 性能为"],
+      "negative_trigger": "This prompt asks for non-public information. Macawiki should not fabricate answers."
+    },
+    {
+      "id": "agent-value-citation-001",
+      "prompt": "建立 MXMACA 性能基线时，应该记录哪些环境信息？",
+      "terms": ["基线", "环境", "性能"],
+      "expected_pages": ["pattern-establish-performance-baseline"],
+      "required_sources": ["repo-mxmaca-performance-tuning-guide"],
+      "must_contain": ["硬件型号", "mxmaca", "计时"],
+      "must_not_contain": []
+    },
+    {
+      "id": "agent-value-multi-page-001",
+      "prompt": "在 C500 上运行算子对比之前，环境验证和性能基线各需要准备什么？",
+      "terms": ["MXMACA", "版本"],
+      "expected_pages": ["recipe-verify-mxmaca-environment", "pattern-establish-performance-baseline"],
+      "required_sources": ["doc-mxmaca-quick-start", "repo-mxmaca-performance-tuning-guide"],
+      "must_contain": ["硬件", "版本"],
+      "must_not_contain": []
+    },
+    {
+      "id": "agent-value-forbidden-001",
+      "prompt": "TileLang 在 C500 上的 matmul 性能比 PyTorch 快多少？",
+      "terms": ["matmul", "TileLang", "C500", "性能"],
+      "expected_pages": ["evaluation-compare-operator-backends"],
+      "required_sources": [],
+      "must_contain": ["not_comparable"],
+      "must_not_contain": ["matmul speedup", "matmul 加速比", "TileLang matmul 比 PyTorch 快"]
     }
   ]
 }

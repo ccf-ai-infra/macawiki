@@ -23,6 +23,46 @@
       "access": "public",
       "license_status": "unknown",
       "capture_policy": "metadata-and-original-summary-only"
+    },
+    {
+      "id": "doc-mxmaca-programming-model",
+      "name": "MXMACA Programming Model",
+      "url": "https://developer.metax-tech.com/doc",
+      "access": "public",
+      "license_status": "source-terms",
+      "capture_policy": "metadata-and-links-only"
+    },
+    {
+      "id": "doc-mxmaca-compiler-mxcc",
+      "name": "MXMACA C/C++ Compiler (mxcc)",
+      "url": "https://developer.metax-tech.com/doc",
+      "access": "public",
+      "license_status": "source-terms",
+      "capture_policy": "metadata-and-links-only"
+    },
+    {
+      "id": "repo-mxmaca-runtime",
+      "name": "MXMACA Runtime",
+      "url": "https://gitee.com/metax-maca",
+      "access": "public",
+      "license_status": "unknown",
+      "capture_policy": "metadata-and-links-only"
+    },
+    {
+      "id": "repo-mcpytorch",
+      "name": "mcPyTorch",
+      "url": "https://gitee.com/metax-maca",
+      "access": "public",
+      "license_status": "unknown",
+      "capture_policy": "metadata-and-links-only"
+    },
+    {
+      "id": "repo-vllm-metax",
+      "name": "vLLM-MetaX",
+      "url": "https://gitee.com/metax-maca",
+      "access": "public",
+      "license_status": "unknown",
+      "capture_policy": "metadata-and-links-only"
     }
   ]
 }

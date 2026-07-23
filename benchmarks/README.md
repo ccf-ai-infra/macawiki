@@ -21,6 +21,9 @@ python3 scripts/compare_benchmarks.py --baseline /tmp/pytorch.json --candidate r
 - `softmax`：行归约与数值稳定性。
 - `layer_norm`：归约、仿射参数和常见模型路径。
 - `matmul`：计算密集型库调用与自定义 kernel 对比。
+- `quantize`：INT8 对称伪量化与反量化（逐元素）。
+- `transpose`：共享内存分块转置。
+- `moe_routing`：softmax + top-k 专家选择（混合专家路由）。
 
 这些算子都由 PyTorch 提供；case 规格见 `operator_cases.yaml`。
 

@@ -1,7 +1,8 @@
-"""Repository-level regression tests for Macawiki v0.1."""
+"""Repository-level regression tests for Macawiki."""
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import tempfile
@@ -79,6 +80,220 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         for operator in ("add", "softmax", "layer_norm", "matmul", "quantize", "transpose", "moe_routing"):
             self.assertIn(operator, result.stdout)
+
+    def test_tilelang_list_runs_without_import_error(self) -> None:
+        result = run_script("benchmarks/tilelang_candidate.py", "--list")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for case_id in ("add-f32-4096", "quantize-f32-8192", "moe-routing-f32-1024x8-top2"):
+            self.assertIn(case_id, result.stdout)
+
+    # ── compare_benchmarks.py contract tests ──────────────────────────
+
+    def _make_result(self, **overrides: object) -> dict:
+        """Build a minimal valid completed result, with optional overrides."""
+        result: dict = {
+            "status": "completed",
+            "environment": {"environment_fingerprint": "fp:test"},
+            "cases": [
+                {
+                    "case_id": "add-f32-4096",
+                    "operator": "add",
+                    "shape": [4096],
+                    "dtype": "float32",
+                    "correctness": {"passed": True},
+                    "timing": {"median_ms": 1.2, "warmup": 2, "iterations": 5},
+                }
+            ],
+        }
+        for key, val in overrides.items():
+            if val is None:
+                result.pop(key, None)
+            else:
+                result[key] = val
+        return result
+
+    def _run_compare(self, baseline: dict, candidate: dict) -> subprocess.CompletedProcess[str]:
+        with tempfile.TemporaryDirectory() as td:
+            base_path = Path(td) / "baseline.json"
+            cand_path = Path(td) / "candidate.json"
+            base_path.write_text(json.dumps(baseline), encoding="utf-8")
+            cand_path.write_text(json.dumps(candidate), encoding="utf-8")
+            return run_script(
+                "scripts/compare_benchmarks.py",
+                "--baseline", str(base_path),
+                "--candidate", str(cand_path),
+            )
+
+    def test_compare_rejects_missing_status(self) -> None:
+        base = self._make_result(status=None)
+        cand = self._make_result()
+        result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("missing top-level key", result.stdout)
+
+    def test_compare_rejects_missing_environment(self) -> None:
+        base = self._make_result(environment=None)
+        cand = self._make_result()
+        result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_compare_rejects_missing_cases(self) -> None:
+        base = self._make_result(cases=None)
+        cand = self._make_result()
+        result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_compare_rejects_non_list_cases(self) -> None:
+        base = self._make_result()
+        cand = self._make_result()
+        cand["cases"] = "not_a_list"
+        result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("must be a list", result.stdout)
+
+    def test_compare_flags_missing_case_id(self) -> None:
+        base = self._make_result()
+        cand = self._make_result()
+        del cand["cases"][0]["case_id"]
+        result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("missing required key", result.stdout)
+
+    def test_compare_flags_negative_median(self) -> None:
+        base = self._make_result()
+        cand = self._make_result()
+        cand["cases"][0]["timing"]["median_ms"] = -1.0
+        result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("must be positive", result.stdout)
+
+    def test_compare_flags_zero_median(self) -> None:
+        base = self._make_result()
+        cand = self._make_result()
+        cand["cases"][0]["timing"]["median_ms"] = 0.0
+        result = self._run_compare(base, cand)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("must be positive", result.stdout)
+
+    def test_compare_detects_case_mismatch(self) -> None:
+        base = self._make_result()
+        cand = self._make_result()
+        cand["cases"][0]["case_id"] = "softmax-f32-64x128"
+        cand["cases"][0]["operator"] = "softmax"
+        result = self._run_compare(base, cand)
+        self.assertIn("baseline_only", result.stdout)
+        self.assertIn("candidate_only", result.stdout)
+
+    def test_compare_detects_contract_mismatch(self) -> None:
+        base = self._make_result()
+        cand = self._make_result()
+        # same case_id but different shape
+        cand["cases"][0]["shape"] = [2048]
+        result = self._run_compare(base, cand)
+        self.assertIn("shape mismatch", result.stdout)
+        self.assertIn("not_comparable", result.stdout)
+
+    def test_compare_passes_valid_input(self) -> None:
+        base = self._make_result()
+        cand = self._make_result()
+        result = self._run_compare(base, cand)
+        self.assertEqual(result.returncode, 0)
+        parsed = json.loads(result.stdout)
+        self.assertEqual(parsed["comparisons"][0]["status"], "comparable")
+        self.assertIn("speedup", parsed["comparisons"][0])
+
+    def test_compare_rejects_correctness_failure(self) -> None:
+        base = self._make_result()
+        cand = self._make_result()
+        cand["cases"][0]["correctness"]["passed"] = False
+        result = self._run_compare(base, cand)
+        # should run (returncode 0 for completed comparison) but mark as not_comparable
+        self.assertEqual(result.returncode, 0)
+        parsed = json.loads(result.stdout)
+        self.assertEqual(parsed["comparisons"][0]["status"], "not_comparable")
+
+    # ── version-claim and evidence integrity tests ────────────────────
+
+    def test_version_claim_integrity(self) -> None:
+        """version-claims.yaml entries must have required fields."""
+        claims_path = ROOT / "data" / "version-claims.yaml"
+        data = json.loads(claims_path.read_text(encoding="utf-8"))
+        claims = data.get("claims", [])
+        if claims:
+            for i, claim in enumerate(claims):
+                with self.subTest(i=i):
+                    self.assertIn("id", claim, f"claim {i} missing id")
+                    self.assertIn("statement", claim, f"claim {i} missing statement")
+
+    def test_no_fabricated_c500_numbers(self) -> None:
+        """C500 performance numbers (e.g. X TFlops, Y GB/s) must not appear in wiki."""
+        import re
+        # Match fabricated numeric performance claims, not methodological context
+        fabricated_pattern = re.compile(
+            r"C500.*?\d+(?:\.\d+)?\s*(?:TFlops|TFLOPS|GB/s|GFlops|GFLOPs|TOPS)",
+            re.IGNORECASE
+        )
+        fabrications = []
+        for wiki_dir in ["wiki"]:
+            wiki_path = ROOT / wiki_dir
+            if wiki_path.is_dir():
+                for md_file in wiki_path.rglob("*.md"):
+                    text = md_file.read_text(encoding="utf-8")
+                    matches = fabricated_pattern.findall(text)
+                    if matches:
+                        fabrications.append((str(md_file.relative_to(ROOT)), matches))
+        self.assertEqual(
+            len(fabrications), 0,
+            f"Found potential fabricated C500 performance numbers: {fabrications}"
+        )
+
+    def test_source_registry_urls_are_plausible(self) -> None:
+        """All sources in source-registry.yaml must have URL and id fields."""
+        registry_path = ROOT / "data" / "source-registry.yaml"
+        data = json.loads(registry_path.read_text(encoding="utf-8"))
+        sources = data.get("sources", [])
+        self.assertGreater(len(sources), 0, "source registry is empty")
+        for src in sources:
+            with self.subTest(src_id=src.get("id", "unknown")):
+                self.assertIn("id", src)
+                self.assertIn("url", src)
+                self.assertTrue(
+                    src["url"].startswith("http"),
+                    f"source {src['id']} URL is not HTTP: {src['url']}"
+                )
+
+    def test_agent_value_proxy_enhanced_passes(self) -> None:
+        """All agent-value cases (>=8) must pass including negative-trigger."""
+        result = run_script("scripts/run_agent_value_eval.py", "--json")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        report = json.loads(result.stdout)
+        self.assertGreaterEqual(report["total"], 8)
+        self.assertTrue(report["all_passed"], f"Some cases failed: {report}")
+        # Verify negative cases exist
+        negative_cases = [
+            c for c in report["cases"]
+            if c.get("type") == "negative_trigger"
+        ]
+        self.assertGreaterEqual(len(negative_cases), 2,
+                                "Expected at least 2 negative-trigger cases")
+
+    def test_eval_files_are_valid_json(self) -> None:
+        """Both agent-value-cases and gold-questions must be valid JSON."""
+        for path in ["evals/agent-value-cases.yaml", "evals/gold-questions.yaml"]:
+            with self.subTest(file=path):
+                data = json.loads((ROOT / path).read_text(encoding="utf-8"))
+                self.assertIn("schema_version", data)
+
+    def test_gold_questions_count(self) -> None:
+        """gold-questions.yaml must have at least 6 questions."""
+        data = json.loads(
+            (ROOT / "evals" / "gold-questions.yaml").read_text(encoding="utf-8")
+        )
+        questions = data.get("questions", [])
+        self.assertGreaterEqual(
+            len(questions), 6,
+            f"Expected >=6 gold questions, got {len(questions)}"
+        )
 
 
 if __name__ == "__main__":

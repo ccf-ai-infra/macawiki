@@ -167,6 +167,7 @@ def _load_tilelang_backend() -> tuple[Any, Any, dict[str, Any]]:
         N = T.const("N")
         X: T.Tensor((N,), dtype)
         Y = T.empty((N,), out_dtype)
+        accum = T.float32
         sf = T.float32(scale)
         lo = T.float32(-128.0)
         hi = T.float32(127.0)
