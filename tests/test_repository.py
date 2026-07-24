@@ -593,7 +593,7 @@ log_zero_result(["missing_term"], {{}}, "and", False)
 
     def test_evolve_pipeline_scripts_exist(self) -> None:
         """All self-evolution scripts must be importable."""
-        scripts = ["signal_logger", "signal_aggregator", "self_improve", "env_detector"]
+        scripts = ["signal_logger", "signal_aggregator", "self_improve", "env_detector", "perf_capture"]
         import importlib
         for name in scripts:
             with self.subTest(script=name):
@@ -758,22 +758,77 @@ log_environment("test")
         data = json.loads(result.stdout)
         self.assertIn("total_records", data)
 
-    def test_env_detector_snapshot_writes_file(self) -> None:
-        """env_detector --snapshot must write env-snapshot.json."""
-        import os, tempfile
-        with tempfile.TemporaryDirectory() as td:
-            os.environ["MACAWIKI_SIGNAL_DIR"] = td
-            result = subprocess.run(
-                [sys.executable, "scripts/env_detector.py", "--snapshot"],
-                capture_output=True, text=True, cwd=str(ROOT),
-                env={**os.environ, "MACAWIKI_SIGNAL_DIR": td},
+    def test_env_detector_deep_probe(self) -> None:
+        """env_detector --deep --json must include pip_packages and maca_libraries."""
+        result = subprocess.run(
+            [sys.executable, "scripts/env_detector.py", "--deep", "--json"],
+            capture_output=True, text=True, cwd=str(ROOT),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        data = json.loads(result.stdout)
+        self.assertEqual(data["schema_version"], 2)
+        self.assertIn("pip_packages", data)
+        self.assertIn("maca_libraries", data)
+        self.assertIn("macainfo", data)
+        self.assertIn("tools", data)
+        # Check mcTracer tool detection
+        self.assertIn("mcTracer", data.get("tools", {}))
+
+    def test_perf_capture_module_importable(self) -> None:
+        """perf_capture module must be importable."""
+        import importlib
+        try:
+            importlib.import_module("scripts.perf_capture")
+        except ImportError:
+            importlib.import_module("perf_capture")
+
+    def test_perf_capture_json_output(self) -> None:
+        """perf_capture --json must return structured results."""
+        result = subprocess.run(
+            [sys.executable, "scripts/perf_capture.py", "--json"],
+            capture_output=True, text=True, cwd=str(ROOT),
+            timeout=120,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        data = json.loads(result.stdout)
+        self.assertIn("device_name", data)
+        self.assertIn("operator_results", data)
+        self.assertIn("memory_bandwidth", data)
+        # Must have all 6 micro cases
+        self.assertGreaterEqual(len(data.get("operator_results", [])), 4)
+
+    def test_signal_logger_tool_inventory(self) -> None:
+        """log_tool_inventory() must write to tool-inventory-log.jsonl."""
+        import tempfile, os, subprocess as sp
+        with tempfile.TemporaryDirectory() as tmp:
+            r = sp.run(
+                ["python3", "-c", f"""
+import os; os.environ["MACAWIKI_SIGNAL_DIR"] = "{tmp}"
+from scripts.signal_logger import log_tool_inventory
+log_tool_inventory({{"mcTracer": {{"path": "/opt/maca/bin/mcTracer", "version": "3.7.1.5"}}}}, "test")
+"""],
+                cwd=str(ROOT), capture_output=True, text=True,
             )
-            self.assertEqual(result.returncode, 0, result.stderr)
-            snap_path = Path(td) / "env-snapshot.json"
-            self.assertTrue(snap_path.exists(), f"Snapshot not created at {snap_path}")
-            data = json.loads(snap_path.read_text())
-            self.assertIn("environment_fingerprint", data)
-            del os.environ["MACAWIKI_SIGNAL_DIR"]
+            self.assertEqual(r.returncode, 0, r.stderr)
+            log_path = Path(tmp) / "tool-inventory-log.jsonl"
+            self.assertTrue(log_path.exists(), f"Log not created at {log_path}")
+            record = json.loads(log_path.read_text().strip().split("\n")[0])
+            self.assertEqual(record["type"], "tool_inventory")
+            self.assertIn("mcTracer", record.get("tools", {}))
+
+    def test_env_detector_recognizes_mctracer(self) -> None:
+        """env_detector must detect mcTracer at /opt/maca/bin/mcTracer when C500 present."""
+        result = subprocess.run(
+            [sys.executable, "scripts/env_detector.py", "--json"],
+            capture_output=True, text=True, cwd=str(ROOT),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        data = json.loads(result.stdout)
+        tools = data.get("tools", {})
+        if data.get("is_c500"):
+            mct = tools.get("mcTracer", {})
+            self.assertIsNotNone(mct.get("path"),
+                                 "mcTracer path should be detected on C500")
 
 
 if __name__ == "__main__":

@@ -272,3 +272,26 @@ def log_token_usage(
     }
     _enrich_with_env(record)
     _write_log("token-log.jsonl", record)
+
+
+def log_tool_inventory(
+    tools: dict[str, dict[str, Any]],
+    trigger: str = "manual",
+) -> None:
+    """Log a MACA tool inventory snapshot for change detection.
+
+    Args:
+        tools: Dict mapping tool names to ``{path, version}`` dicts.
+        trigger: Why the inventory was taken.
+    """
+    record: dict[str, Any] = {
+        "ts": _now_iso(),
+        "type": "tool_inventory",
+        "trigger": trigger,
+        "tools": {
+            name: {"path": info.get("path"), "version": info.get("version")}
+            for name, info in tools.items()
+        },
+    }
+    _enrich_with_env(record)
+    _write_log("tool-inventory-log.jsonl", record)

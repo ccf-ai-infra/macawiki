@@ -82,6 +82,14 @@ perf-signals:
 token-report:
 	python3 scripts/token_report.py
 
+# Performance capture — run quick microbenchmarks and log results.
+perf-capture:
+	python3 scripts/perf_capture.py
+
+# Full performance capture — extended benchmark suite.
+perf-capture-full:
+	python3 scripts/perf_capture.py --full --json
+
 # Evolve: aggregate signals + preview auto-fixes (combined advisory gate).
 evolve: env-probe signals self-improve-check
 	@echo ""
