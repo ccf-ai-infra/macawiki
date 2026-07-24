@@ -14,6 +14,7 @@
 - [`repo-mxmaca-performance-tuning-guide`](../sources/repos/mxmaca-performance-tuning-guide.md) — MXMACA Performance Optimization Guide 仓库
 - [`repo-mxmaca-runtime`](../sources/repos/mxmaca-runtime.md) — MXMACA Runtime
 - [`repo-vllm-metax`](../sources/repos/vllm-metax.md) — vLLM-MetaX
+- [`repo-vllm-metax-env-sh`](../sources/repos/vllm-metax-env-sh.md) — vLLM-MetaX env.sh — cu-bridge 环境配置
 
 ## wiki-pattern
 
@@ -28,4 +29,5 @@
 ## wiki-tool
 
 - [`diagnostics-mcprofiler-basics`](../wiki/diagnostics/mcprofiler-basics.md) — mcProfiler 基本使用
+- [`reference-maca-environment-variables`](../wiki/reference/maca-environment-variables.md) — vLLM-MetaX cu-bridge 环境变量配置
 - [`reference-mxcc-compiler-basics`](../wiki/reference/mxcc-compiler-basics.md) — mxcc 编译器基础参考

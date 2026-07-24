@@ -25,8 +25,10 @@
 - [`evaluation-compare-operator-backends`](../wiki/evaluations/compare-operator-backends.md) — 用 PyTorch、TileLang、MXMACA++ 比较算子实现
 - [`pattern-establish-performance-baseline`](../wiki/optimization-patterns/establish-performance-baseline.md) — 优化前先建立可比较的性能基线
 - [`recipe-verify-mxmaca-environment`](../wiki/tutorials/verify-mxmaca-environment.md) — 验证 MXMACA 开发环境的证据清单
+- [`reference-maca-environment-variables`](../wiki/reference/maca-environment-variables.md) — vLLM-MetaX cu-bridge 环境变量配置
 - [`reference-mxcc-compiler-basics`](../wiki/reference/mxcc-compiler-basics.md) — mxcc 编译器基础参考
 - [`repo-mxmaca-performance-tuning-guide`](../sources/repos/mxmaca-performance-tuning-guide.md) — MXMACA Performance Optimization Guide 仓库
+- [`repo-vllm-metax-env-sh`](../sources/repos/vllm-metax-env-sh.md) — vLLM-MetaX env.sh — cu-bridge 环境配置
 - [`tutorial-first-mxmaca-program`](../wiki/tutorials/first-mxmaca-program.md) — 编写并验证第一个 MXMACA 程序
 
 ## mxmaca-cpp
@@ -53,11 +55,13 @@
 - [`doc-mxmaca-quick-start`](../sources/official-docs/mxmaca-quick-start.md) — MXMACA 快速上手指南（公开预览入口）
 - [`pattern-establish-performance-baseline`](../wiki/optimization-patterns/establish-performance-baseline.md) — 优化前先建立可比较的性能基线
 - [`recipe-verify-mxmaca-environment`](../wiki/tutorials/verify-mxmaca-environment.md) — 验证 MXMACA 开发环境的证据清单
+- [`reference-maca-environment-variables`](../wiki/reference/maca-environment-variables.md) — vLLM-MetaX cu-bridge 环境变量配置
 - [`reference-mxcc-compiler-basics`](../wiki/reference/mxcc-compiler-basics.md) — mxcc 编译器基础参考
 - [`repo-mcpytorch`](../sources/repos/mcpytorch.md) — mcPyTorch
 - [`repo-mxmaca-performance-tuning-guide`](../sources/repos/mxmaca-performance-tuning-guide.md) — MXMACA Performance Optimization Guide 仓库
 - [`repo-mxmaca-runtime`](../sources/repos/mxmaca-runtime.md) — MXMACA Runtime
 - [`repo-vllm-metax`](../sources/repos/vllm-metax.md) — vLLM-MetaX
+- [`repo-vllm-metax-env-sh`](../sources/repos/vllm-metax-env-sh.md) — vLLM-MetaX env.sh — cu-bridge 环境配置
 - [`tutorial-first-mxmaca-program`](../wiki/tutorials/first-mxmaca-program.md) — 编写并验证第一个 MXMACA 程序
 
 ## pytorch
@@ -67,4 +71,6 @@
 
 ## vllm-metax
 
+- [`reference-maca-environment-variables`](../wiki/reference/maca-environment-variables.md) — vLLM-MetaX cu-bridge 环境变量配置
 - [`repo-vllm-metax`](../sources/repos/vllm-metax.md) — vLLM-MetaX
+- [`repo-vllm-metax-env-sh`](../sources/repos/vllm-metax-env-sh.md) — vLLM-MetaX env.sh — cu-bridge 环境配置
