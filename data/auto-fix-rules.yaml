@@ -28,8 +28,8 @@
       "min_confidence": "source-reported"
     },
     "perf_baseline_update": {
-      "enabled": true,
-      "description": "Update version references in wiki pages when MXMACA environment changes",
+      "enabled": false,
+      "description": "Update version references in wiki pages when MXMACA environment changes (disabled: requires human benchmark re-run and verification before any version fact changes)",
       "max_pages_per_fix": 3,
       "mark_status_draft": true,
       "require_revalidation_note": true

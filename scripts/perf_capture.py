@@ -67,7 +67,7 @@ class PerfResult:
     median_ms: float = 0.0
     min_ms: float = 0.0
     max_ms: float = 0.0
-    passed_correctness: bool = True
+    passed_correctness: bool | None = None  # None = no correctness check was run
     error: str | None = None
 
 
@@ -310,7 +310,7 @@ def capture(cases: list[dict[str, Any]] | None = None, full: bool = False) -> di
             "min_ms": round(perf.min_ms, 6),
             "max_ms": round(perf.max_ms, 6),
             "device_name": device_name,
-            "passed_correctness": perf.passed_correctness,
+            "correctness_checked": perf.passed_correctness is not None,
         }
         if perf.error:
             rec["error"] = perf.error
@@ -390,7 +390,9 @@ def main() -> int:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
         if report.get("error"):
-            print(f"Error: {report['error']}")
+            print(f"Error: {report['error']}", file=sys.stderr)
+            if args.json:
+                print(json.dumps(report, ensure_ascii=False, indent=2))
             return 1
         print(f"=== Performance Capture ({report['captured_at_utc'][:19]}) ===")
         print(f"Device: {report['device_name']}")

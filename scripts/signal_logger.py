@@ -171,12 +171,9 @@ def log_performance(
 ) -> None:
     """Log operator-level performance data.
 
-    Called by benchmark runners or manually after running benchmarks on C500
-    hardware.  On non-MXMACA systems this is a no-op.
+    Always writes the record.  Environment enrichment (hardware, device name,
+    MACA version) is only added when running on C500 hardware.
     """
-    if not _check_mxmaca():
-        return
-
     record: dict[str, Any] = {
         "ts": _now_iso(),
         "type": "performance",
@@ -206,31 +203,36 @@ def log_environment(
         trigger: Why the snapshot was taken (\"startup\", \"periodic\", \"manual\").
         baseline_fingerprint: Previous fingerprint for diff detection.
     """
-    if not _check_mxmaca():
-        return
+    record: dict[str, Any] = {
+        "ts": _now_iso(),
+        "type": "environment",
+        "trigger": trigger,
+    }
 
+    # Enrich with C500 environment facts when available
     try:
         from .env_detector import detect as _detect  # type: ignore[assignment]
     except ImportError:
         try:
             from env_detector import detect as _detect  # type: ignore[no-redef,assignment]
         except ImportError:
-            return
+            _detect = None
 
-    env = _detect()
-    record: dict[str, Any] = {
-        "ts": _now_iso(),
-        "type": "environment",
-        "trigger": trigger,
-        "is_c500": env.is_c500,
-        "device_name": env.device_name,
-        "maca_version": env.maca_version,
-        "driver_version": env.driver_version,
-        "mxcc_version": env.mxcc_version,
-        "pytorch_version": env.pytorch_version,
-        "tilelang_version": env.tilelang_version,
-        "fingerprint": env.fingerprint,
-    }
+    if _detect:
+        try:
+            env = _detect()
+            record.update({
+                "is_c500": env.is_c500,
+                "device_name": env.device_name,
+                "maca_version": env.maca_version,
+                "driver_version": env.driver_version,
+                "mxcc_version": env.mxcc_version,
+                "pytorch_version": env.pytorch_version,
+                "tilelang_version": env.tilelang_version,
+                "fingerprint": env.fingerprint,
+            })
+        except Exception:
+            record["fingerprint"] = "unavailable"
     if baseline_fingerprint:
         record["baseline_fingerprint"] = baseline_fingerprint
         record["changed"] = env.fingerprint != baseline_fingerprint

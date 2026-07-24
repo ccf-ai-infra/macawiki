@@ -289,12 +289,24 @@ def _strategy_token_efficiency_hint(item: dict[str, Any], rules: dict[str, Any])
         if already_aliased:
             continue
 
-        # Run fuzzy search to find best matching page
+        # Enforce max aliases per fix from config
+        cfg = rules.get("rules", {}).get("token_efficiency_hint", {})
+        max_aliases = cfg.get("max_aliases_per_fix", 3)
+        if len(new_aliases) >= max_aliases:
+            break
+
+        # Run fuzzy search and only alias if similarity is above threshold
+        fuzzy_threshold = cfg.get("fuzzy_threshold", 0.3)
         r = _run([sys.executable, "scripts/query.py", term, "--fuzzy", "--limit", "3", "--json"])
         try:
             results = json.loads(r.stdout)
             if results:
                 best = results[0]
+                # Check fuzzy score — score is scaled by 1000 internally
+                score = best.get("score", 0)
+                normalized_score = score / 1000.0 if score > 1 else score
+                if normalized_score < fuzzy_threshold:
+                    continue
                 page_id = best.get("id", "")
                 if page_id:
                     if page_id in aliases_data:

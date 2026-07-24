@@ -121,37 +121,50 @@ def _detect_staleness(freshness_days: int = 180) -> list[dict[str, Any]]:
     return items
 
 
-def _group_perf_regressions(signals: list[dict], min_count: int = 2) -> list[dict[str, Any]]:
-    """Group performance regression signals by (operator, backend).
+def _group_perf_regressions(signals: list[dict], min_count: int = 2, regression_threshold: float = 1.15) -> list[dict[str, Any]]:
+    """Group performance regression signals by full workload identity.
 
-    Regressions must appear at least *min_count* times to produce a backlog
-    item, avoiding noise from single-run variance.
+    Grouping key includes operator, backend, shape, dtype, and environment
+    fingerprint — different workloads (e.g. add/4096/fp32 vs add/1M/fp16)
+    are never compared against each other.  Only signals with matching
+    fingerprints are considered for regression detection.
     """
     groups: dict[tuple, list[dict]] = defaultdict(list)
     for s in signals:
         if s.get("type") == "performance":
-            key = (s.get("operator", "?"), s.get("backend", "?"))
+            shape_key = tuple(s.get("shape", []))
+            key = (
+                s.get("operator", "?"),
+                s.get("backend", "?"),
+                shape_key,
+                s.get("dtype", "?"),
+                s.get("env_fingerprint", ""),
+            )
             groups[key].append(s)
 
     items: list[dict[str, Any]] = []
-    for (operator, backend), sigs in groups.items():
+    for (operator, backend, shape_tuple, dtype, env_fp), sigs in groups.items():
         if len(sigs) < min_count:
             continue
         # Compare latest median against the earliest in this batch
-        medians = [sig.get("median_ms", 0) for sig in sigs]
+        medians = [sig.get("median_ms", 0) for sig in sigs if sig.get("median_ms", 0) > 0]
+        if len(medians) < 2:
+            continue
         latest = medians[-1]
         earliest = medians[0]
-        if earliest > 0 and latest > earliest * 1.15:
+        if earliest > 0 and latest > earliest * regression_threshold:
             ratio = round(latest / earliest, 2)
+            shape_str = str(list(shape_tuple))
             items.append({
                 "source": "signal",
                 "signal_type": "perf_regression",
                 "signal_count": len(sigs),
-                "signal_query_terms": [operator, backend],
-                "signal_filters": {},
+                "signal_query_terms": [operator, backend, shape_str, dtype],
+                "signal_filters": {"env_fingerprint": env_fp},
                 "auto_fixable": False,
                 "auto_fix_hint": (
-                    f"Operator {operator} on {backend}: median {latest}ms vs {earliest}ms "
+                    f"Operator {operator} on {backend} [{shape_str}/{dtype}]: "
+                    f"median {latest}ms vs {earliest}ms "
                     f"(×{ratio}); may need re-benchmarking or investigation"
                 ),
             })
@@ -226,11 +239,11 @@ def _group_env_changes(signals: list[dict]) -> list[dict[str, Any]]:
                 "signal_count": 1,
                 "signal_query_terms": [label, old_v, new_v],
                 "signal_filters": {},
-                "auto_fixable": True,
-                "auto_fix_strategy": "perf_baseline_update",
+                "auto_fixable": False,
                 "auto_fix_hint": (
                     f"{label} changed: {old_v} → {new_v}. "
-                    f"Benchmark baselines may need updating."
+                    f"Requires human review: re-run benchmarks on the new environment "
+                    f"before updating any version references or performance claims."
                 ),
             })
 

@@ -222,7 +222,7 @@ def _parse_macainfo() -> dict[str, Any]:
 
 
 def _probe_tilelang() -> dict[str, Any]:
-    """Auto-detect TileLang, trying standard locations and PYTHONPATH."""
+    """Auto-detect TileLang, trying standard locations via sys.path."""
     result: dict[str, Any] = {"available": False, "version": None, "path": None, "source_commit": None}
 
     # Check if TileLang root exists
@@ -232,14 +232,12 @@ def _probe_tilelang() -> dict[str, Any]:
         if commit_file.exists():
             result["source_commit"] = commit_file.read_text(encoding="utf-8").strip()
 
-    # Try importing with PYTHONPATH adjustment
-    saved_path = os.environ.get("PYTHONPATH", "")
+    # Insert TileLang into sys.path before attempting import
+    # (os.environ["PYTHONPATH"] changes are ineffective after Python has started)
+    saved_path = list(sys.path)
     try:
-        tilelang_paths = []
         if _KNOWN_TILELANG_ROOT.exists():
-            tilelang_paths.append(str(_KNOWN_TILELANG_ROOT))
-        if tilelang_paths:
-            os.environ["PYTHONPATH"] = ":".join(tilelang_paths + ([saved_path] if saved_path else []))
+            sys.path.insert(0, str(_KNOWN_TILELANG_ROOT))
 
         try:
             import tilelang  # type: ignore[import-untyped]
@@ -249,10 +247,7 @@ def _probe_tilelang() -> dict[str, Any]:
         except ImportError:
             pass
     finally:
-        if saved_path:
-            os.environ["PYTHONPATH"] = saved_path
-        elif "PYTHONPATH" in os.environ:
-            del os.environ["PYTHONPATH"]
+        sys.path[:] = saved_path
 
     return result
 
