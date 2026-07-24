@@ -70,9 +70,11 @@ self-improve-check:
 self-improve:
 	python3 scripts/self_improve.py --apply
 
-# Environment detection — probe C500/MXMACA hardware and software versions.
+# Environment detection — probe C500/MXMACA hardware and software versions,
+# write a JSONL record for the aggregator so env changes are detected over time.
 env-probe:
-	python3 scripts/env_detector.py
+	python3 scripts/env_detector.py --snapshot
+	@python3 -c "from scripts.signal_logger import log_environment; log_environment('periodic')"
 
 # Performance signals — analyze operator performance logs and detect regressions.
 perf-signals:

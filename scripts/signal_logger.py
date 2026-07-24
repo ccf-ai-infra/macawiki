@@ -163,10 +163,35 @@ def _enrich_with_env(record: dict[str, Any]) -> None:
             except Exception:
                 pass
 
-    # Fallback: host-based fingerprint for non-MXMACA environments
+    # Fallback: build a fingerprint from whatever hardware/software facts are
+    # available.  Includes GPU model, PyTorch version, and CUDA driver so that
+    # different machines, GPU swaps, or container instances produce distinct
+    # fingerprints even when MACA is absent.
     import platform as _platform
     import hashlib as _hashlib
-    host_id = f"{_platform.node()}:{_platform.platform()}:{_platform.python_version()}"
+    parts: list[str] = [
+        _platform.node(),
+        _platform.platform(),
+        _platform.python_version(),
+    ]
+    # Try to capture GPU and PyTorch facts on any CUDA-capable system
+    try:
+        import torch
+        parts.append(f"torch={torch.__version__}")
+        if torch.cuda.is_available():
+            parts.append(f"cuda_dev={torch.cuda.get_device_name(0)}")
+            parts.append(f"cuda_ver={torch.version.cuda}")
+            try:
+                import subprocess
+                r = subprocess.run(["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"],
+                                   capture_output=True, text=True, timeout=10)
+                if r.returncode == 0:
+                    parts.append(f"nv_driver={r.stdout.strip()}")
+            except Exception:
+                pass
+    except ImportError:
+        pass
+    host_id = ":".join(parts)
     record["env_fingerprint"] = _hashlib.sha256(host_id.encode()).hexdigest()[:16]
 
 

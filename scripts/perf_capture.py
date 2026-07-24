@@ -103,6 +103,7 @@ def _bench_op(
     result = PerfResult(
         operator=op_name,
         shape=list(shape),
+        dtype=dtype_str,
         warmup_iters=warmup,
         timed_iters=iterations,
     )
