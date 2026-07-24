@@ -593,7 +593,7 @@ log_zero_result(["missing_term"], {{}}, "and", False)
 
     def test_evolve_pipeline_scripts_exist(self) -> None:
         """All self-evolution scripts must be importable."""
-        scripts = ["signal_logger", "signal_aggregator", "self_improve"]
+        scripts = ["signal_logger", "signal_aggregator", "self_improve", "env_detector", "perf_capture"]
         import importlib
         for name in scripts:
             with self.subTest(script=name):
@@ -604,6 +604,251 @@ log_zero_result(["missing_term"], {{}}, "and", False)
                         importlib.import_module(name)
                     except ImportError:
                         self.fail(f"Could not import {name}")
+
+    def test_env_detector_imports(self) -> None:
+        """env_detector module must import and detect() returns EnvInfo fields."""
+        from scripts.env_detector import detect, is_mxmaca_env, snapshot
+        info = detect()
+        self.assertIsInstance(info.is_c500, bool)
+        self.assertIsInstance(is_mxmaca_env(), bool)
+        snap = snapshot()
+        for key in ("is_c500", "device_name", "maca_version", "driver_version",
+                     "environment_fingerprint"):
+            self.assertIn(key, snap, f"Missing key in snapshot: {key}")
+
+    def test_env_detector_cli_json(self) -> None:
+        """env_detector --json must produce valid JSON with required keys."""
+        result = subprocess.run(
+            [sys.executable, "scripts/env_detector.py", "--json"],
+            capture_output=True, text=True, cwd=str(ROOT),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        data = json.loads(result.stdout)
+        for key in ("schema_version", "is_c500", "device_name", "environment_fingerprint"):
+            self.assertIn(key, data, f"Missing key: {key}")
+
+    def test_signal_logger_perf_creates_file(self) -> None:
+        """log_performance() must write to perf-log.jsonl with correct fields."""
+        import tempfile, os, subprocess as sp
+        with tempfile.TemporaryDirectory() as tmp:
+            r = sp.run(
+                ["python3", "-c", f"""
+import os; os.environ["MACAWIKI_SIGNAL_DIR"] = "{tmp}"
+from scripts.signal_logger import log_performance
+log_performance("add", [4096], "pytorch", 0.1, 0.1, 0.01, 20, 100)
+"""],
+                cwd=str(ROOT), capture_output=True, text=True,
+            )
+            self.assertEqual(r.returncode, 0, r.stderr)
+            log_path = Path(tmp) / "perf-log.jsonl"
+            self.assertTrue(log_path.exists(), f"Log not created at {log_path}")
+            record = json.loads(log_path.read_text().strip().split("\n")[0])
+            self.assertEqual(record["type"], "performance")
+            self.assertEqual(record["operator"], "add")
+            self.assertEqual(record["backend"], "pytorch")
+
+    def test_signal_logger_token_creates_file(self) -> None:
+        """log_token_usage() must write to token-log.jsonl with correct fields."""
+        import tempfile, os, subprocess as sp
+        with tempfile.TemporaryDirectory() as tmp:
+            r = sp.run(
+                ["python3", "-c", f"""
+import os; os.environ["MACAWIKI_SIGNAL_DIR"] = "{tmp}"
+from scripts.signal_logger import log_token_usage
+log_token_usage("query", ["test"], "or", 3, 100, 200)
+"""],
+                cwd=str(ROOT), capture_output=True, text=True,
+            )
+            self.assertEqual(r.returncode, 0, r.stderr)
+            log_path = Path(tmp) / "token-log.jsonl"
+            self.assertTrue(log_path.exists(), f"Log not created at {log_path}")
+            record = json.loads(log_path.read_text().strip().split("\n")[0])
+            self.assertEqual(record["type"], "token_usage")
+            self.assertEqual(record["total_tokens"], 300)
+            self.assertEqual(record["tokens_per_result"], 100.0)
+
+    def test_signal_logger_env_creates_file(self) -> None:
+        """log_environment() must write to env-log.jsonl (when C500 detected)."""
+        import tempfile, os, subprocess as sp
+        with tempfile.TemporaryDirectory() as tmp:
+            r = sp.run(
+                ["python3", "-c", f"""
+import os; os.environ["MACAWIKI_SIGNAL_DIR"] = "{tmp}"
+from scripts.signal_logger import log_environment
+log_environment("test")
+"""],
+                cwd=str(ROOT), capture_output=True, text=True,
+            )
+            self.assertEqual(r.returncode, 0, r.stderr)
+            log_path = Path(tmp) / "env-log.jsonl"
+            self.assertTrue(log_path.exists(), f"Log not created at {log_path}")
+            record = json.loads(log_path.read_text().strip().split("\n")[0])
+            self.assertEqual(record["type"], "environment")
+            self.assertIn("fingerprint", record)
+
+    def test_signal_aggregator_handles_all_types(self) -> None:
+        """Aggregator must process all signal type JSONs without error."""
+        import tempfile, os, subprocess as sp
+        with tempfile.TemporaryDirectory() as tmp:
+            # Write synthetic signals via subprocess
+            r = sp.run(
+                ["python3", "-c", f"""
+import os; os.environ["MACAWIKI_SIGNAL_DIR"] = "{tmp}"
+from scripts.signal_logger import (
+    log_performance, log_token_usage, log_environment,
+    log_query, log_zero_result,
+)
+log_query(["test"], {{}}, "and", False, 2, ["p1"], 5.0)
+log_zero_result(["missing"], {{}}, "or", False)
+log_performance("softmax", [64, 128], "tilelang", 0.03, 0.03, 0.001, 20, 100)
+log_token_usage("query", ["softmax", "perf"], "or", 2, 80, 120)
+log_environment("test")
+"""],
+                cwd=str(ROOT), capture_output=True, text=True,
+            )
+            self.assertEqual(r.returncode, 0, r.stderr)
+
+            result = sp.run(
+                [sys.executable, "scripts/signal_aggregator.py", "--check", "--json"],
+                capture_output=True, text=True, cwd=str(ROOT),
+                env={**os.environ, "MACAWIKI_SIGNAL_DIR": tmp},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            data = json.loads(result.stdout)
+            self.assertGreaterEqual(data["total_signals"], 3)
+
+    def test_env_detector_snapshot_writes_file(self) -> None:
+        """env_detector --snapshot must write env-snapshot.json."""
+        import tempfile, os, subprocess as sp
+        with tempfile.TemporaryDirectory() as tmp:
+            result = sp.run(
+                [sys.executable, "scripts/env_detector.py", "--snapshot"],
+                capture_output=True, text=True, cwd=str(ROOT),
+                env={**os.environ, "MACAWIKI_SIGNAL_DIR": tmp},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            snap_path = Path(tmp) / "env-snapshot.json"
+            self.assertTrue(snap_path.exists(), f"Snapshot not created at {snap_path}")
+            data = json.loads(snap_path.read_text())
+            self.assertIn("environment_fingerprint", data)
+
+    def test_self_improve_new_strategies_registered(self) -> None:
+        """STRATEGIES dict must include perf_baseline_update and token_efficiency_hint."""
+        from scripts.self_improve import STRATEGIES
+        for name in ("perf_baseline_update", "token_efficiency_hint"):
+            self.assertIn(name, STRATEGIES, f"Strategy '{name}' not registered")
+            self.assertTrue(callable(STRATEGIES[name]),
+                            f"Strategy '{name}' is not callable")
+
+    def test_auto_fix_rules_has_new_strategies(self) -> None:
+        """auto-fix-rules.yaml must contain perf_baseline_update and token_efficiency_hint."""
+        from scripts.common import load_data
+        rules = load_data(ROOT / "data" / "auto-fix-rules.yaml")
+        for name in ("perf_baseline_update", "token_efficiency_hint"):
+            self.assertIn(name, rules.get("rules", {}),
+                          f"Strategy '{name}' missing in auto-fix-rules.yaml")
+
+    def test_token_report_script_works(self) -> None:
+        """token_report.py must execute without error."""
+        result = subprocess.run(
+            [sys.executable, "scripts/token_report.py", "--json"],
+            capture_output=True, text=True, cwd=str(ROOT),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        data = json.loads(result.stdout)
+        self.assertIn("total_records", data)
+
+    def test_env_detector_deep_probe(self) -> None:
+        """env_detector --deep --json must include pip_packages and maca_libraries."""
+        result = subprocess.run(
+            [sys.executable, "scripts/env_detector.py", "--deep", "--json"],
+            capture_output=True, text=True, cwd=str(ROOT),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        data = json.loads(result.stdout)
+        self.assertEqual(data["schema_version"], 2)
+        self.assertIn("pip_packages", data)
+        self.assertIn("maca_libraries", data)
+        self.assertIn("macainfo", data)
+        self.assertIn("tools", data)
+        # Check mcTracer tool detection
+        self.assertIn("mcTracer", data.get("tools", {}))
+
+    def test_perf_capture_module_importable(self) -> None:
+        """perf_capture module must be importable."""
+        import importlib
+        try:
+            importlib.import_module("scripts.perf_capture")
+        except ImportError:
+            importlib.import_module("perf_capture")
+
+    def test_perf_capture_json_output(self) -> None:
+        """perf_capture --json must return structured results or a valid error.
+
+        When PyTorch + CUDA device are available the response must include
+        device_name, operator_results, and memory_bandwidth (exit 0).
+        When PyTorch is unavailable a structured error response with a
+        non-zero exit code is acceptable.
+        """
+        result = subprocess.run(
+            [sys.executable, "scripts/perf_capture.py", "--json"],
+            capture_output=True, text=True, cwd=str(ROOT),
+            timeout=120,
+        )
+        data = json.loads(result.stdout)
+        if result.returncode == 0:
+            # Success path: must have the expected benchmark fields
+            self.assertIn("device_name", data, "Success response missing device_name")
+            self.assertIn("operator_results", data, "Success response missing operator_results")
+            self.assertIn("memory_bandwidth", data, "Success response missing memory_bandwidth")
+            self.assertGreaterEqual(len(data.get("operator_results", [])), 4,
+                                    "Expected at least 4 operator_results")
+        elif result.returncode == 1 and isinstance(data.get("error"), str):
+            # Error path: device unavailable — only specific errors accepted
+            self.assertIn(data["error"], (
+                "PyTorch not available",
+                "CUDA/MXMACA device not available",
+            ), f"Unexpected error message: {data.get('error')}")
+            self.assertIsInstance(data.get("results"), list,
+                                  "Error response must include results list")
+        else:
+            self.fail(
+                f"Unexpected exit {result.returncode}: "
+                f"stdout={result.stdout[:500]} stderr={result.stderr[:500]}"
+            )
+
+    def test_signal_logger_tool_inventory(self) -> None:
+        """log_tool_inventory() must write to tool-inventory-log.jsonl."""
+        import tempfile, os, subprocess as sp
+        with tempfile.TemporaryDirectory() as tmp:
+            r = sp.run(
+                ["python3", "-c", f"""
+import os; os.environ["MACAWIKI_SIGNAL_DIR"] = "{tmp}"
+from scripts.signal_logger import log_tool_inventory
+log_tool_inventory({{"mcTracer": {{"path": "/opt/maca/bin/mcTracer", "version": "3.7.1.5"}}}}, "test")
+"""],
+                cwd=str(ROOT), capture_output=True, text=True,
+            )
+            self.assertEqual(r.returncode, 0, r.stderr)
+            log_path = Path(tmp) / "tool-inventory-log.jsonl"
+            self.assertTrue(log_path.exists(), f"Log not created at {log_path}")
+            record = json.loads(log_path.read_text().strip().split("\n")[0])
+            self.assertEqual(record["type"], "tool_inventory")
+            self.assertIn("mcTracer", record.get("tools", {}))
+
+    def test_env_detector_recognizes_mctracer(self) -> None:
+        """env_detector must detect mcTracer at /opt/maca/bin/mcTracer when C500 present."""
+        result = subprocess.run(
+            [sys.executable, "scripts/env_detector.py", "--json"],
+            capture_output=True, text=True, cwd=str(ROOT),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        data = json.loads(result.stdout)
+        tools = data.get("tools", {})
+        if data.get("is_c500"):
+            mct = tools.get("mcTracer", {})
+            self.assertIsNotNone(mct.get("path"),
+                                 "mcTracer path should be detected on C500")
 
 
 if __name__ == "__main__":

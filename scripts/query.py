@@ -254,6 +254,7 @@ def main() -> int:
     parser.add_argument("--paths-only", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--signal-log", action="store_true", help="Log query telemetry to evals/signals/ for self-evolution")
+    parser.add_argument("--token-estimate", action="store_true", help="Estimate and log token consumption for this query")
     args = parser.parse_args()
     filters = {name: getattr(args, name) for name in FILTER_FIELDS}
     active_filters = {k: v for k, v in filters.items() if v is not None}
@@ -321,6 +322,40 @@ def main() -> int:
                     log_coverage_gap(list(args.terms), unmatched, len(results))
             except Exception:
                 pass
+
+        # Token estimation (when --token-estimate is active)
+        if args.token_estimate:
+            try:
+                from signal_logger import log_token_usage
+            except ImportError:
+                from scripts.signal_logger import log_token_usage
+
+            # Heuristic: count chars / 4 for Latin, chars / 1.5 for CJK
+            def _est_tokens(text: str) -> int:
+                cjk = sum(1 for c in text if '一' <= c <= '鿿' or '぀' <= c <= 'ヿ')
+                latin = len(text) - cjk
+                return max(1, int(cjk / 1.5 + latin / 4))
+
+            input_text = " ".join(args.terms)
+            if active_filters:
+                input_text += " " + json.dumps(active_filters, sort_keys=True)
+            input_tokens = _est_tokens(input_text)
+
+            # Estimate output tokens from result records
+            output_text = ""
+            for score, page in results:
+                record = _record(score, page)
+                output_text += json.dumps(record, ensure_ascii=False, sort_keys=True)
+            output_tokens = _est_tokens(output_text)
+
+            log_token_usage(
+                operation="query",
+                query_terms=list(args.terms),
+                mode=args.mode,
+                result_count=len(results),
+                estimated_input_tokens=input_tokens,
+                estimated_output_tokens=output_tokens,
+            )
 
     # Smart hints when no results found (stderr, doesn't affect output parsing)
     if not results:

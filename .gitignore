@@ -162,5 +162,6 @@ cython_debug/
 
 # Macawiki self-evolution signals (raw logs, not aggregated results)
 evals/signals/*.jsonl
+evals/signals/env-snapshot*.json
 evals/signals/archive/
 

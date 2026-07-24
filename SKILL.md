@@ -62,6 +62,32 @@ For operator comparison work, read `benchmarks/README.md` and
 - Say that the corpus has no reliable conclusion when evidence is absent.
 - Never assume CUDA behavior is identical on MXMACA.
 
+## Performance optimization (C500/MXMACA only)
+
+When running on a MetaX C500 with MXMACA, capture environment data and track query efficiency:
+
+```bash
+# Check if this is a C500/MXMACA environment
+python3 scripts/env_detector.py
+
+# Run queries with token tracking
+python3 scripts/query.py "performance baseline" --mode or --signal-log --token-estimate
+
+# Probe the environment before running benchmarks
+python3 scripts/env_detector.py --snapshot
+
+# Analyze collected signals
+make signals          # aggregate incoming query signals
+make token-report     # identify expensive query patterns
+make env-probe        # capture hardware/software fingerprint
+make evolve           # full self-evolution cycle (env + signals + auto-fix preview)
+```
+
+Performance signals and token tracking are captured automatically when
+``--signal-log`` is used.  On non-MXMACA systems a host-based fingerprint
+is used in place of the C500 hardware fingerprint, so records from
+different machines are never merged.
+
 ## Maintenance
 
 Run all checks before proposing corpus changes:

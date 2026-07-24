@@ -26,6 +26,20 @@
       "enabled": false,
       "description": "Auto-add uncovered vocabulary terms to pages (disabled: requires human semantic judgment)",
       "min_confidence": "source-reported"
+    },
+    "perf_baseline_update": {
+      "enabled": false,
+      "description": "Update version references in wiki pages when MXMACA environment changes (disabled: requires human benchmark re-run and verification before any version fact changes)",
+      "max_pages_per_fix": 3,
+      "mark_status_draft": true,
+      "require_revalidation_note": true
+    },
+    "token_efficiency_hint": {
+      "enabled": true,
+      "description": "Add aliases and keywords to reduce token waste on expensive queries",
+      "min_tokens_per_result": 300,
+      "max_aliases_per_fix": 3,
+      "max_keywords_per_fix": 5
     }
   },
   "safety": {
