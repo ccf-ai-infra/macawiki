@@ -1,4 +1,4 @@
-.PHONY: validate test indices status eval doctor quality freshness coverage recall signals signals-merge self-improve-check self-improve evolve report check check-advisory all
+.PHONY: validate test indices status eval doctor quality freshness coverage recall signals signals-merge self-improve-check self-improve evolve report check check-advisory all env-probe perf-signals token-report perf-capture perf-capture-full
 
 validate:
 	python3 scripts/validate.py

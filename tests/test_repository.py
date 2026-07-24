@@ -803,8 +803,12 @@ log_environment("test")
             self.assertIn("memory_bandwidth", data, "Success response missing memory_bandwidth")
             self.assertGreaterEqual(len(data.get("operator_results", [])), 4,
                                     "Expected at least 4 operator_results")
-        elif result.returncode == 1 and data.get("error"):
-            # Error path: device unavailable — verify structured error shape
+        elif result.returncode == 1 and isinstance(data.get("error"), str):
+            # Error path: device unavailable — only specific errors accepted
+            self.assertIn(data["error"], (
+                "PyTorch not available",
+                "CUDA/MXMACA device not available",
+            ), f"Unexpected error message: {data.get('error')}")
             self.assertIsInstance(data.get("results"), list,
                                   "Error response must include results list")
         else:

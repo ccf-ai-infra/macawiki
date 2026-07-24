@@ -114,6 +114,7 @@ def log_coverage_gap(
 
 _mxmaca_checked: bool = False
 _mxmaca_available: bool = False
+_fallback_fingerprint: str | None = None  # cached fallback fingerprint
 
 
 def _check_mxmaca() -> bool:
@@ -164,9 +165,12 @@ def _enrich_with_env(record: dict[str, Any]) -> None:
                 pass
 
     # Fallback: build a fingerprint from whatever hardware/software facts are
-    # available.  Includes GPU model, PyTorch version, and CUDA driver so that
-    # different machines, GPU swaps, or container instances produce distinct
-    # fingerprints even when MACA is absent.
+    # available.  Cached after first call so subprocess/smi probes only run once.
+    global _fallback_fingerprint
+    if _fallback_fingerprint is not None:
+        record["env_fingerprint"] = _fallback_fingerprint
+        return
+
     import platform as _platform
     import hashlib as _hashlib
     parts: list[str] = [
@@ -192,7 +196,8 @@ def _enrich_with_env(record: dict[str, Any]) -> None:
     except ImportError:
         pass
     host_id = ":".join(parts)
-    record["env_fingerprint"] = _hashlib.sha256(host_id.encode()).hexdigest()[:16]
+    _fallback_fingerprint = _hashlib.sha256(host_id.encode()).hexdigest()[:16]
+    record["env_fingerprint"] = _fallback_fingerprint
 
 
 def log_performance(
