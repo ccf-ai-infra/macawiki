@@ -379,6 +379,12 @@ def process_item(item: dict[str, Any], rules: dict[str, Any]) -> dict[str, Any]:
     except (json.JSONDecodeError, KeyError):
         pass
 
+    # Check that the strategy is enabled in config
+    if not _strategy_enabled(strategy_name, rules):
+        result["status"] = "skipped"
+        result["failure_reason"] = f"strategy '{strategy_name}' is disabled in auto-fix-rules.yaml"
+        return result
+
     # Step 4: Run strategy
     strategy_fn = STRATEGIES.get(strategy_name)
     if not strategy_fn:
@@ -443,13 +449,31 @@ def process_item(item: dict[str, Any], rules: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def _strategy_enabled(strategy_name: str, rules: dict[str, Any]) -> bool:
+    """Return True if *strategy_name* is enabled in the auto-fix rules config.
+
+    Strategies absent from the rules config default to disabled.
+    """
+    if not strategy_name:
+        return False
+    rule = rules.get("rules", {}).get(strategy_name)
+    if rule is None:
+        return False
+    return bool(rule.get("enabled", False))
+
+
 def apply_fixes(dry_run: bool = False) -> dict[str, Any]:
     """Process all open auto-fixable backlog items."""
     state = load_data(STATE_PATH)
     backlog = state.get("backlog", []) if isinstance(state, dict) else []
     rules = load_data(RULES_PATH)
 
-    auto_items = [b for b in backlog if b.get("auto_fixable") and b.get("status") in ("open", "pending")]
+    auto_items = [
+        b for b in backlog
+        if b.get("auto_fixable")
+        and b.get("status") in ("open", "pending")
+        and _strategy_enabled(b.get("auto_fix_strategy", ""), rules)
+    ]
     max_per_run = rules.get("safety", {}).get("max_auto_fixes_per_run", 5)
     auto_items = auto_items[:max_per_run]
 

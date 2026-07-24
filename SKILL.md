@@ -84,8 +84,9 @@ make evolve           # full self-evolution cycle (env + signals + auto-fix prev
 ```
 
 Performance signals and token tracking are captured automatically when
-``--signal-log`` is used.  On non-MXMACA systems all MXMACA-specific
-functions are harmless no-ops.
+``--signal-log`` is used.  On non-MXMACA systems a host-based fingerprint
+is used in place of the C500 hardware fingerprint, so records from
+different machines are never merged.
 
 ## Maintenance
 

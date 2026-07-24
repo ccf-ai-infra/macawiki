@@ -136,25 +136,38 @@ def _check_mxmaca() -> bool:
 
 
 def _enrich_with_env(record: dict[str, Any]) -> None:
-    """Add environment context fields to *record* when on C500 hardware."""
-    if not _check_mxmaca():
-        return
-    try:
-        from .env_detector import detect as _detect  # type: ignore[assignment]
-    except ImportError:
+    """Add environment context fields to *record*.
+
+    On C500 hardware the full MACA/driver/mxcc fingerprint is added.  On
+    non-MXMACA systems a host-based fingerprint is generated so that
+    records from different machines are never grouped together by the
+    aggregator.
+    """
+    if _check_mxmaca():
         try:
-            from env_detector import detect as _detect  # type: ignore[no-redef,assignment]
+            from .env_detector import detect as _detect  # type: ignore[assignment]
         except ImportError:
-            return
-    try:
-        env = _detect()
-        record["hardware"] = "c500"
-        record["device_name"] = env.device_name
-        record["maca_version"] = env.maca_version
-        record["driver_version"] = env.driver_version
-        record["env_fingerprint"] = env.fingerprint[:16]
-    except Exception:
-        pass
+            try:
+                from env_detector import detect as _detect  # type: ignore[no-redef,assignment]
+            except ImportError:
+                _detect = None
+        if _detect:
+            try:
+                env = _detect()
+                record["hardware"] = "c500"
+                record["device_name"] = env.device_name
+                record["maca_version"] = env.maca_version
+                record["driver_version"] = env.driver_version
+                record["env_fingerprint"] = env.fingerprint[:16]
+                return
+            except Exception:
+                pass
+
+    # Fallback: host-based fingerprint for non-MXMACA environments
+    import platform as _platform
+    import hashlib as _hashlib
+    host_id = f"{_platform.node()}:{_platform.platform()}:{_platform.python_version()}"
+    record["env_fingerprint"] = _hashlib.sha256(host_id.encode()).hexdigest()[:16]
 
 
 def log_performance(
@@ -218,6 +231,7 @@ def log_environment(
         except ImportError:
             _detect = None
 
+    env = None
     if _detect:
         try:
             env = _detect()
@@ -235,7 +249,8 @@ def log_environment(
             record["fingerprint"] = "unavailable"
     if baseline_fingerprint:
         record["baseline_fingerprint"] = baseline_fingerprint
-        record["changed"] = env.fingerprint != baseline_fingerprint
+        current_fp = env.fingerprint if env else record.get("fingerprint", "unavailable")
+        record["changed"] = current_fp != baseline_fingerprint
 
     _write_log("env-log.jsonl", record)
 

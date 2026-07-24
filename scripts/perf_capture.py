@@ -386,14 +386,17 @@ def main() -> int:
 
     report = capture(full=args.full)
 
+    # Check for errors before formatting — must exit non-zero on failure
+    if report.get("error"):
+        if args.json:
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+        else:
+            print(f"Error: {report['error']}", file=sys.stderr)
+        return 1
+
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
-        if report.get("error"):
-            print(f"Error: {report['error']}", file=sys.stderr)
-            if args.json:
-                print(json.dumps(report, ensure_ascii=False, indent=2))
-            return 1
         print(f"=== Performance Capture ({report['captured_at_utc'][:19]}) ===")
         print(f"Device: {report['device_name']}")
         bw = report.get("memory_bandwidth", {})

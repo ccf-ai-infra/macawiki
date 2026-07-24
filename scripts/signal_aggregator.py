@@ -146,8 +146,9 @@ def _group_perf_regressions(signals: list[dict], min_count: int = 2, regression_
     for (operator, backend, shape_tuple, dtype, env_fp), sigs in groups.items():
         if len(sigs) < min_count:
             continue
-        # Compare latest median against the earliest in this batch
-        medians = [sig.get("median_ms", 0) for sig in sigs if sig.get("median_ms", 0) > 0]
+        # Sort by timestamp so earliest/latest comparisons are chronological
+        sigs_sorted = sorted(sigs, key=lambda s: s.get("ts", ""))
+        medians = [sig.get("median_ms", 0) for sig in sigs_sorted if sig.get("median_ms", 0) > 0]
         if len(medians) < 2:
             continue
         latest = medians[-1]
