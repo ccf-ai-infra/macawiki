@@ -11,7 +11,7 @@
   "mxmaca_versions": ["3.7.1.5"],
   "components": ["mxcc", "mxmaca-sdk", "mxmaca-runtime"],
   "sources": ["doc-mxmaca-compiler-mxcc", "doc-mxmaca-quick-start"],
-  "related": ["recipe-verify-mxmaca-environment", "tutorial-first-mxmaca-program"],
+  "related": ["recipe-verify-mxmaca-environment", "tutorial-first-mxmaca-program", "reference-maca-environment-variables"],
   "prerequisites": ["recipe-verify-mxmaca-environment"],
   "verified_at": "2026-07-22",
   "confidence": "source-reported",

@@ -20,3 +20,5 @@
 - [`doc-mxmaca-programming-model`](../sources/official-docs/mxmaca-programming-model.md) — MXMACA Programming Model Documentation
 - [`doc-mxmaca-quick-start`](../sources/official-docs/mxmaca-quick-start.md) — MXMACA 快速上手指南（公开预览入口）
 - [`doc-pytorch-operator-reference`](../sources/official-docs/pytorch-operator-reference.md) — PyTorch stable operator reference for evaluation baselines
+- [`reference-maca-environment-variables`](../wiki/reference/maca-environment-variables.md) — vLLM-MetaX cu-bridge 环境变量配置
+- [`repo-vllm-metax-env-sh`](../sources/repos/vllm-metax-env-sh.md) — vLLM-MetaX env.sh — cu-bridge 环境配置

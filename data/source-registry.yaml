@@ -65,6 +65,16 @@
       "access": "public",
       "license_status": "permissive",
       "capture_policy": "metadata-and-links-only"
+    },
+    {
+      "id": "repo-vllm-metax-env-sh",
+      "name": "vLLM-MetaX env.sh (cu-bridge env config)",
+      "url": "https://gitee.com/metax-maca/vLLM-metax/blob/master/env.sh",
+      "access": "public",
+      "license_status": "permissive",
+      "capture_policy": "metadata-and-original-summary-only",
+      "fixed_ref": "commit 0bf07c51d32f24eb3a2adecf50476260f589db9c (blob 88b76bf4, master, 2026-07-24)",
+      "note": "Full env.sh (~16 lines) preserved due to minimal size; every line is evidence-relevant"
     }
   ]
 }

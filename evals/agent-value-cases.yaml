@@ -84,6 +84,15 @@
       "required_sources": [],
       "must_contain": ["not_comparable"],
       "must_not_contain": ["matmul speedup", "matmul 加速比", "TileLang matmul 比 PyTorch 快"]
+    },
+    {
+      "id": "agent-value-env-vars-001",
+      "prompt": "vLLM-MetaX 在 C500 上构建时，cu-bridge 环境变量应该如何配置？",
+      "terms": ["cu-bridge", "CUCC_PATH", "vLLM"],
+      "expected_pages": ["reference-maca-environment-variables"],
+      "required_sources": ["repo-vllm-metax-env-sh"],
+      "must_contain": ["CUDA_PATH", "env.sh", "不是通用"],
+      "must_not_contain": ["MACA 开发环境的标准环境变量配置", "通用 MACA 标准环境变量"]
     }
   ]
 }
