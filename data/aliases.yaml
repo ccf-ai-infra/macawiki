@@ -8,8 +8,10 @@
   "mcpytorch": ["mcPyTorch", "MetaX PyTorch"],
   "mctriton": ["mcTriton", "MetaX Triton"],
   "mctilelang": ["mcTileLang", "MetaX TileLang"],
+  "flash-attn": ["flash_attn", "FlashAttention", "flash attention", "Flash Attention"],
   "vllm-metax": ["vLLM-MetaX", "MetaX vLLM"],
   "tutorial-first-mxmaca-program": ["第一个 MXMACA 程序", "hello world", "入门教程", "first program"],
   "reference-mxcc-compiler-basics": ["mxcc 基础", "编译器参考", "compiler reference", "mxcc 使用"],
-  "diagnostics-mcprofiler-basics": ["mcProfiler 使用", "profiling 基础", "性能分析入门"]
+  "diagnostics-mcprofiler-basics": ["mcProfiler 使用", "profiling 基础", "性能分析入门"],
+  "kernel-flash-attention-mxmaca": ["MXMACA FlashAttention", "C500 flash_attn", "FlashAttention 证据边界"]
 }

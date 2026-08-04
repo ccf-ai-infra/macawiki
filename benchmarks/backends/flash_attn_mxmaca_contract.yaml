@@ -1,0 +1,50 @@
+{
+  "backend": "mxmaca-flash-attn-wheel",
+  "status": "not_run",
+  "source_policy": "Prefer an exact public source ref; otherwise treat the wheel as an opaque artifact.",
+  "artifact_identity": {
+    "reported_version_context": "2.6.3+metax3.7.1.3torch2.8",
+    "reported_version_is_compatibility_evidence": false,
+    "wheel_filename": null,
+    "acquisition_url_or_channel": null,
+    "sha256": null,
+    "source_repo": null,
+    "source_ref": null,
+    "patch_set": null,
+    "build_manifest_or_sbom": null
+  },
+  "required_artifact_records": [
+    "wheel_filename",
+    "acquisition_channel",
+    "acquired_at",
+    "sha256",
+    "METADATA",
+    "WHEEL",
+    "RECORD",
+    "direct_url_json_if_present",
+    "python_module_paths_and_hashes",
+    "native_extension_paths_and_hashes",
+    "safe_dynamic_dependency_or_symbol_inventory"
+  ],
+  "required_environment": [
+    "environment_fingerprint",
+    "device_string",
+    "driver_version",
+    "maca_or_mxmaca_version",
+    "mxcc_version",
+    "python_version",
+    "pytorch_version",
+    "flash_attn_version"
+  ],
+  "required_inputs": ["case_id", "shape", "dtype", "seed", "parameters", "tolerance"],
+  "required_outputs": ["status", "correctness", "timing", "environment", "artifact_identity", "command", "raw_samples"],
+  "correctness_reference": "pytorch eager/SDPA with upstream v2.6.3 semantics",
+  "correctness_gate": "forward and requested gradients pass the case tolerance before timing is comparable",
+  "timing_gate": "same environment fingerprint, case contract, synchronization policy, warmup and iteration count",
+  "speedup_rule": "do not compute speedup for not_run, failed correctness, mismatched artifacts, or mismatched environments",
+  "notes": [
+    "Null provenance values are deliberate placeholders, not evidence; fill them only from the actual artifact or provider manifest.",
+    "Do not use upstream pip install flash-attn as an MXMACA installation instruction without MXMACA-specific evidence.",
+    "Black-box results apply only to the recorded artifact hash, environment fingerprint, and cases."
+  ]
+}

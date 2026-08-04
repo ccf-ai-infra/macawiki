@@ -17,8 +17,11 @@
 
 ## unspecified
 
+- [`doc-mctilelang-flash-attention-pr-2`](../sources/official-docs/mctilelang-flash-attention-pr-2.md) — mcTileLang FlashAttention 示例 PR !2
 - [`doc-mxmaca-programming-model`](../sources/official-docs/mxmaca-programming-model.md) — MXMACA Programming Model Documentation
 - [`doc-mxmaca-quick-start`](../sources/official-docs/mxmaca-quick-start.md) — MXMACA 快速上手指南（公开预览入口）
 - [`doc-pytorch-operator-reference`](../sources/official-docs/pytorch-operator-reference.md) — PyTorch stable operator reference for evaluation baselines
+- [`kernel-flash-attention-mxmaca`](../wiki/kernels/flash-attention-mxmaca.md) — FlashAttention 在 MXMACA/C500 上的证据与验证指南
 - [`reference-maca-environment-variables`](../wiki/reference/maca-environment-variables.md) — vLLM-MetaX cu-bridge 环境变量配置
+- [`repo-flash-attention-v2-6-3`](../sources/repos/flash-attention-v2-6-3.md) — 上游 FlashAttention v2.6.3
 - [`repo-vllm-metax-env-sh`](../sources/repos/vllm-metax-env-sh.md) — vLLM-MetaX env.sh — cu-bridge 环境配置

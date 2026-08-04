@@ -57,6 +57,21 @@ class RepositoryTests(unittest.TestCase):
         # The top result should be the performance pattern page
         self.assertIn("wiki/optimization-patterns/establish-performance-baseline.md", result.stdout)
 
+    def test_query_fuzzy_prefers_flash_attention_topic(self) -> None:
+        result = run_script(
+            "scripts/query.py", "flash attenton", "--fuzzy", "--limit", "8", "--paths-only"
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        paths = result.stdout.strip().splitlines()
+        self.assertEqual(paths[0], "wiki/kernels/flash-attention-mxmaca.md")
+        self.assertTrue(
+            set(paths).issubset({
+                "wiki/kernels/flash-attention-mxmaca.md",
+                "sources/repos/flash-attention-v2-6-3.md",
+                "sources/official-docs/mctilelang-flash-attention-pr-2.md",
+            })
+        )
+
     def test_query_auto_fuzzy_fallback(self) -> None:
         """Auto-fuzzy should fall back when exact AND returns 0 results."""
         # A query that won't match exactly in any single page
@@ -69,6 +84,18 @@ class RepositoryTests(unittest.TestCase):
         result = run_script("scripts/query.py", "--component", "mcProfiler", "--paths-only")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("wiki/optimization-patterns/establish-performance-baseline.md", result.stdout)
+
+    def test_flash_attention_aliases_find_topic_page(self) -> None:
+        for alias in ("flash_attn", "flash-attn", "FlashAttention", "flash attention"):
+            with self.subTest(alias=alias):
+                result = run_script("scripts/query.py", alias, "--paths-only")
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("wiki/kernels/flash-attention-mxmaca.md", result.stdout)
+
+    def test_flash_attention_component_filter(self) -> None:
+        result = run_script("scripts/query.py", "--component", "flash_attn", "--paths-only")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("wiki/kernels/flash-attention-mxmaca.md", result.stdout)
 
     def test_get_page_follows_sources(self) -> None:
         result = run_script(
@@ -123,6 +150,18 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         for operator in ("add", "softmax", "layer_norm", "matmul", "quantize", "transpose", "moe_routing"):
             self.assertIn(operator, result.stdout)
+
+    def test_flash_attention_contract_stays_not_run_without_artifact(self) -> None:
+        cases = json.loads((ROOT / "benchmarks/flash_attention_cases.yaml").read_text(encoding="utf-8"))
+        backend = json.loads(
+            (ROOT / "benchmarks/backends/flash_attn_mxmaca_contract.yaml").read_text(encoding="utf-8")
+        )
+        self.assertEqual(cases["status"], "not_run")
+        self.assertTrue(cases["cases"])
+        self.assertTrue(all(case["status"] == "not_run" for case in cases["cases"]))
+        self.assertEqual(backend["status"], "not_run")
+        self.assertIsNone(backend["artifact_identity"]["sha256"])
+        self.assertFalse(backend["artifact_identity"]["reported_version_is_compatibility_evidence"])
 
     def test_tilelang_list_runs_without_import_error(self) -> None:
         result = run_script("benchmarks/tilelang_candidate.py", "--list")

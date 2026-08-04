@@ -39,6 +39,14 @@
       "versions": ["unspecified"],
       "sources": ["repo-mxmaca-performance-tuning-guide"],
       "confidence": "experimental"
+    },
+    {
+      "id": "vc-006",
+      "statement": "Upstream FlashAttention v2.6.3 defines upstream API and test semantics, but does not establish support, installation, ABI, feature coverage, or performance for an MXMACA flash_attn binary. Exact binary provenance and C500 validation remain required.",
+      "scope": "flash-attn",
+      "versions": ["2.6.3", "unspecified"],
+      "sources": ["repo-flash-attention-v2-6-3", "doc-mctilelang-flash-attention-pr-2"],
+      "confidence": "inferred"
     }
   ]
 }

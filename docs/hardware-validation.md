@@ -18,6 +18,7 @@ C500 与 MXMACA 已就绪。`benchmarks/results/` 下保存了在 MetaX C500 上
 - PyTorch 基线：7 个 case 均已在 C500 上完成实测（add, softmax, layer_norm, matmul, quantize, transpose, moe_routing）；结果见 `benchmarks/results/pytorch_c500.json`。transpose 基线已从 `torch.t(x)`（view）修正为 `torch.t(x).contiguous()`（物化输出），C500 已重跑，当前 median=0.0325ms。
 - TileLang 候选：7 个 case 均有状态记录（add, softmax, layer_norm, quantize, transpose 通过正确性与计时门禁；matmul 因 TileLang/maca codegen 差距标记为 `not_comparable`；moe_routing 因 TileLang 缺少 top-k 原语标记为 `not_comparable`）；结果见 `benchmarks/results/tilelang_c500.json`。
 - MXMACA++ 后端：契约已定义（`backends/mxmacacpp_contract.yaml`），后端未接入（`not_run`）。
+- FlashAttention 专题：任务矩阵与 MXMACA wheel provenance 契约已定义，但精确制品和专题原始结果未提供，全部保持 `not_run`；不得复用普通算子的 C500 结果推导 FlashAttention 性能。
 
 ## 目标与基线算子
 
@@ -67,3 +68,9 @@ python3 benchmarks/pytorch_baseline.py \
 ## 报告
 
 必须同时保留：环境 JSON、每后端结果 JSON、源码/ref、运行命令和错误日志。`scripts/compare_benchmarks.py` 只在环境指纹、case ID、shape 和 dtype 一致且正确性通过时输出相对值。
+
+## FlashAttention 验证入口
+
+专题知识页为 `wiki/kernels/flash-attention-mxmaca.md`，固定 case 为 `benchmarks/flash_attention_cases.yaml`，MXMACA 二进制证据要求为 `benchmarks/backends/flash_attn_mxmaca_contract.yaml`。在 wheel 的 SHA256、元数据、扩展哈希和来源/构建证据未捕获前，不得把用户报告的版本字符串登记为兼容组合。
+
+专题执行时应把 PyTorch reference、MXMACA wheel 与 mcTileLang 候选放在同一环境中，先核对 forward/gradient 正确性，再统计 median、P90、吞吐、显存峰值和失败率。KV cache case 只有在制品明确暴露语义匹配接口时才执行；接口不存在应记录 unsupported，而不是改写 case 伪造通过。
