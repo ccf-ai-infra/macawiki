@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "suite_id": "flash-attention-mxmaca-c500",
+  "status": "not_run",
+  "status_reason": "The exact MXMACA flash_attn artifact and an execution environment for this suite have not been provided.",
+  "seed": 20260731,
+  "reference": {
+    "backend": "pytorch",
+    "implementation": "eager_or_sdpa_with_matching_semantics",
+    "source": "repo-flash-attention-v2-6-3"
+  },
+  "candidates": [
+    {"backend": "mxmaca-flash-attn-wheel", "status": "not_run"},
+    {"backend": "mctilelang-flash-attention-pr-2", "status": "not_run"}
+  ],
+  "profiles": {
+    "smoke": {"warmup": 2, "iterations": 5},
+    "c500": {"warmup": 20, "iterations": 100}
+  },
+  "required_statistics": ["median_ms", "p90_ms", "throughput_tokens_per_second", "peak_memory_bytes", "failure_rate"],
+  "required_correctness": ["allclose", "max_abs_error", "max_rel_error", "nan_count", "inf_count", "q_grad_error", "k_grad_error", "v_grad_error"],
+  "cases": [
+    {
+      "case_id": "flash-fixed-fwd-fp16-b2-s128-h8-d64",
+      "mode": "fixed",
+      "direction": "forward",
+      "shape": {"batch": 2, "seqlen_q": 128, "seqlen_k": 128, "q_heads": 8, "kv_heads": 8, "head_dim": 64},
+      "dtype": "float16",
+      "parameters": {"causal": false, "dropout_p": 0.0, "softmax_scale": null},
+      "tolerance": {"atol": 0.002, "rtol": 0.002},
+      "status": "not_run"
+    },
+    {
+      "case_id": "flash-fixed-fwd-bwd-bf16-b1-s512-h16-d64-causal",
+      "mode": "fixed",
+      "direction": "forward_backward",
+      "shape": {"batch": 1, "seqlen_q": 512, "seqlen_k": 512, "q_heads": 16, "kv_heads": 16, "head_dim": 64},
+      "dtype": "bfloat16",
+      "parameters": {"causal": true, "dropout_p": 0.0, "softmax_scale": null},
+      "tolerance": {"atol": 0.01, "rtol": 0.01},
+      "status": "not_run"
+    },
+    {
+      "case_id": "flash-varlen-fwd-bwd-fp16-total320-h8-d64",
+      "mode": "varlen",
+      "direction": "forward_backward",
+      "shape": {"batch": 3, "cu_seqlens_q": [0, 64, 192, 320], "cu_seqlens_k": [0, 96, 224, 320], "q_heads": 8, "kv_heads": 8, "head_dim": 64},
+      "dtype": "float16",
+      "parameters": {"causal": false, "dropout_p": 0.0, "softmax_scale": null},
+      "tolerance": {"atol": 0.003, "rtol": 0.003},
+      "status": "not_run"
+    },
+    {
+      "case_id": "flash-fixed-fwd-fp16-b2-s127-h8-d80-causal",
+      "mode": "fixed_boundary",
+      "direction": "forward",
+      "shape": {"batch": 2, "seqlen_q": 127, "seqlen_k": 127, "q_heads": 8, "kv_heads": 8, "head_dim": 80},
+      "dtype": "float16",
+      "parameters": {"causal": true, "dropout_p": 0.0, "softmax_scale": null},
+      "tolerance": {"atol": 0.003, "rtol": 0.003},
+      "status": "not_run"
+    },
+    {
+      "case_id": "flash-gqa-fwd-fp16-b2-s256-qh16-kvh4-d64",
+      "mode": "fixed_gqa",
+      "direction": "forward",
+      "shape": {"batch": 2, "seqlen_q": 256, "seqlen_k": 256, "q_heads": 16, "kv_heads": 4, "head_dim": 64},
+      "dtype": "float16",
+      "parameters": {"causal": false, "dropout_p": 0.0, "softmax_scale": null},
+      "tolerance": {"atol": 0.003, "rtol": 0.003},
+      "status": "not_run"
+    },
+    {
+      "case_id": "flash-kvcache-fwd-fp16-b2-q1-cache2048-h16-d64",
+      "mode": "kv_cache",
+      "direction": "forward",
+      "shape": {"batch": 2, "seqlen_q": 1, "cache_seqlen": 2048, "q_heads": 16, "kv_heads": 16, "head_dim": 64},
+      "dtype": "float16",
+      "parameters": {"causal": true, "dropout_p": 0.0, "softmax_scale": null},
+      "tolerance": {"atol": 0.003, "rtol": 0.003},
+      "run_condition": "Only run when the captured MXMACA artifact explicitly exposes a semantically matching KV-cache API.",
+      "status": "not_run"
+    }
+  ],
+  "boundary_checks": [
+    "empty_or_zero_length_sequence",
+    "invalid_head_relationship",
+    "unsupported_dtype",
+    "non_contiguous_input",
+    "causal_seqlen_q_not_equal_seqlen_k"
+  ]
+}

@@ -2,6 +2,8 @@
 
 本目录定义同一组 PyTorch、TileLang、MXMACA++ 算子比较的输入契约和结果格式。PyTorch 基线与 TileLang 候选已在 MetaX C500 上实测，结果见 `results/`（同环境相对计时，非官方规格；环境指纹与运行命令随结果 JSON 保存）。MXMACA++ 后端尚未接入。
 
+FlashAttention 专题另使用 `flash_attention_cases.yaml` 和 `backends/flash_attn_mxmaca_contract.yaml`。它们固定 PyTorch reference、MXMACA `flash_attn` wheel 与 mcTileLang 候选的正确性/性能契约；由于精确 wheel、来源证据和专题运行结果尚未提供，所有 FlashAttention case 均保持 `not_run`。
+
 ## 统一契约
 
 每个 case 必须固定：`case_id`、算子、shape、dtype、布局、seed、输入分布、容差、warmup、iterations、同步策略和环境指纹。后端必须输出同一 schema 的 JSON；`status` 可为 `completed`、`not_run` 或 `not_comparable`。
@@ -26,6 +28,10 @@ python3 scripts/compare_benchmarks.py --baseline /tmp/pytorch.json --candidate r
 - `moe_routing`：softmax + top-k 专家选择（混合专家路由）。
 
 这些算子都由 PyTorch 提供；case 规格见 `operator_cases.yaml`。
+
+## FlashAttention 专题
+
+FlashAttention case 覆盖 fixed/varlen、causal/non-causal、fp16/bf16、forward/backward、GQA、非对齐 shape，以及有能力声明时才运行的 KV cache。执行前必须先补齐 wheel 文件名、SHA256、wheel 元数据、原生扩展哈希和完整 C500 环境指纹。上游 v2.6.3 只作为语义与测试参考，不作为 MXMACA 安装或性能证据。
 
 ## 后端状态
 

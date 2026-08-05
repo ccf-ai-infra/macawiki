@@ -75,6 +75,25 @@
       "capture_policy": "metadata-and-original-summary-only",
       "fixed_ref": "commit 0bf07c51d32f24eb3a2adecf50476260f589db9c (blob 88b76bf4, master, 2026-07-24)",
       "note": "Full env.sh (~16 lines) preserved due to minimal size; every line is evidence-relevant"
+    },
+    {
+      "id": "repo-flash-attention-v2-6-3",
+      "name": "Upstream FlashAttention v2.6.3",
+      "url": "https://github.com/Dao-AILab/flash-attention/commit/418d677192b483dfc1decfdf9aadca40b402485d",
+      "access": "public",
+      "license_status": "permissive",
+      "capture_policy": "metadata-and-original-summary-only",
+      "fixed_ref": "v2.6.3@418d677192b483dfc1decfdf9aadca40b402485d",
+      "note": "Upstream semantics only; this source does not establish MetaX C500 or MXMACA support"
+    },
+    {
+      "id": "doc-mctilelang-flash-attention-pr-2",
+      "name": "mcTileLang FlashAttention example PR !2",
+      "url": "https://gitee.com/metax-maca/mcTileLang/pulls/2",
+      "access": "public",
+      "license_status": "unknown",
+      "capture_policy": "metadata-and-original-summary-only",
+      "note": "Open and conflicted when retrieved on 2026-07-31; not the source of the MXMACA flash_attn wheel"
     }
   ]
 }

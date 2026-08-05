@@ -63,6 +63,60 @@
       "required_sources": [],
       "must_state": ["no evidence in corpus", "not_run", "not available"],
       "must_not_state": ["the optimized implementations are"]
+    },
+    {
+      "id": "eval-flash-attention-source-001",
+      "question": "flash_attn 2.6.3+metax 二进制包对应哪份源码？",
+      "keywords": ["flash_attn", "MXMACA", "wheel", "源码", "provenance", "构建清单"],
+      "expected_pages": ["kernel-flash-attention-mxmaca"],
+      "required_sources": ["repo-flash-attention-v2-6-3", "doc-mctilelang-flash-attention-pr-2"],
+      "must_state": ["exact source is unknown", "opaque artifact provenance is required"],
+      "must_not_state": ["the wheel is confirmed to be unmodified upstream v2.6.3"]
+    },
+    {
+      "id": "eval-flash-attention-install-001",
+      "question": "可以直接在 C500 上安装上游 flash-attn 吗？",
+      "keywords": ["C500", "flash-attn", "安装", "上游", "MXMACA"],
+      "expected_pages": ["kernel-flash-attention-mxmaca"],
+      "required_sources": ["repo-flash-attention-v2-6-3"],
+      "must_state": ["upstream instructions are not C500 installation evidence", "MXMACA-specific evidence is required"],
+      "must_not_state": ["pip install flash-attn is the official C500 installation method"]
+    },
+    {
+      "id": "eval-flash-attention-features-001",
+      "question": "MXMACA flash_attn 支持 causal、varlen、KV cache 和反向传播吗？",
+      "keywords": ["flash_attn", "causal", "varlen", "KV cache", "反向传播", "unknown"],
+      "expected_pages": ["kernel-flash-attention-mxmaca"],
+      "required_sources": ["repo-flash-attention-v2-6-3"],
+      "must_state": ["upstream semantics are documented", "MXMACA feature coverage is unknown", "test each capability"],
+      "must_not_state": ["MXMACA supports every upstream FlashAttention feature"]
+    },
+    {
+      "id": "eval-flash-attention-correctness-001",
+      "question": "如何验证 MXMACA flash_attn 的正确性？",
+      "keywords": ["FlashAttention", "正确性", "PyTorch", "allclose", "梯度", "容差"],
+      "expected_pages": ["kernel-flash-attention-mxmaca"],
+      "required_sources": ["repo-flash-attention-v2-6-3", "doc-pytorch-operator-reference"],
+      "must_state": ["same inputs and semantics", "forward and gradient errors", "not_comparable on failure"],
+      "must_not_state": ["successful import proves correctness"]
+    },
+    {
+      "id": "eval-flash-attention-compare-001",
+      "question": "如何比较 PyTorch reference、MXMACA flash_attn 与 TileLang/mcTileLang？",
+      "keywords": ["FlashAttention", "PyTorch", "MXMACA", "mcTileLang", "median", "P90"],
+      "expected_pages": ["kernel-flash-attention-mxmaca"],
+      "required_sources": ["repo-flash-attention-v2-6-3", "doc-mctilelang-flash-attention-pr-2", "doc-pytorch-operator-reference"],
+      "must_state": ["same C500 environment", "correctness gate", "not_run without artifact results"],
+      "must_not_state": ["a fabricated C500 speedup"]
+    },
+    {
+      "id": "eval-flash-attention-no-source-001",
+      "question": "没有 MXMACA 二进制对应源码时，Macawiki 应该如何回答？",
+      "keywords": ["MXMACA", "wheel", "SHA256", "METADATA", "unknown", "黑盒"],
+      "expected_pages": ["kernel-flash-attention-mxmaca"],
+      "required_sources": ["repo-flash-attention-v2-6-3"],
+      "must_state": ["treat the wheel as opaque", "record artifact hash and environment", "limit claims to observed cases"],
+      "must_not_state": ["infer source equivalence from the version string"]
     }
   ]
 }

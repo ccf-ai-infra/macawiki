@@ -93,6 +93,60 @@
       "required_sources": ["repo-vllm-metax-env-sh"],
       "must_contain": ["CUDA_PATH", "env.sh", "不是通用"],
       "must_not_contain": ["MACA 开发环境的标准环境变量配置", "通用 MACA 标准环境变量"]
+    },
+    {
+      "id": "agent-value-flash-source-001",
+      "prompt": "flash_attn 的 MXMACA 二进制对应哪份源码和构建清单？",
+      "terms": ["flash_attn", "源码", "构建清单"],
+      "expected_pages": ["kernel-flash-attention-mxmaca"],
+      "required_sources": ["repo-flash-attention-v2-6-3", "doc-mctilelang-flash-attention-pr-2"],
+      "must_contain": ["不透明制品", "unknown", "patch set"],
+      "must_not_contain": ["wheel 已确认等同于上游 v2.6.3"]
+    },
+    {
+      "id": "agent-value-flash-install-001",
+      "prompt": "C500 可以直接使用上游 FlashAttention 安装方法吗？",
+      "terms": ["C500", "安装", "上游", "flash_attn"],
+      "expected_pages": ["kernel-flash-attention-mxmaca"],
+      "required_sources": ["repo-flash-attention-v2-6-3"],
+      "must_contain": ["不能作为 C500 安装依据", "官方 MXMACA", "构建证据"],
+      "must_not_contain": ["pip install flash-attn 是 C500 官方安装方式"]
+    },
+    {
+      "id": "agent-value-flash-features-001",
+      "prompt": "MXMACA flash_attn 的 causal、varlen、KV cache 和反向传播支持情况如何？",
+      "terms": ["causal", "varlen", "KV cache", "反向传播"],
+      "expected_pages": ["kernel-flash-attention-mxmaca"],
+      "required_sources": ["repo-flash-attention-v2-6-3"],
+      "must_contain": ["unknown", "逐项黑盒验证", "固定矩阵"],
+      "must_not_contain": ["MXMACA 已完整支持 causal、varlen、KV cache 和反向传播"]
+    },
+    {
+      "id": "agent-value-flash-correctness-001",
+      "prompt": "如何用 PyTorch reference 检查 FlashAttention 输出和梯度？",
+      "terms": ["FlashAttention", "正确性", "梯度", "allclose"],
+      "expected_pages": ["kernel-flash-attention-mxmaca"],
+      "required_sources": ["repo-flash-attention-v2-6-3", "doc-pytorch-operator-reference"],
+      "must_contain": ["最大绝对误差", "Q/K/V 梯度误差", "not_comparable"],
+      "must_not_contain": ["import 成功就证明正确"]
+    },
+    {
+      "id": "agent-value-flash-compare-001",
+      "prompt": "如何比较 PyTorch、MXMACA wheel 和 mcTileLang FlashAttention？",
+      "terms": ["FlashAttention", "PyTorch", "mcTileLang", "median"],
+      "expected_pages": ["kernel-flash-attention-mxmaca"],
+      "required_sources": ["repo-flash-attention-v2-6-3", "doc-mctilelang-flash-attention-pr-2", "doc-pytorch-operator-reference"],
+      "must_contain": ["同一 C500", "P90", "not_run"],
+      "must_not_contain": ["mcTileLang 已经比 MXMACA flash_attn 快"]
+    },
+    {
+      "id": "agent-value-flash-opaque-001",
+      "prompt": "拿不到 MXMACA wheel 源码时如何建立 FlashAttention 证据？",
+      "terms": ["wheel", "SHA256", "METADATA", "unknown"],
+      "expected_pages": ["kernel-flash-attention-mxmaca"],
+      "required_sources": ["repo-flash-attention-v2-6-3"],
+      "must_contain": ["不透明制品", "不填写假 SHA256", "构建清单"],
+      "must_not_contain": ["版本字符串可以证明源码等价"]
     }
   ]
 }

@@ -68,10 +68,12 @@ def _fuzzy_search(
     page_map: dict[str, Page],
     limit: int = 20,
 ) -> list[tuple[float, Page]]:
-    """Search using n-gram Jaccard similarity for each term against each page.
+    """Search using exact-body and field-aware n-gram similarity.
 
-    Uses character bigrams (n=2) which work well for both CJK and Latin text.
-    Scores are summed across terms, so pages matching more query terms rank higher.
+    Comparing a short query only with all unique n-grams from a long page dilutes
+    topic matches and lets unrelated pages rank on a few common bigrams. Prefer
+    exact body matches and focused metadata fields (especially aliases), while
+    retaining the full-page score as a fallback.
     """
     # Pre-compute page n-grams from cached pickle index if available
     page_ngrams: dict[str, set[str]] = {}
@@ -111,15 +113,37 @@ def _fuzzy_search(
         if not p_ngrams:
             continue
 
-        # Score: average Jaccard across all terms, with bonuses
+        page_text = searchable_text(page)
         title = str(page.metadata.get("title", "")).casefold()
         page_id_str = str(page.metadata.get("id", "")).casefold()
+        focused_fields = [
+            page_id_str,
+            title,
+            str(page.metadata.get("summary", "")).casefold(),
+        ]
+        for field in ("aliases", "components", "tags", "hardware"):
+            values = page.metadata.get(field, [])
+            if isinstance(values, list):
+                focused_fields.extend(str(value).casefold() for value in values)
 
         score = 0.0
+        strongest_match = 0.0
         for i, term in enumerate(terms):
             t_ngrams = term_ngram_sets[i]
-            sim = _jaccard(t_ngrams, p_ngrams)
+            if term in page_text:
+                sim = 1.0
+            else:
+                sim = _jaccard(t_ngrams, p_ngrams)
+                for candidate in focused_fields:
+                    if not candidate:
+                        continue
+                    if term in candidate or candidate in term:
+                        field_sim = 0.95
+                    else:
+                        field_sim = _jaccard(t_ngrams, _ngrams(candidate, n=2))
+                    sim = max(sim, field_sim)
             score += sim
+            strongest_match = max(strongest_match, sim)
 
         # Bonuses for title and ID matches (exact substring)
         for term in terms:
@@ -128,7 +152,8 @@ def _fuzzy_search(
             if term in page_id_str:
                 score += 0.3
 
-        if score > 0.0:
+        # Suppress matches caused only by a handful of common bigrams.
+        if strongest_match >= 0.20:
             results.append((round(score, 4), page))
 
     results.sort(key=lambda item: (-item[0], str(item[1].relative_path)))

@@ -34,6 +34,10 @@ python3 scripts/query.py "profiling" --component mcprofiler
 
 # 算子相关内容
 python3 scripts/query.py "tolerance" --component operator-evaluation
+
+# FlashAttention 证据、MXMACA wheel 来源与 C500 验证边界
+python3 scripts/query.py "flash_attn" --component flash-attn --compact
+python3 scripts/get_page.py kernel-flash-attention-mxmaca --follow-sources
 ```
 
 ## 按版本过滤

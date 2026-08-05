@@ -18,6 +18,7 @@
     "v0.1 does not infer compatibility from document listings or repository names.",
     "Add a combination only after a maintainer reviews public evidence.",
     "Version numbers are marked unspecified until confirmed against official release notes.",
-    "C500 environment fingerprint exists in benchmark results; specific version mapping is pending."
+    "C500 environment fingerprint exists in benchmark results; specific version mapping is pending.",
+    "The user-reported flash_attn 2.6.3+metax3.7.1.3torch2.8 string is intentionally omitted as a compatibility combination until the wheel provenance and exact environment are captured."
   ]
 }
