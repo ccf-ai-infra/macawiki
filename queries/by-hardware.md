@@ -12,6 +12,7 @@
 - [`pattern-establish-performance-baseline`](../wiki/optimization-patterns/establish-performance-baseline.md) — 优化前先建立可比较的性能基线
 - [`reference-maca-environment-variables`](../wiki/reference/maca-environment-variables.md) — vLLM-MetaX cu-bridge 环境变量配置
 - [`reference-mxcc-compiler-basics`](../wiki/reference/mxcc-compiler-basics.md) — mxcc 编译器基础参考
+- [`reference-mxmaca-runtime-api`](../wiki/reference/mxmaca-runtime-api.md) — MXMACA Runtime API 参考（能力边界与验证清单）
 - [`repo-mcpytorch`](../sources/repos/mcpytorch.md) — mcPyTorch
 - [`repo-mxmaca-performance-tuning-guide`](../sources/repos/mxmaca-performance-tuning-guide.md) — MXMACA Performance Optimization Guide 仓库
 - [`repo-mxmaca-runtime`](../sources/repos/mxmaca-runtime.md) — MXMACA Runtime
@@ -24,6 +25,5 @@
 - [`doc-mxmaca-quick-start`](../sources/official-docs/mxmaca-quick-start.md) — MXMACA 快速上手指南（公开预览入口）
 - [`doc-pytorch-operator-reference`](../sources/official-docs/pytorch-operator-reference.md) — PyTorch stable operator reference for evaluation baselines
 - [`recipe-verify-mxmaca-environment`](../wiki/tutorials/verify-mxmaca-environment.md) — 验证 MXMACA 开发环境的证据清单
-- [`reference-mxmaca-runtime-api`](../wiki/reference/mxmaca-runtime-api.md) — MXMACA Runtime API 参考（能力边界与验证清单）
 - [`repo-flash-attention-v2-6-3`](../sources/repos/flash-attention-v2-6-3.md) — 上游 FlashAttention v2.6.3
 - [`tutorial-first-mxmaca-program`](../wiki/tutorials/first-mxmaca-program.md) — 编写并验证第一个 MXMACA 程序

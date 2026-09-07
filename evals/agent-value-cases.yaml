@@ -147,6 +147,15 @@
       "required_sources": ["repo-flash-attention-v2-6-3"],
       "must_contain": ["不透明制品", "不填写假 SHA256", "构建清单"],
       "must_not_contain": ["版本字符串可以证明源码等价"]
+    },
+    {
+      "id": "agent-value-mx-smi-001",
+      "prompt": "如何用 mx-smi 查询 C500 设备型号、MACA 版本和驱动版本？",
+      "terms": ["mx-smi", "设备型号"],
+      "expected_pages": ["diagnostics-mx-smi"],
+      "required_sources": ["repo-mxmaca-performance-tuning-guide"],
+      "must_contain": ["MetaX C500", "MACA Version", "记录输出中的设备型号"],
+      "must_not_contain": ["nvidia-smi 输出格式可以直接套用"]
     }
   ]
 }
