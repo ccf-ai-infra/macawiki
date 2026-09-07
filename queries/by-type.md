@@ -35,5 +35,7 @@
 ## wiki-tool
 
 - [`diagnostics-mcprofiler-basics`](../wiki/diagnostics/mcprofiler-basics.md) — mcProfiler 基本使用
+- [`diagnostics-mx-smi`](../wiki/diagnostics/mx-smi.md) — mx-smi 硬件与版本查询工具（能力边界与验证清单）
 - [`reference-maca-environment-variables`](../wiki/reference/maca-environment-variables.md) — vLLM-MetaX cu-bridge 环境变量配置
 - [`reference-mxcc-compiler-basics`](../wiki/reference/mxcc-compiler-basics.md) — mxcc 编译器基础参考
+- [`reference-mxmaca-runtime-api`](../wiki/reference/mxmaca-runtime-api.md) — MXMACA Runtime API 参考（能力边界与验证清单）

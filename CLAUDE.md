@@ -2,6 +2,10 @@
 
 Macawiki is an evidence-first MXMACA knowledge base designed for local AI agent consumption (Claude Code, Codex, OpenCode). Read `AGENTS.md` before editing corpus content and activate the `macawiki` skill for MXMACA questions.
 
+## wiki参考文档来源
+
+- https://developer.metax-tech.com/doc
+
 ## Guiding principles
 
 - **Local agent first**: Macawiki targets local AI agent workflows (Claude Code `/macawiki`, Codex `$macawiki`, OpenCode skill). Do not add server/API/Docker deployment layers — keep the toolchain CLI-native and file-based. Agents interact via CLI subprocess (`python3 scripts/query.py`, etc.), not HTTP endpoints.
@@ -15,4 +19,3 @@ Macawiki is an evidence-first MXMACA knowledge base designed for local AI agent 
 - State hardware, MXMACA/framework version, confidence, and missing evidence.
 - Never invent C500, TileLang, or MXMACA++ benchmark results.
 - Run `make all` before proposing repository changes.
-- **GitLink PR 目标**: 提 PR 时目标仓库始终是 `ccf-ai-infra/macawiki`（origin 上游），不要推到 `topshare/macawiki`（个人 fork）。Git remote 中 `origin` = `ccf-ai-infra/macawiki`，`topshare` = 个人 fork。

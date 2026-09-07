@@ -51,3 +51,7 @@ python3 benchmarks/pytorch_baseline.py --operator all --profile smoke --device c
 # 证据边界
 
 PyTorch API 页面支持参考语义；公开性能指南支持“先冻结基线、再 profiling/建模”的方法。两者都不能证明某个 TileLang 或 MXMACA++ 实现的 C500 性能。性能结论需等待目标环境原始结果与人工审阅。
+
+## 跨平台移植提示
+
+性能调优指南首页提示：跨平台代码可能存在 warp size 与平台宏差异。这只能支持"把 CUDA/其他后端的算子移植到 MXMACA 时，必须显式核对硬件参数与平台宏，不能照搬"这一结论，不足以支撑独立的迁移指南页面。新增迁移页或迁移结论，需先在目标 C500 上完成一次真实的 kernel 移植验证并闭环证据。

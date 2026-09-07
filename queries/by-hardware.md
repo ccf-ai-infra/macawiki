@@ -4,6 +4,7 @@
 ## c500
 
 - [`diagnostics-mcprofiler-basics`](../wiki/diagnostics/mcprofiler-basics.md) — mcProfiler 基本使用
+- [`diagnostics-mx-smi`](../wiki/diagnostics/mx-smi.md) — mx-smi 硬件与版本查询工具（能力边界与验证清单）
 - [`doc-mctilelang-flash-attention-pr-2`](../sources/official-docs/mctilelang-flash-attention-pr-2.md) — mcTileLang FlashAttention 示例 PR !2
 - [`doc-mxmaca-compiler-mxcc`](../sources/official-docs/mxmaca-compiler-mxcc.md) — MXMACA C/C++ Compiler (mxcc) Documentation
 - [`evaluation-compare-operator-backends`](../wiki/evaluations/compare-operator-backends.md) — 用 PyTorch、TileLang、MXMACA++ 比较算子实现
@@ -23,5 +24,6 @@
 - [`doc-mxmaca-quick-start`](../sources/official-docs/mxmaca-quick-start.md) — MXMACA 快速上手指南（公开预览入口）
 - [`doc-pytorch-operator-reference`](../sources/official-docs/pytorch-operator-reference.md) — PyTorch stable operator reference for evaluation baselines
 - [`recipe-verify-mxmaca-environment`](../wiki/tutorials/verify-mxmaca-environment.md) — 验证 MXMACA 开发环境的证据清单
+- [`reference-mxmaca-runtime-api`](../wiki/reference/mxmaca-runtime-api.md) — MXMACA Runtime API 参考（能力边界与验证清单）
 - [`repo-flash-attention-v2-6-3`](../sources/repos/flash-attention-v2-6-3.md) — 上游 FlashAttention v2.6.3
 - [`tutorial-first-mxmaca-program`](../wiki/tutorials/first-mxmaca-program.md) — 编写并验证第一个 MXMACA 程序
