@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "captured_by": "scripts/capture_environment.py",
+  "python": "3.12.11 | packaged by conda-forge | (main, Jun  4 2025, 14:45:31) [GCC 13.3.0]",
+  "platform": "Linux-5.15.0-58-generic-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "processor": "x86_64",
+  "hostname": "<redacted>",
+  "env": {},
+  "commands": {
+    "mx-smi": {
+      "path": "/usr/bin/mx-smi",
+      "version": "mx-smi  version: 2.3.1",
+      "returncode": 0
+    },
+    "mxcc": {
+      "path": "/opt/maca/mxgpu_llvm/bin/mxcc",
+      "version": "mxcc version 1.0.0 (d9102a1572)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/maca-3.7.1/mxgpu_llvm/bin",
+      "returncode": 0
+    },
+    "nvidia-smi": {
+      "path": null,
+      "version": null
+    }
+  },
+  "python_packages": {
+    "torch": "2.8.0+metax3.7.1.3",
+    "tilelang": null
+  },
+  "notes": [
+    "Command absence is recorded as null; this script never infers MXMACA support from CUDA.",
+    "Hostname redacted before committing. Captured on a MetaX C500 (mx-smi shows 'MetaX C500')."
+  ],
+  "environment_fingerprint": "10b207e42fd91a5e84862d25e3aea8a0e119e8edc5af3b4f2f78598a38ab25f5"
+}

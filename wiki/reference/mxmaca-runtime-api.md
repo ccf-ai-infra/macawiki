@@ -7,13 +7,13 @@
   "summary": "MXMACA 运行时管理设备上下文、内存分配与 kernel 启动。本页给出能力边界和验证清单，不提供版本特定的 API 签名。",
   "languages": ["zh-CN"],
   "tags": ["runtime", "programming-model", "installation"],
-  "hardware": ["unspecified"],
-  "mxmaca_versions": ["unspecified"],
+  "hardware": ["c500"],
+  "mxmaca_versions": ["3.7.1.5"],
   "components": ["mxmaca-runtime", "mxmaca-sdk"],
   "sources": ["doc-mxmaca-programming-model", "repo-mxmaca-runtime"],
   "related": ["reference-mxcc-compiler-basics", "recipe-verify-mxmaca-environment", "tutorial-first-mxmaca-program"],
   "prerequisites": ["recipe-verify-mxmaca-environment"],
-  "verified_at": "2026-08-25",
+  "verified_at": "2026-09-07",
   "confidence": "source-reported",
   "reproducibility": "concept",
   "aliases": ["MXMACA Runtime API", "运行时 API", "runtime api", "设备内存管理", "kernel 启动"]
@@ -25,6 +25,8 @@
 MXMACA 运行时（Runtime）是 MXMACA 软件栈中负责设备管理、内存操作和 kernel 启动的组件。官方编程模型文档（`doc-mxmaca-programming-model`）将其职责概括为三块：**设备上下文管理、内存分配与释放、kernel 启动**；公开仓库 `repo-mxmaca-runtime` 的入口摘要与之一致。
 
 本页是**能力边界与验证清单**，不是 API 签名手册。具体函数签名、参数和宏因 MXMACA 版本和目标硬件而异，使用前必须查阅对应版本的官方文档。
+
+> ✅ **已验证环境**（2026-09-07）：能力边界在 MetaX C500 + MACA 3.7.1.5 + 驱动 3.8.30 + mxcc 1.0.0（d9102a1572）环境下核对过环境可探测性（见 `benchmarks/results/environment-c500.json`）。这**只确认了软件栈与工具可探测**，不代表本页所列 API 均已在 C500 上编译运行验证——未执行最小 kernel 前，不升级置信度。
 
 ## 能力边界
 
