@@ -1,0 +1,97 @@
+{
+  "schema_version": 2,
+  "captured_by": "scripts/capture_environment.py",
+  "python": "3.12.11 | packaged by conda-forge | (main, Jun  4 2025, 14:45:31) [GCC 13.3.0]",
+  "platform": "Linux-5.15.0-58-generic-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "processor": "x86_64",
+  "hostname": "<redacted>",
+  "env": {},
+  "commands": {
+    "mx-smi": {
+      "path": "/usr/bin/mx-smi",
+      "version": "mx-smi  version: 2.3.1",
+      "returncode": 0
+    },
+    "mxcc": {
+      "path": "/opt/maca/mxgpu_llvm/bin/mxcc",
+      "version": "mxcc version 1.0.0 (d9102a1572)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/maca-3.7.1/mxgpu_llvm/bin",
+      "returncode": 0
+    },
+    "nvidia-smi": {
+      "path": null,
+      "version": null
+    }
+  },
+  "tools": {
+    "mcTracer": {
+      "path": "/opt/maca/bin/mcTracer",
+      "version": "(Tracer): 03:24:53 [INFO ] Tracer startup\n(Tracer): 03:24:53 [INFO ] =====Help Info=====\n(Tracer): 03:24:53 [INFO ] ***** Version: \n(Tracer): 03:24:53 [INFO ] *****         3.7.1.5-ef9e10e\n(Tracer): 03:24:53 [INFO ] ***** Usage: \n(Tracer): 03:24:53 [INFO ] *****         /opt/maca/bin/mcTracer <trace options> '[target commands]'\n(Tracer): 03:24:53 [INFO ] ***** Where: \n(Tracer): 03:24:53 [INFO ] *****         <tracer options> specify trace behavior\n(Tracer): 03:24:53 [INFO ] *****         [target commands] are commands of target application\n(Tracer): 03:24:53 [INFO ] ***** Available tracer options: \n(Tracer): 03:24:53 [INFO ] *****         --help: Print help info\n(Tracer): 03:24:53 [INFO ] *****         --debug: Enable debugging function\n(Tracer): 03:24:53 [INFO ] *****         --mctx: Enable mctx function\n(Tracer): 03:24:53 [INFO ] *****         --odname: Set the output folder name, followed by the corresponding name\n(Tracer): 03:24:53 [INFO ] *****         --name: Set the prefix of the output file name, default is tracer_out\n(Tracer): 03:24:53 [INFO ] *****         --attach: Enable attach mode, followed by the corresponding pid, press 'ctrl+t' to stop attach\n(Tracer): 03:24:53 [INFO ] ***** Usage example: \n(Tracer): 03:24:53 [INFO ] *****         /opt/maca/bin/mcTracer --mctx ./hello_world hello_args1 --helo_args2=...",
+      "returncode": 0,
+      "version_args": [
+        "--help"
+      ]
+    },
+    "macainfo": {
+      "path": "/opt/maca/bin/macainfo",
+      "version": "======================\nMXC System Attributes\n======================\nRuntime Version:\t1.0\nSystem Timestamp Freq:\t1000MHz\nSignal Max Wait Time:\t18446744073709551615(0xffffffffffffffff)\nMachine Model:\t\tLARGE\nSystem Endianess:\tLITTLE\n\n***********\nAgent 1\n***********\n  Name:\t\t\t\t\tINTEL(R) CORE(TM) I7-8550U CPU @ 1.80GHZ\n  Uuid:\t\t\t\t\t<uuid-redacted>\n  Market Name:\t\t\t\tIntel(R) Core(TM) i7-8550U CPU @ 1.80GHz\n  Vendor Name:\t\t\t\tCPU\n  Feature:\t\t\t\tNot Specified\n  Profile:\t\t\t\tFULL_PROFILE\n  Float Round Mode:\t\t\tNEAR\n  Max Queue Number:\t\t\t0(0x0)\n  Queue Min Size:\t\t\t0\n  Queue Max Size:\t\t\t0\n  Queue Type:\t\t\t\tMULTI\n  Node:\t\t\t\t\t0\n  Device Type:\t\t\t\tCPU\n  Cache Info:\t\t\t\t\n  Chip ID:\t\t\t\t0(0x0)\n  Cacheline Size:\t\t\t64(0x40)\n  Max Clock Freq(MHz):\t\t\t0\n  BDFID:\t\t\t\t0\n  Internal Node ID:\t\t\t0\n  Accelerator Processors:\t\t64\n  PEUs per AP:\t\t\t\t0\n  Data Processor Clustes(DPCs):\t\t0\n  DPC Arrays per DPC.:\t\t\t0\n  Watch Pointers on Address Ranges:\t1\n  Pool Info:\n    Pool 1\n      Segment:\t\t\t\tGLOBAL\n      Flags:\t\t\t\tFINE_GRAINED\n      Size:\t\t\t\t3726972(0x38de7c) KB\n      Allocatable:\t\t\tTRUE\n      Alloc Granule:\t\t\t4 KB\n      Alloc Alignment:\t\t\t4 KB\n      Accessible by all:\t\tTRUE\n    Pool 2\n      Segment:\t\t\t\tGLOBAL\n      Flags:\t\t\t\tFINE_GRAINED\n      Size:\t\t\t\t3726972(0x38de7c) KB\n      Allocatable:\t\t\tTRUE\n      Alloc Granule:\t\t\t4 KB\n      Alloc Alignment:\t\t\t4 KB\n      Accessible by all:\t\tTRUE\n  ISA Info:\n    N/A\n***********\nAgent 2\n***********\n  Name:\t\t\t\t\tINTEL(R) CORE(TM) I7-8550U CPU @ 1.80GHZ\n  Uuid:\t\t\t\t\t<uuid-redacted>\n  Market Name:\t\t\t\tIntel(R) Core(TM) i7-8550U CPU @ 1.80GHz\n  Vendor Name:\t\t\t\tCPU\n  Feature:\t\t\t\tNot Specified\n  Profile:\t\t\t\tFULL_PROFILE\n  Float Round Mode:\t\t\tNEAR\n  Max Queue Number:\t\t\t0(0x0)\n  Queue Min Size:\t\t\t0\n  Queue Max Size:\t\t\t0\n  Queue Type:\t\t\t\tMULTI\n  Node:\t\t\t\t\t1\n  Device Type:\t\t\t\tCPU\n  Cache Info:\t\t\t\t\n  Chip ID:\t\t\t\t0(0x0)\n  Cacheline Size:\t\t\t64(0x40)\n  Max Clock Freq(MHz):\t\t\t0\n  BDFID:\t\t\t\t0\n  Internal Node ID:\t\t\t1\n  Accelerator Processors:\t\t64\n  PEUs per AP:\t\t\t\t0\n  Data Processor Clust\n[truncated: 7860 chars total]",
+      "returncode": 0,
+      "version_args": [
+        "--version"
+      ]
+    },
+    "mcclras": {
+      "path": "/opt/maca/bin/mcclras",
+      "version": "MCCL RAS client version 2.16.5",
+      "returncode": 0,
+      "version_args": [
+        "--version"
+      ]
+    },
+    "mxvs": {
+      "path": "/opt/maca/bin/mxvs",
+      "version": "dlopen(): error loading libfuse.so.2\n\nAppImages require FUSE to run. \nYou might still be able to extract the contents of this AppImage \nif you run it with the --appimage-extract option. \nSee https://github.com/AppImage/AppImageKit/wiki/FUSE \nfor more information",
+      "returncode": 1,
+      "version_args": [
+        "--version"
+      ]
+    },
+    "mcProfiler": {
+      "path": "/usr/local/bin/mcProfiler",
+      "version": "usage: mcProfiler [-h] [--cmdline CMDLINE] [--kernelname KERNELNAME]\n                  [--casename CASENAME] [--cwd CWD]\n                  [--metrics METRICS [METRICS ...]]\n                  [--headnames HEADNAMES [HEADNAMES ...]]\n                  [--remote_ip REMOTE_IP] [--remote_port REMOTE_PORT]\n                  [--remote_user REMOTE_USER] [--remote_pwd REMOTE_PWD]\n                  [--identity_file IDENTITY_FILE]\n                  [--container_id CONTAINER_ID] [--per-kernel]\n                  [--profile-from-start PROFILE_FROM_START] [--custom]\n                  [--counts COUNTS] [--exclude]\n                  [--kernelnames KERNELNAMES [KERNELNAMES ...]]\n                  [--single-pass] [--multi-device] [--exec_id EXEC_ID]\n                  [--status {init,init_failed,executing,execute_failed,profiling,profiler_failed,done}]\n                  [--items ITEMS [ITEMS ...]] [--output OUTPUT]\n                  [--interval INTERVAL] [--host HOST] [--port PORT]\n                  {show_metrics,perf_exec,version,help}\nmcProfiler: error: the following arguments are required: operation",
+      "returncode": 2,
+      "version_args": [
+        "--version"
+      ]
+    }
+  },
+  "maca_libraries": {
+    "libmcblas.so": {
+      "path": "/opt/maca/lib/libmcblas.so",
+      "real_path": "/opt/maca-3.7.1/lib/libmcblas.so"
+    },
+    "libmccl.so": {
+      "path": "/opt/maca/lib/libmccl.so",
+      "real_path": "/opt/maca-3.7.1/lib/libmccl.so"
+    },
+    "libmcdnn.so": {
+      "path": "/opt/maca/lib/libmcdnn.so",
+      "real_path": "/opt/maca-3.7.1/lib/libmcdnn.so"
+    },
+    "libmcblasLt.so": {
+      "path": "/opt/maca/lib/libmcblasLt.so",
+      "real_path": "/opt/maca-3.7.1/lib/libmcblasLt.so"
+    }
+  },
+  "python_packages": {
+    "torch": "2.8.0+metax3.7.1.3",
+    "tilelang": null,
+    "triton": "3.0.0+metax3.7.1.3"
+  },
+  "notes": [
+    "Command and library absence is recorded as null; this script never infers MXMACA support from CUDA.",
+    "Hostname is redacted by default because this artifact is committed to the repository.",
+    "maca_libraries records install evidence only; it does not assert API compatibility or performance."
+  ],
+  "environment_fingerprint": "52bbcb62b59d098b123bb4d3710c90931b15671c5630e0d097af1ad0a74c4200"
+}

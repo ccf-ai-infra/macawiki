@@ -49,7 +49,9 @@ SNAPSHOT_PATH = SIGNAL_DIR / "env-snapshot.json"
 # Known MACA tool paths (not always on PATH)
 # ---------------------------------------------------------------------------
 _KNOWN_MACA_BIN = Path("/opt/maca/bin")
-_KNOWN_TILELANG_ROOT = Path("/opt/tilelang-metax")
+# Real installs are versioned (e.g. /opt/tilelang-metax-v0.1.10); the bare
+# /opt/tilelang-metax path is a fallback for older layouts.
+_KNOWN_TILELANG_ROOTS = [Path("/opt/tilelang-metax-v0.1.10"), Path("/opt/tilelang-metax")]
 _KNOWN_DRIVER_BIN = Path("/opt/mxdriver/bin")
 
 # ---------------------------------------------------------------------------
@@ -221,14 +223,30 @@ def _parse_macainfo() -> dict[str, Any]:
     }
 
 
+def _resolve_tilelang_root() -> Path | None:
+    """First existing TileLang install root, preferring versioned layouts."""
+    for candidate in _KNOWN_TILELANG_ROOTS:
+        if candidate.is_dir():
+            return candidate
+    # Also pick up a layout we have not hard-coded yet.
+    for candidate in sorted(Path("/opt").glob("tilelang-metax*"), reverse=True):
+        if candidate.is_dir():
+            return candidate
+    return None
+
+
 def _probe_tilelang() -> dict[str, Any]:
     """Auto-detect TileLang, trying standard locations via sys.path."""
     result: dict[str, Any] = {"available": False, "version": None, "path": None, "source_commit": None}
 
-    # Check if TileLang root exists
-    if _KNOWN_TILELANG_ROOT.exists():
-        result["path"] = str(_KNOWN_TILELANG_ROOT)
-        commit_file = _KNOWN_TILELANG_ROOT / ".git_commit.txt"
+    root = _resolve_tilelang_root()
+
+    # Record the install root even when the import fails: a present-but-not-
+    # importable install is still evidence for the corpus (the snapshot's
+    # tilelang_version: null previously masked that TileLang was installed).
+    if root is not None:
+        result["path"] = str(root)
+        commit_file = root / ".git_commit.txt"
         if commit_file.exists():
             result["source_commit"] = commit_file.read_text(encoding="utf-8").strip()
 
@@ -236,14 +254,15 @@ def _probe_tilelang() -> dict[str, Any]:
     # (os.environ["PYTHONPATH"] changes are ineffective after Python has started)
     saved_path = list(sys.path)
     try:
-        if _KNOWN_TILELANG_ROOT.exists():
-            sys.path.insert(0, str(_KNOWN_TILELANG_ROOT))
+        if root is not None:
+            sys.path.insert(0, str(root))
 
         try:
             import tilelang  # type: ignore[import-untyped]
             result["available"] = True
             result["version"] = getattr(tilelang, "__version__", None)
-            result["path"] = str(_KNOWN_TILELANG_ROOT)
+            if root is not None:
+                result["path"] = str(root)
         except ImportError:
             pass
     finally:
