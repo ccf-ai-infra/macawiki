@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install Macawiki as a Codex and/or Claude Code skill."""
+"""Install Macawiki as a CodeBuddy, Codex and/or Claude Code skill."""
 
 from __future__ import annotations
 
@@ -17,10 +17,11 @@ except ImportError:
 AGENT_PATHS = {
     "codex": Path(".agents/skills/macawiki"),
     "claude": Path(".claude/skills/macawiki"),
+    "codebuddy": Path(".codebuddy/skills/macawiki"),
 }
 TOP_LEVEL_EXCLUDED = {
     ".git", ".DS_Store", "__pycache__", ".pytest_cache", ".mypy_cache",
-    ".macawiki-v0.3-build", ".agents", ".claude", "docs", "tests",
+    ".macawiki-v0.3-build", ".agents", ".claude", ".codebuddy", "docs", "tests",
     "README.md", "CLAUDE.md", "Makefile", "LICENSE", "VERSION",
 }
 
@@ -67,7 +68,7 @@ def install(source: Path, destination: Path, mode: str, replace: bool, dry_run: 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--agent", choices=["codex", "claude", "both"], default="both")
+    parser.add_argument("--agent", choices=["codex", "claude", "codebuddy", "both"], default="both")
     parser.add_argument("--scope", choices=["user", "project"], default="user")
     parser.add_argument("--mode", choices=["symlink", "copy"], default="symlink")
     parser.add_argument("--target-root", type=Path, help="override the user home root (mainly for tests)")

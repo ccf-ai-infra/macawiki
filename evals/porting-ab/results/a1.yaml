@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "run_id": "a1",
+  "task_id": "porting-ab-torch-scatter",
+  "group": "A",
+  "repetition": 1,
+  "commit_sha": "f514c10f920b5aeed2eb162092f0ad20d3edee52",
+  "model": "kimi-k3-2",
+  "session_id": "porting-ab-a1-2c253eb5",
+  "finished_at": "2026-09-08T04:50:28.935852+00:00",
+  "environment_fingerprint": "67042ee0a8a17d08f8a6e92bf5155248c59c1a4c5cd011e3d2a630089bcc6de0",
+  "gates": {
+    "environment": "pass",
+    "build": "pass",
+    "correctness": "pass",
+    "timing": "pass",
+    "comparability": "not_run",
+    "conclusion": "not_run"
+  },
+  "pytest": {
+    "passed": 2771,
+    "failed": null,
+    "errors": null,
+    "skipped": 30,
+    "returncode": 0
+  },
+  "benchmark": {
+    "gather": {
+      "returncode": 0,
+      "timed_out": false
+    },
+    "scatter_segment": {
+      "returncode": 0,
+      "timed_out": false
+    }
+  },
+  "process": {
+    "wall_time_s": 6374.3,
+    "agent_returncode": null,
+    "human_interventions": 0,
+    "macawiki_queries": null,
+    "agent_timed_out": null,
+    "turns": 227,
+    "tokens_in": 4870155,
+    "tokens_out": 42239,
+    "agent_duration_ms": 6374334,
+    "is_error": false,
+    "permission_denials": 0
+  },
+  "status": "recorded",
+  "reviewed": false,
+  "note": "comparability/conclusion gates are computed at report time; timing-gate warmup/sync compliance requires human log review."
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "run_id": "b1",
+  "task_id": "porting-ab-torch-scatter",
+  "group": "B",
+  "repetition": 1,
+  "commit_sha": "f514c10f920b5aeed2eb162092f0ad20d3edee52",
+  "model": "kimi-k3-2",
+  "max_turns": 120,
+  "permission_mode": "bypassPermissions",
+  "session_id": "porting-ab-b1-b2e53f40",
+  "worktree": "/root/porting-ab-workspaces/b1/src",
+  "prompt_sha256": "54b1a4ab15ae6895cecc1a852707845568eccb0d72cf91b06b33e35556e620c6",
+  "skill_installed": true,
+  "skill_mode": "copy",
+  "gates_only": false,
+  "started_at": "2026-09-08T04:51:59.763324+00:00"
+}

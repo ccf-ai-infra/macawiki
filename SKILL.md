@@ -19,7 +19,9 @@ Use the repository-local knowledge base to answer MXMACA questions with explicit
    python3 scripts/query.py --hardware c500 --version unspecified --signal-log
 
    # Broad multi-concept search (any term may match -- OR mode, better recall):
-   python3 scripts/query.py "性能 基线 算子" --mode or --compact --signal-log
+   # IMPORTANT: pass terms as separate arguments. A quoted string is treated as
+   # ONE term, so query.py "性能 基线 算子" returns zero results.
+   python3 scripts/query.py 性能 基线 算子 --mode or --compact --signal-log
    ```
 
    Prefer `--mode or` for broad topic exploration or when a multi-word AND query returns zero results.

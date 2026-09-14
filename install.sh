@@ -54,6 +54,11 @@ echo ""
 echo "==> Agent skill setup"
 
 detect_agent() {
+    # CodeBuddy Code
+    if command -v codebuddy &>/dev/null || [ -d "$HOME/.codebuddy" ]; then
+        echo "codebuddy"
+        return
+    fi
     # Claude Code
     if command -v claude &>/dev/null || [ -d "$HOME/.claude" ]; then
         echo "claude"
@@ -75,12 +80,14 @@ detect_agent() {
 AGENT=$(detect_agent)
 
 if [ -n "$AGENT" ]; then
-    echo "  Detected agent: $AGENT"
-    INSTALL_FLAGS="--agent $AGENT --mode symlink"
+    echo "  Detected agent: $AGENT (installing for all supported agents)"
+    # Install for every supported agent: a skill installed only into another
+    # agent's directory is invisible to the running agent (see evals/porting-ab).
+    INSTALL_FLAGS="--agent both --mode symlink"
     if [ "$INSTALL_DIR" != "$(pwd)" ]; then
         echo "  (Installing from $INSTALL_DIR)"
     fi
-    python3 scripts/install.py $INSTALL_FLAGS --scope user || echo "  Skill install skipped (run manually if needed): python3 scripts/install.py --agent both --mode symlink"
+    python3 scripts/install.py $INSTALL_FLAGS --scope user --replace || echo "  Skill install skipped (run manually if needed): python3 scripts/install.py --agent both --mode symlink --replace"
 else
     echo "  No Claude Code/Codex/OpenCode detected."
     echo "  To install manually:"
@@ -99,8 +106,9 @@ echo "  python3 scripts/get_page.py pattern-establish-performance-baseline --fol
 echo ""
 if [ -n "$AGENT" ]; then
     echo "In your agent:"
-    echo "  Claude Code:  /macawiki <question>"
-    echo "  Codex:        \$macawiki <question>"
+    echo "  CodeBuddy Code: skill auto-triggers (~/.codebuddy/skills/macawiki)"
+    echo "  Claude Code:    /macawiki <question>"
+    echo "  Codex:          \$macawiki <question>"
     echo ""
 fi
 echo "Run the tutorial: python3 scripts/tutorial.py"
