@@ -82,3 +82,43 @@ make coverage         # 组件 18/21，version-claims 4/6 specified
 - **vc-003 / mcProfiler 版本**：查 `/opt/maca` 与 `/usr/local` 下的 `.version` 或包元数据，给 vc-003 一个真实版本（若确实读不到，维持 unspecified 并补上 measured_note，已经是当前状态）。
 - **license 已知比例 58.3%**：为 local-capture source 查 `/opt/maca` 许可文件；若查不到，考虑把它明确记为 `unknown` 的正当理由而非缺陷。
 - **剩余 uncovered 组件**：`mctvm`（本机未安装）、`sglang`（本机未安装）。这两项只能诚实记录「未安装」，是否值得开页面取决于是否需要证据来反驳关于它们的错误主张。
+
+<!-- iterate_metrics
+```json
+{
+  "metrics_before": {
+    "pages": 21,
+    "component_coverage": 12,
+    "component_total": 21,
+    "version_claims_specified": 0,
+    "version_claims_total": 6,
+    "draft_ratio": 0.619,
+    "unspecified_ratio": 0.381,
+    "license_known_ratio": 0.636,
+    "recall": 1.0,
+    "tests": 72
+  },
+  "metrics_after": {
+    "pages": 28,
+    "component_coverage": 18,
+    "component_total": 21,
+    "version_claims_specified": 4,
+    "version_claims_total": 6,
+    "draft_ratio": 0.5,
+    "unspecified_ratio": 0.286,
+    "license_known_ratio": 0.583,
+    "recall": 1.0,
+    "tests": 72
+  },
+  "deltas": {
+    "pages": 7.0,
+    "component_coverage": 6.0,
+    "version_claims_specified": 4.0,
+    "draft_ratio": -11.9,
+    "unspecified_ratio": -9.5,
+    "license_known_ratio": -5.3
+  },
+  "status": "accepted"
+}
+```
+-->

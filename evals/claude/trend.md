@@ -1,6 +1,6 @@
 # Macawiki iteration trend
 
-11 cycles recorded: 11 accepted, 0 rejected, 0 abandoned, 0 in progress. 0 carry measurable metrics.
+12 cycles recorded: 12 accepted, 0 rejected, 0 abandoned, 0 in progress. 2 carry measurable metrics.
 
 | Cycle | Status | pages | component_coverage | version_claims_specified | draft_ratio | unspecified_ratio | license_known_ratio | recall | tests |
 |-------|--------|---|---|---|---|---|---|---|---|
@@ -14,7 +14,8 @@
 | 8 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
 | 9 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
 | 10 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| 11 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
+| 11 | ✅ accepted | 28 | 18/21 | 4/6 | 50.0% | 28.6% | 58.3% | 1.000 | 72 |
+| 12 | ✅ accepted | 28 | 18/21 | 4/6 | 50.0% | 28.6% | 58.3% | 1.000 | 82 |
 
 Legend:
 - `pages` — total corpus pages
@@ -42,11 +43,24 @@ audit its own past will repeat it.
 - **cycle 8**: no report path in state (cycles 7-10); decision is not traceable
 - **cycle 9**: no report path in state (cycles 7-10); decision is not traceable
 - **cycle 10**: no report path in state (cycles 7-10); decision is not traceable
-- **cycle 11**: report predates metric recording and has no embedded metrics block
+
+## Direction of travel
+
+- `pages`: flat at 28
+- `component_coverage`: flat at 18
+- `version_claims_specified`: flat at 4
+- `draft_ratio`: flat at 50.0%
+- `unspecified_ratio`: flat at 28.6%
+- `license_known_ratio`: flat at 58.3%
+- `recall`: flat at 1.000
+- `tests`: 72 → 82 (up 10.0)
+
+Note: `up` is not always improvement. Draft ratio and unspecified
+ratio are *better when lower*; the symbol only records direction.
 
 ## Most recent decision
 
-**Cycle 11 (accepted)**
+**Cycle 12 (accepted)**
 
-> Hypothesis confirmed, not falsified: versions were read from header macros without loading any library or running a kernel. Component coverage 12/21 -> 18/21 (target >=15/21). version-claims specified 0/6 -> 4/6 (target >=3/6). Pages 21 -> 28. Recall 100% held. 72 tests pass (count unchanged; one existing URL-plausibility assertion was strengthened rather than added). mcCL is the only corroborated component (header macro + mcclras self-report agree on 2.16.5); all others single-signal. Page-level unspecified ratio 28.6% missed the <25% sub-target deliberately: the remaining unspecified pages cite upstream non-MXMACA sources that carry no MXMACA version and AGENTS.md forbids inferring one. License-known ratio fell 63.6% -> 58.3% because the new local-capture source has license_status unknown, surfacing rather than hiding that gap. Negative evidence recorded: ctypes mcblasGetVersion segfaulted (needs an initialized handle); mcTracer --version silently reports no version at all (the version is in --help; capture script fixed and re-run); mxvs and mcProfiler version probes both failed. Two real defects surfaced via make all and were fixed with tests: the URL-plausibility test now audits local:// sources (access must be local-capture and fixed_ref must name a committed artifact) instead of blanket-rejecting them; iterate_precheck champion-stale was demoted from error to warn because HEAD legitimately outruns the recorded champion between cycles, while foreign SHA and cycle-id collision stay critical.
+> Tooling cycle, not a corpus cycle: no tracked corpus metric moved (all 10 unchanged), which is expected because this adds instruments rather than evidence. Accepted on the traceability claim, verified concretely: (1) the falsifiability gate rejected its own operator's first draft of this hypothesis for naming no measurable metric, proving it enforces rather than advises; (2) a begin->reject run in the test suite leaves a report with metrics, closing the cycles-7-10 failure mode; (3) next_cycle_id advances at --begin, pre-empting the exact drift Phase 2 had to fix by hand. Genuinely no corpus gain, so this main line returns to corpus work next cycle; the <25% unspecified sub-target remains deliberately out of reach per AGENTS.md.
 

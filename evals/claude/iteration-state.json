@@ -3,12 +3,12 @@
   "objective": "maximize measured Macawiki value without quality or safety regression",
   "head_at_start": "3b1e9a6397af589ebb4bfbf5d90964818e3ec668",
   "champion": {
-    "commit": "4b5577715860db7390202b5196274a6a22af17d0",
+    "commit": "abf335092d396d7e4ea95bd71bb1e3edd406e5e1",
     "task_set_version": "2",
     "metrics_file": "evals/claude/reports/verification-report-2026-07-23.md",
-    "note": "Re-pointed by iterate_precheck --fix; now tracks HEAD 4b5577715860. Previous note: Fixed 2026-09-14: prior champion b2bb4071 did not exist in this repo's history (foreign fork/branch residue), so every state-consistency check failed. Re-pointed to the real validated HEAD at time of fix. Original note: Phase 2 tooling improvements in working tree: OR/fuzzy search, quality gates, recall check, coverage report, freshness check, pickle index, pip install, tutorial"
+    "note": "Re-pointed by iterate_precheck --fix; now tracks HEAD abf335092d39. Previous note: Re-pointed by iterate_precheck --fix; now tracks HEAD 4b5577715860. Previous note: Fixed 2026-09-14: prior champion b2bb4071 did not exist in this repo's history (foreign fork/branch residue), so every state-consistency check failed. Re-pointed to the real validated HEAD at time of fix. Original note: Phase 2 tooling improvements in working tree: OR/fuzzy search, quality gates, recall check, coverage report, freshness check, pickle index, pip install, tutorial"
   },
-  "next_cycle_id": 12,
+  "next_cycle_id": 13,
   "cycles": [
     {
       "cycle_id": 1,
@@ -253,6 +253,52 @@
       "heldout_result": null,
       "report": "evals/claude/reports/cycle-011.md",
       "decision_reason": "Hypothesis confirmed, not falsified: versions were read from header macros without loading any library or running a kernel. Component coverage 12/21 -> 18/21 (target >=15/21). version-claims specified 0/6 -> 4/6 (target >=3/6). Pages 21 -> 28. Recall 100% held. 72 tests pass (count unchanged; one existing URL-plausibility assertion was strengthened rather than added). mcCL is the only corroborated component (header macro + mcclras self-report agree on 2.16.5); all others single-signal. Page-level unspecified ratio 28.6% missed the <25% sub-target deliberately: the remaining unspecified pages cite upstream non-MXMACA sources that carry no MXMACA version and AGENTS.md forbids inferring one. License-known ratio fell 63.6% -> 58.3% because the new local-capture source has license_status unknown, surfacing rather than hiding that gap. Negative evidence recorded: ctypes mcblasGetVersion segfaulted (needs an initialized handle); mcTracer --version silently reports no version at all (the version is in --help; capture script fixed and re-run); mxvs and mcProfiler version probes both failed. Two real defects surfaced via make all and were fixed with tests: the URL-plausibility test now audits local:// sources (access must be local-capture and fixed_ref must name a committed artifact) instead of blanket-rejecting them; iterate_precheck champion-stale was demoted from error to warn because HEAD legitimately outruns the recorded champion between cycles, while foreign SHA and cycle-id collision stay critical."
+    },
+    {
+      "cycle_id": 12,
+      "status": "accepted",
+      "started_at": "2026-09-14T04:27:29.971979+00:00",
+      "hypothesis": "Wrapping the 13-step loop in iterate_cycle.py makes cycle decisions traceable: every cycle would record a falsifiable hypothesis, measured before/after metrics, and a report even when rejected. Falsification path: if the tooling adds no real enforcement beyond what the agent already does by hand, it is not worth the maintenance surface and the cycle should be rejected.",
+      "workstream": "foundation",
+      "metrics_before": {
+        "_quality_gates_error": null,
+        "pages": 28,
+        "draft_ratio": 0.5,
+        "unspecified_ratio": 0.286,
+        "license_known_ratio": 0.583,
+        "_coverage_error": null,
+        "component_coverage": 18,
+        "component_total": 21,
+        "version_claims_specified": 4,
+        "version_claims_total": 6,
+        "_recall_error": null,
+        "recall": 1.0,
+        "tests": 82
+      },
+      "targets": {},
+      "candidate_changes": [
+        "evals/claude/iteration-state.json"
+      ],
+      "dev_result": "evals/claude/reports/cycle-012.md",
+      "heldout_result": null,
+      "report": "evals/claude/reports/cycle-012.md",
+      "decision_reason": "Tooling cycle, not a corpus cycle: no tracked corpus metric moved (all 10 unchanged), which is expected because this adds instruments rather than evidence. Accepted on the traceability claim, verified concretely: (1) the falsifiability gate rejected its own operator's first draft of this hypothesis for naming no measurable metric, proving it enforces rather than advises; (2) a begin->reject run in the test suite leaves a report with metrics, closing the cycles-7-10 failure mode; (3) next_cycle_id advances at --begin, pre-empting the exact drift Phase 2 had to fix by hand. Genuinely no corpus gain, so this main line returns to corpus work next cycle; the <25% unspecified sub-target remains deliberately out of reach per AGENTS.md.",
+      "finished_at": "2026-09-14T04:27:43.214224+00:00",
+      "metrics_after": {
+        "_quality_gates_error": null,
+        "pages": 28,
+        "draft_ratio": 0.5,
+        "unspecified_ratio": 0.286,
+        "license_known_ratio": 0.583,
+        "_coverage_error": null,
+        "component_coverage": 18,
+        "component_total": 21,
+        "version_claims_specified": 4,
+        "version_claims_total": 6,
+        "_recall_error": null,
+        "recall": 1.0,
+        "tests": 82
+      }
     }
   ],
   "backlog": [
