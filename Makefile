@@ -1,4 +1,4 @@
-.PHONY: validate test indices status eval doctor quality freshness coverage recall signals signals-merge self-improve-check self-improve evolve report check check-advisory all env-probe perf-signals token-report perf-capture perf-capture-full
+.PHONY: validate test indices status eval doctor quality freshness coverage recall signals signals-merge self-improve-check self-improve evolve report check check-advisory iterate-precheck iterate-cycle trend all env-probe perf-signals token-report perf-capture perf-capture-full
 
 validate:
 	python3 scripts/validate.py
@@ -62,6 +62,12 @@ signals:
 signals-merge:
 	python3 scripts/signal_aggregator.py --merge
 
+# Iteration precheck — refuse to start a cycle while loop state has drifted
+# (cycle-id collision, foreign/absent champion SHA, unaggregated signals).
+# Non-zero exit means: fix the findings before opening a new cycle.
+iterate-precheck:
+	python3 scripts/iterate_precheck.py
+
 # Self-improvement dry-run — preview auto-fixable items.
 self-improve-check:
 	python3 scripts/self_improve.py --dry-run
@@ -69,6 +75,17 @@ self-improve-check:
 # Self-improvement apply — process auto-fixable backlog items with safety gates.
 self-improve:
 	python3 scripts/self_improve.py --apply
+
+# Iteration cycle orchestration — the mechanical spine of the 13-step loop.
+# The hypothesis and the accept/reject judgement stay with the agent; this
+# only enforces that a cycle records its hypothesis, its measured before/after
+# metrics, and a report even when rejected.
+iterate-cycle:
+	python3 scripts/iterate_cycle.py --status
+
+# Iteration trend — per-cycle metrics and decisions from loop history.
+trend:
+	python3 scripts/trend_report.py --markdown evals/claude/trend.md
 
 # Environment detection — probe C500/MXMACA hardware and software versions,
 # write a JSONL record for the aggregator so env changes are detected over time.
@@ -102,4 +119,7 @@ check: validate test
 	@echo ""
 	@echo "=== Pre-commit check passed ==="
 
-all: validate indices test eval doctor status
+# trend is in `all` because the artifact is regenerated, not hand-edited: if it
+# is not refreshed on every gate run it silently drifts from the state file, and
+# a trend that disagrees with the loop it describes is worse than none.
+all: validate indices test eval doctor status trend

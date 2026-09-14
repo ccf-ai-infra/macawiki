@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install Macawiki as a Codex and/or Claude Code skill."""
+"""Install Macawiki as a CodeBuddy, Codex and/or Claude Code skill."""
 
 from __future__ import annotations
 
@@ -17,19 +17,30 @@ except ImportError:
 AGENT_PATHS = {
     "codex": Path(".agents/skills/macawiki"),
     "claude": Path(".claude/skills/macawiki"),
+    "codebuddy": Path(".codebuddy/skills/macawiki"),
 }
 TOP_LEVEL_EXCLUDED = {
     ".git", ".DS_Store", "__pycache__", ".pytest_cache", ".mypy_cache",
-    ".macawiki-v0.3-build", ".agents", ".claude", "docs", "tests",
+    ".macawiki-v0.3-build", ".agents", ".claude", ".codebuddy", "tests",
     "README.md", "CLAUDE.md", "Makefile", "LICENSE", "VERSION",
 }
+
+# docs/ mixes contributor planning with files the skill contract tells agents
+# to read. Ship only the ones an installed skill can actually resolve;
+# otherwise SKILL.md/AGENTS.md point at a file the copy install never made.
+DOCS_DIR_NAME = "docs"
+SHIPPED_DOCS = {"hardware-validation.md", "source-and-license-policy.md"}
 
 
 def copy_ignore(path: str, names: list[str]) -> set[str]:
     """Keep the installed skill useful without copying contributor-only files."""
     ignored = {name for name in names if name in {".git", ".DS_Store", "__pycache__", ".pytest_cache", ".mypy_cache", "results"}}
-    if Path(path).resolve() == ROOT.resolve():
+    resolved = Path(path).resolve()
+    if resolved == ROOT.resolve():
         ignored.update(name for name in names if name in TOP_LEVEL_EXCLUDED)
+    elif resolved == (ROOT / DOCS_DIR_NAME).resolve():
+        ignored.update(name for name in names
+                       if name not in SHIPPED_DOCS and Path(path, name).is_file())
     return ignored
 
 
@@ -67,7 +78,7 @@ def install(source: Path, destination: Path, mode: str, replace: bool, dry_run: 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--agent", choices=["codex", "claude", "both"], default="both")
+    parser.add_argument("--agent", choices=["codex", "claude", "codebuddy", "both"], default="both")
     parser.add_argument("--scope", choices=["user", "project"], default="user")
     parser.add_argument("--mode", choices=["symlink", "copy"], default="symlink")
     parser.add_argument("--target-root", type=Path, help="override the user home root (mainly for tests)")

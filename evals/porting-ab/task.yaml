@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "porting-ab-torch-scatter",
+  "description": "A/B experiment: measure whether Macawiki helps an agent port torch-scatter (CUDA extension) to MXMACA on a MetaX C500. Group A runs without the Macawiki skill; Group B runs with it. Prompt is byte-identical for both groups and never mentions Macawiki.",
+  "upstream": {
+    "repo": "https://github.com/rusty1s/pytorch_scatter",
+    "commit_sha": "f514c10f920b5aeed2eb162092f0ad20d3edee52",
+    "commit_date": "2026-06-03",
+    "commit_subject": "Add PyTorch 2.12 support (#510)",
+    "tarball": "https://codeload.github.com/rusty1s/pytorch_scatter/tar.gz/f514c10f920b5aeed2eb162092f0ad20d3edee52",
+    "resolved_at": "2026-09-08",
+    "note": "git ls-remote to github.com is blocked from this host; SHA resolved via GitHub API, source fetched via codeload tarball."
+  },
+  "agent": {
+    "cli": "codebuddy",
+    "model": "kimi-k3-2",
+    "max_turns": 120,
+    "permission_mode": "bypassPermissions",
+    "output_format": "stream-json",
+    "no_session_persistence": true
+  },
+  "environment_facts_given_in_prompt": [
+    "1x MetaX C500 64GiB present",
+    "MACA toolkit 3.7.1.5 installed at /opt/maca",
+    "torch 2.8.0+metax3.7.1.3 installed (MetaX PyTorch, CUDA API mapped to MACA)",
+    "no nvcc, no NVIDIA GPU",
+    "cmake 3.28.3, gcc 13.3.0 available"
+  ],
+  "environment_facts_deliberately_withheld": [
+    "mxcc exact path (discoverable via filesystem search)",
+    "cu-bridge location and CUCC_*/CUDA_PATH environment variable conventions (this is the key knowledge Macawiki documents in wiki/reference/maca-environment-variables.md; leaking it in the prompt would invalidate the A/B measurement)"
+  ],
+  "prompt": "当前工作目录是 torch-scatter 的源码（上游 https://github.com/rusty1s/pytorch_scatter，commit f514c10f920b5aeed2eb162092f0ad20d3edee52 的 tarball 解压，不含 .git）。请把它移植到本机的 MetaX C500 GPU 上构建并运行。\n\n已知环境事实：本机有 1 块 MetaX C500（64GiB 显存）；MACA toolkit 3.7.1.5 安装在 /opt/maca；已安装 torch 2.8.0+metax3.7.1.3（MetaX 版 PyTorch，CUDA API 已映射到 MACA）；系统没有 nvcc，也没有 NVIDIA GPU；cmake 3.28.3、gcc 13.3.0 可用。\n\n交付物（全部必须完成）：\n1. CUDA 扩展在本机成功构建，且 python3 -c \"import torch_scatter\" 成功；\n2. 上游 pytest 测试套件（test/ 目录）在 GPU 上通过（单卡不适用的用例允许按上游逻辑 skip，不允许修改测试断言让其通过）；\n3. 运行上游 benchmark/ 目录中的脚本产出计时结果，计时必须包含 warmup 与设备同步、保留全部样本；\n4. 在源码根目录写 PORTING_NOTES.md，列出每一处修改及原因。\n\n约束：不要改动或重装已安装的 torch；可以用 pip 安装其他构建与测试依赖（如 pytest）；除安装依赖外，所有文件修改限制在当前工作目录内。"
+}

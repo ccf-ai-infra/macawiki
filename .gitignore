@@ -165,3 +165,8 @@ evals/signals/*.jsonl
 evals/signals/env-snapshot*.json
 evals/signals/archive/
 
+# Scratch SQLite DBs written into the repo root by task-execution tooling
+# during local runs (schema: exec_info). Nothing in scripts/ reads or writes
+# these; they are session debris, not corpus.
+/.2026*.db
+

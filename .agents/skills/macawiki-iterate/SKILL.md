@@ -23,14 +23,17 @@ Parameters (`/macawiki-iterate <param>`):
 
 1. Read `AGENTS.md`, `CLAUDE.md`, root `SKILL.md`, `docs/source-and-license-policy.md`
 2. Run `make all` as pre-check baseline
-3. Read `evals/claude/iteration-state.json` — pick highest priority backlog item
-4. Form a single falsifiable hypothesis
-5. Execute minimal related changes (one cluster)
-6. Run `make all` + any targeted tests
-7. Accept (metrics improved, no regression) or reject (no gain, instability, negative transfer)
-8. Write cycle report to `evals/claude/reports/cycle-NNN.md`
-9. Update `evals/claude/iteration-state.json`
-10. For `next`: stop here. For `run`: continue to next cycle.
+3. Run `make signals-merge` to process captured query signals into backlog items
+4. Run `make self-improve-check` to identify auto-fixable items; if any exist and are safe, run `make self-improve` to apply them
+5. Read `evals/claude/iteration-state.json` — pick highest priority backlog item (now includes auto-generated signal items alongside manual items)
+6. Form a single falsifiable hypothesis
+7. Prepare PR branch: `bash scripts/prepare_pr.sh <type> "<description>"` (if committing changes)
+8. Execute minimal related changes (one cluster)
+9. Run `make all` + `make check-advisory` + any targeted tests
+10. Accept (metrics improved, no regression) or reject (no gain, instability, negative transfer)
+11. Write cycle report to `evals/claude/reports/cycle-NNN.md`
+12. Update `evals/claude/iteration-state.json`
+13. For `next`: stop here. For `run`: continue to next cycle.
 
 ## Key constraints
 
