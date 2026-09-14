@@ -119,4 +119,7 @@ check: validate test
 	@echo ""
 	@echo "=== Pre-commit check passed ==="
 
-all: validate indices test eval doctor status
+# trend is in `all` because the artifact is regenerated, not hand-edited: if it
+# is not refreshed on every gate run it silently drifts from the state file, and
+# a trend that disagrees with the loop it describes is worse than none.
+all: validate indices test eval doctor status trend

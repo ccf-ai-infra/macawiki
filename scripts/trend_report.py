@@ -102,16 +102,21 @@ def _report_metrics(state: dict[str, Any], cycle: dict[str, Any]) -> dict[str, A
     if not full.is_file():
         return {"_missing_report": path}
     text = full.read_text(encoding="utf-8")
-    marker = "<!-- iterate_metrics"
-    i = text.find(marker)
+    i = text.find("<!-- iterate_metrics")
     if i < 0:
         return {}
+    # The fence is ```json, so skip the language tag too; slicing at the
+    # opening backticks alone leaves "json" in front of the payload and
+    # every report would parse as empty.
     start = text.find("```", i)
-    end = text.find("```", start + 3) if start >= 0 else -1
-    if start < 0 or end < 0:
+    if start < 0:
+        return {}
+    nl = text.find("\n", start)
+    end = text.find("```", start + 3)
+    if nl < 0 or end < 0 or end < nl:
         return {}
     try:
-        data = json.loads(text[start + 3 : end])
+        data = json.loads(text[nl + 1 : end])
     except json.JSONDecodeError:
         return {}
     if not isinstance(data, dict):
