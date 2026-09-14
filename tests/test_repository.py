@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import subprocess
@@ -33,6 +34,43 @@ def run_script(*args: str, env: dict[str, str] | None = None) -> subprocess.Comp
         check=False,
         env=full_env,
     )
+
+
+@contextlib.contextmanager
+def _scratch_iteration_state() -> Any:
+    """Copy the real loop state into a scratch dir for one test.
+
+    Subprocess isolation is the reason this exists: a test that wants to run
+    a full begin/finish cycle cannot monkeypatch a module constant and expect
+    a separate `python3` process to see it. Instead the scripts read
+    MACAWIKI_ITERATE_STATE / MACAWIKI_ITERATE_REPORTS, so pointing both at a
+    temp dir keeps the real iteration-state.json and reports/ untouched.
+
+    Copies rather than synthesizes, so the cycle under test sees a realistic
+    backlog and cycle history (including the cycles with `report: null`,
+    which the tools must tolerate).
+    """
+    import shutil
+    real_state = ROOT / "evals" / "claude" / "iteration-state.json"
+    with tempfile.TemporaryDirectory(prefix="macawiki-iterate-test-") as scratch:
+        scratch_dir = Path(scratch)
+        state_copy = scratch_dir / "iteration-state.json"
+        if real_state.is_file():
+            shutil.copy2(real_state, state_copy)
+        else:
+            state_copy.write_text('{"cycles": [], "next_cycle_id": 1}', encoding="utf-8")
+        reports = scratch_dir / "reports"
+        reports.mkdir()
+        yield state_copy, reports
+
+
+def _iterate_env(state: Path, reports: Path) -> dict[str, str]:
+    """Env vars pointing iterate_cycle/trend_report at a scratch state."""
+    return {
+        **os.environ,
+        "MACAWIKI_ITERATE_STATE": str(state),
+        "MACAWIKI_ITERATE_REPORTS": str(reports),
+    }
 
 
 class RepositoryTests(unittest.TestCase):
@@ -1014,4 +1052,220 @@ log_tool_inventory({{"mcTracer": {{"path": "/opt/maca/bin/mcTracer", "version": 
                     if f["level"] in ("critical", "error")]
         self.assertEqual(blocking, [],
                          f"state has unhandled blocking findings: {blocking}")
+
+    # ── cycle orchestration ──────────────────────────────────────────
+
+    def test_iterate_metrics_snapshot_is_complete(self) -> None:
+        """Every tracked metric must be measurable on the real corpus.
+
+        A null value would mean a gate script stopped exposing a number, which
+        would silently corrupt every before/after comparison the loop makes.
+        """
+        from scripts.iterate_metrics import METRIC_KEYS, collect_snapshot
+        snap = collect_snapshot()
+        missing = [k for k in METRIC_KEYS if snap.get(k) is None]
+        self.assertEqual(missing, [],
+                         f"metrics could not be collected: {missing}; errors="
+                         f"{ {k: v for k, v in snap.items() if k.endswith('_error')} }")
+        for key in ("pages", "component_coverage", "tests"):
+            self.assertIsInstance(snap[key], int, f"{key} should be an int")
+
+    def test_cycle_hypothesis_must_be_falsifiable(self) -> None:
+        """A bare intention must be rejected; a testable claim must pass.
+
+        'Add mcBLAS docs' cannot be wrong, so it cannot be a cycle hypothesis.
+        The check is about the shape of the claim, never its truth.
+        """
+        from scripts.iterate_cycle import _hypothesis_is_falsifiable
+        bad = "Add mcBLAS docs"
+        self.assertTrue(_hypothesis_is_falsifiable(bad),
+                        "an intention with no metric and no failure mode was accepted")
+
+        good = ("Adding measured component sources raises component coverage "
+                "to >=15. If the versions cannot be read without loading the "
+                "library, the cycle is rejected.")
+        self.assertEqual(_hypothesis_is_falsifiable(good), [],
+                         "a measurable hypothesis with a failure mode was rejected")
+
+    def test_cycle_target_range_is_checked(self) -> None:
+        """A target past a real ceiling must be flagged at --begin, not at --finish."""
+        from scripts.iterate_cycle import _parse_targets, _target_problems
+        baseline = {"component_total": 21, "version_claims_total": 6}
+        unreachable = _parse_targets("raises component coverage to >=25")
+        self.assertTrue(_target_problems(unreachable, baseline),
+                        "coverage 25 with only 21 components was not flagged")
+        reachable = _parse_targets("raises component coverage to >=15")
+        self.assertEqual(_target_problems(reachable, baseline), [],
+                         "a reachable target was flagged as impossible")
+
+    def test_cycle_begin_rejects_nonfalsifiable_hypothesis(self) -> None:
+        """--begin must refuse to open a cycle on an untestable claim.
+
+        Runs against a scratch state + report dir (via the same
+        MACAWIKI_ITERATE_* env override convention the scripts use) so the
+        real loop history is never touched even if this test fails midway.
+        """
+        with _scratch_iteration_state() as (scratch_state, scratch_reports):
+            r = run_script("scripts/iterate_cycle.py", "--json", "--begin",
+                           "--hypothesis", "Add mcBLAS docs", "--no-precheck",
+                           env=_iterate_env(scratch_state, scratch_reports))
+            self.assertNotEqual(r.returncode, 0,
+                                "--begin must exit non-zero on an untestable claim")
+            self.assertIn("measurable", r.stderr + r.stdout)
+            # The scratch state must be unchanged: no cycle was opened.
+            state = json.loads(scratch_state.read_text(encoding="utf-8"))
+            self.assertEqual([c for c in state.get("cycles", [])
+                              if c.get("status") == "in_progress"], [])
+
+    def test_cycle_begin_force_hypothesis_overrides_check(self) -> None:
+        """--force-hypothesis must actually bypass the falsifiability gate.
+
+        It is the documented escape hatch for a maintainer who disagrees with
+        the shape check; if the flag is accepted but ignored, the hatch is a
+        silent no-op and the maintainer is stuck.
+        """
+        with _scratch_iteration_state() as (scratch_state, scratch_reports):
+            env = _iterate_env(scratch_state, scratch_reports)
+            r = run_script(
+                "scripts/iterate_cycle.py", "--json", "--begin", "--force-hypothesis",
+                "--hypothesis", "Add mcBLAS docs", "--no-precheck", env=env)
+            self.assertEqual(r.returncode, 0,
+                             f"--force-hypothesis must open the cycle: {r.stderr}")
+            state = json.loads(scratch_state.read_text(encoding="utf-8"))
+            opened = [c for c in state.get("cycles", [])
+                      if c.get("status") == "in_progress"]
+            self.assertEqual(len(opened), 1, "no cycle was opened")
+            # Close it again so no scratch cycle is left dangling.
+            run_script("scripts/iterate_cycle.py", "--json", "--abandon",
+                       "--reason", "test cleanup", env=env)
+
+    def test_cycle_abandon_without_report(self) -> None:
+        """An abandoned cycle must close cleanly and keep next_cycle_id ahead."""
+        with _scratch_iteration_state() as (scratch_state, scratch_reports):
+            env = _iterate_env(scratch_state, scratch_reports)
+            begin = run_script(
+                "scripts/iterate_cycle.py", "--json", "--begin",
+                "--hypothesis",
+                "Adding a tool page raises component coverage to >=19. "
+                "If the tool is not installed, the cycle is rejected.",
+                "--no-precheck", env=env)
+            self.assertEqual(begin.returncode, 0, begin.stderr + begin.stdout)
+            cid = json.loads(begin.stdout)["cycle_id"]
+
+            no_reason = run_script("scripts/iterate_cycle.py", "--json",
+                                   "--abandon", env=env)
+            self.assertNotEqual(no_reason.returncode, 0,
+                                "--abandon must require a reason")
+
+            r = run_script("scripts/iterate_cycle.py", "--json", "--abandon",
+                           "--reason", "component is not installed on this host",
+                           env=env)
+            self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
+            self.assertEqual(json.loads(r.stdout)["status"], "abandoned")
+
+            state = json.loads(scratch_state.read_text(encoding="utf-8"))
+            cycle = state["cycles"][-1]
+            self.assertEqual(cycle["status"], "abandoned")
+            self.assertIsNone(cycle.get("report"),
+                              "an abandoned cycle records no report path")
+            self.assertEqual(state["next_cycle_id"], cid + 1)
+            self.assertEqual([c for c in state["cycles"]
+                              if c.get("status") == "in_progress"], [])
+
+    def test_cycle_begin_finish_and_reject_all_write_reports(self) -> None:
+        """A full begin -> reject cycle must leave a report with metrics.
+
+        A rejected change with no report is how cycles 7-10 became
+        untraceable; this is the invariant the orchestrator exists to hold.
+        """
+        with _scratch_iteration_state() as (scratch_state, scratch_reports):
+            env = _iterate_env(scratch_state, scratch_reports)
+
+            begin = run_script(
+                "scripts/iterate_cycle.py", "--json", "--begin",
+                "--hypothesis",
+                "Adding a diagnostic page raises component coverage to >=19. "
+                "If the component is not installed, the cycle is rejected.",
+                "--workstream", "corpus", "--no-precheck", env=env)
+            self.assertEqual(begin.returncode, 0, begin.stderr + begin.stdout)
+            bdata = json.loads(begin.stdout)
+            next_id = bdata["cycle_id"]
+
+            # A second --begin must refuse while one is already open.
+            second = run_script("scripts/iterate_cycle.py", "--json", "--begin",
+                                "--hypothesis", "another hypothesis that names "
+                                "component coverage and can be rejected if missing",
+                                "--no-precheck", env=env)
+            self.assertNotEqual(second.returncode, 0,
+                                "--begin must not open two cycles at once")
+
+            # --finish without a reason must refuse.
+            noreason = run_script("scripts/iterate_cycle.py", "--json",
+                                  "--finish", "--reject", env=env)
+            self.assertNotEqual(noreason.returncode, 0,
+                                "--finish must require a reason")
+
+            finish = run_script(
+                "scripts/iterate_cycle.py", "--json", "--finish", "--reject",
+                "--reason", "Hypothesis rejected: the component is not installed.",
+                env=env)
+            self.assertEqual(finish.returncode, 0, finish.stderr + finish.stdout)
+            fdata = json.loads(finish.stdout)
+            self.assertEqual(fdata["status"], "rejected")
+
+            state = json.loads(scratch_state.read_text(encoding="utf-8"))
+            cycle = state["cycles"][-1]
+            self.assertEqual(cycle["cycle_id"], next_id)
+            self.assertEqual(cycle["status"], "rejected")
+            self.assertIn("metrics_before", cycle)
+            self.assertIn("metrics_after", cycle)
+            # A report is written even, especially, on rejection.
+            report = scratch_reports / f"cycle-{next_id:03d}.md"
+            self.assertTrue(report.is_file(), f"report not written: {report}")
+            text = report.read_text(encoding="utf-8")
+            self.assertIn("rejected", text)
+            self.assertIn("iterate_metrics", text)
+            # next_cycle_id must have advanced at --begin, and stay ahead.
+            self.assertEqual(state["next_cycle_id"], next_id + 1)
+            self.assertEqual([c for c in state["cycles"]
+                              if c.get("status") == "in_progress"], [])
+
+    def test_trend_report_reads_state_and_names_gaps(self) -> None:
+        """The trend must run on the real loop history and expose its gaps.
+
+        Cycles 7-10 left no report; the trend must say so instead of
+        quietly omitting them, and must not crash on cycles whose report
+        file is missing on disk.
+        """
+        r = run_script("scripts/trend_report.py", "--json")
+        self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
+        data = json.loads(r.stdout)
+        self.assertGreater(data["cycles_total"], 0)
+        self.assertEqual(len(data["rows"]), data["cycles_total"])
+        statuses = {row["status"] for row in data["rows"]}
+        self.assertIn("accepted", statuses)
+        # Every row carries the fields a reader needs to audit it.
+        for row in data["rows"]:
+            self.assertIn("metrics", row)
+            self.assertIn("decision_reason", row)
+
+    def test_trend_report_handles_missing_report_file(self) -> None:
+        """A state path pointing at a nonexistent file must not crash the trend."""
+        from scripts import trend_report
+
+        cycle = {"cycle_id": 990, "status": "accepted",
+                 "report": "evals/claude/reports/cycle-999.md",
+                 "hypothesis": "h", "decision_reason": "d"}
+        metrics = trend_report._report_metrics({}, cycle)
+        self.assertNotIn("pages", metrics,
+                         "a missing report must not yield fabricated metrics")
+
+    def test_iterate_and_trend_makefile_targets_exist(self) -> None:
+        """The two new targets must be wired into the Makefile."""
+        makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+        self.assertIn("iterate-cycle", makefile, "make iterate-cycle missing")
+        self.assertIn("trend:", makefile, "make trend missing")
+        for script in ("iterate_cycle.py", "trend_report.py", "iterate_metrics.py"):
+            self.assertTrue((ROOT / "scripts" / script).is_file(),
+                            f"scripts/{script} not present")
 
