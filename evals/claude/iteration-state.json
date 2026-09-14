@@ -8,7 +8,7 @@
     "metrics_file": "evals/claude/reports/verification-report-2026-07-23.md",
     "note": "Fixed 2026-09-14: prior champion b2bb4071 did not exist in this repo's history (foreign fork/branch residue), so every state-consistency check failed. Re-pointed to the real validated HEAD at time of fix. Original note: Phase 2 tooling improvements in working tree: OR/fuzzy search, quality gates, recall check, coverage report, freshness check, pickle index, pip install, tutorial"
   },
-  "next_cycle_id": 11,
+  "next_cycle_id": 12,
   "cycles": [
     {
       "cycle_id": 1,
@@ -223,6 +223,36 @@
       "heldout_result": null,
       "report": null,
       "decision_reason": "All quality gates pass (zero warnings). Draft ratio 92.9%→64.3%. Unspecified version 100%→21.4%. 5 reviewed pages (was 1). b11 Claude A/B eval removed as wontfix — local agent CLI architecture confirmed. verified threshold adjusted to reflect wiki-as-methodology model. License research added vllm-metax as permissive. Source registry updated with Gitee check notes."
+    },
+    {
+      "cycle_id": 11,
+      "status": "accepted",
+      "hypothesis": "Adding measured /opt/maca component sources from the live C500 raises component coverage from 12/21 to >=15/21, and backfilling measured versions raises specified version-claims from 0/6 to >=3/6. Falsification path: if library versions cannot be read without loading the library or running a kernel, the evidence route is unusable and the cycle must be rejected.",
+      "workstream": "corpus",
+      "candidate_changes": [
+        "sources/repos/local-c500-maca-sdk.md",
+        "wiki/reference/mcblas-basics.md",
+        "wiki/reference/mccl-basics.md",
+        "wiki/reference/mcdnn-basics.md",
+        "wiki/diagnostics/mctracer-basics.md",
+        "wiki/reference/mctilelang-basics.md",
+        "wiki/reference/mctriton-basics.md",
+        "data/source-registry.yaml",
+        "data/version-claims.yaml",
+        "benchmarks/results/environment-c500-components.json",
+        "scripts/capture_environment.py",
+        "scripts/env_detector.py",
+        "tests/test_repository.py",
+        "scripts/iterate_precheck.py",
+        "queries/by-type.md",
+        "queries/by-component.md",
+        "queries/by-hardware.md",
+        "queries/by-version.md"
+      ],
+      "dev_result": "evals/claude/reports/cycle-011.md",
+      "heldout_result": null,
+      "report": "evals/claude/reports/cycle-011.md",
+      "decision_reason": "Hypothesis confirmed, not falsified: versions were read from header macros without loading any library or running a kernel. Component coverage 12/21 -> 18/21 (target >=15/21). version-claims specified 0/6 -> 4/6 (target >=3/6). Pages 21 -> 28. Recall 100% held. 72 tests pass (count unchanged; one existing URL-plausibility assertion was strengthened rather than added). mcCL is the only corroborated component (header macro + mcclras self-report agree on 2.16.5); all others single-signal. Page-level unspecified ratio 28.6% missed the <25% sub-target deliberately: the remaining unspecified pages cite upstream non-MXMACA sources that carry no MXMACA version and AGENTS.md forbids inferring one. License-known ratio fell 63.6% -> 58.3% because the new local-capture source has license_status unknown, surfacing rather than hiding that gap. Negative evidence recorded: ctypes mcblasGetVersion segfaulted (needs an initialized handle); mcTracer --version silently reports no version at all (the version is in --help; capture script fixed and re-run); mxvs and mcProfiler version probes both failed. Two real defects surfaced via make all and were fixed with tests: the URL-plausibility test now audits local:// sources (access must be local-capture and fixed_ref must name a committed artifact) instead of blanket-rejecting them; iterate_precheck champion-stale was demoted from error to warn because HEAD legitimately outruns the recorded champion between cycles, while foreign SHA and cycle-id collision stay critical."
     }
   ],
   "backlog": [
