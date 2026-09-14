@@ -3,15 +3,21 @@
 
 Refuses to start a new cycle when evals/claude/iteration-state.json has
 drifted out of sync with the repository. The loop is resumable only while
-this invariant holds:
+these structural invariants hold:
 
     next_cycle_id == max(cycle_id) + 1
     champion.commit exists in this repo's history
-    champion.commit == HEAD          (no commits outside the loop)
 
-Unaggregated signal logs are reported but do not block: the signal dir is
-gitignored scratch space that can hold test noise, and deciding whether to
-merge it is a maintainer judgement (see `make signals-merge`).
+A champion that is a valid ancestor of HEAD but lags it is NOT blocking:
+the normal loop flow is to commit work, then record it as a cycle and
+re-point the champion, so HEAD legitimately outruns the last recorded
+champion whenever work has happened since the last cycle. What would be
+unresumable is a champion that never existed here, or a cycle-id that
+would overwrite an existing report.
+
+Unaggregated signal logs are likewise reported but do not block: the signal
+dir is gitignored scratch space that can hold test noise, and deciding
+whether to merge it is a maintainer judgement (see `make signals-merge`).
 
 Usage:
     python3 scripts/iterate_precheck.py            # exit 0 = safe to cycle
@@ -118,10 +124,17 @@ def check() -> dict[str, Any]:
             "history (a SHA from another fork/branch makes the loop state unverifiable)",
             "set champion.commit to the real HEAD, then re-run this check")
     elif champ_sha != head:
-        add("error", "champion-stale",
-            f"champion.commit {champ_sha[:12]} lags behind HEAD {head[:12]}; "
-            "commits exist that the loop has not recorded",
-            "run: python3 scripts/iterate_precheck.py --fix")
+        # Advisory: the normal loop flow commits work first and records it as
+        # a cycle afterwards, so HEAD legitimately outruns the recorded
+        # champion between cycles. Only the maintainer can tell 'work pending
+        # a cycle write-up' from 'a cycle was never closed out'; demanding a
+        # block here would make every legitimate mid-cycle commit a failure.
+        behind = _git(["rev-list", "--count", f"{champ_sha}..{head}"]).stdout.strip()
+        add("warn", "champion-lags-head",
+            f"champion.commit {champ_sha[:12]} is {behind or 'some'} commit(s) behind "
+            f"HEAD {head[:12]}; work exists that no cycle records yet",
+            "close it out: write the cycle report and run "
+            "python3 scripts/iterate_precheck.py --fix")
 
     signals = _unaggregated_signals()
     if signals:
@@ -159,7 +172,11 @@ def check() -> dict[str, Any]:
 
 
 def fix() -> dict[str, Any]:
-    """Sync champion.commit to HEAD when the recorded SHA is stale or foreign."""
+    """Sync champion.commit to HEAD, after the intervening work is recorded.
+
+    Refuses only when the recorded SHA does not exist in this repo, since that
+    state is unverifiable rather than merely stale.
+    """
     head = _head()
     if head is None:
         return {"fixed": False, "reason": "git HEAD could not be resolved"}
@@ -170,15 +187,15 @@ def fix() -> dict[str, Any]:
 
     if current == head:
         return {"fixed": False, "reason": f"champion already at HEAD {head[:12]}"}
-    if current and _sha_exists(current):
+    if current and not _sha_exists(current):
         return {"fixed": False,
-                "reason": f"champion {current[:12]} is a valid ancestor-style SHA but lags HEAD; "
-                          "record the intervening work as a cycle before resetting the champion"}
+                "reason": f"champion {current[:12]} does not exist in this repo; "
+                          "resolve the foreign SHA by hand before fixing"}
 
     champion["commit"] = head
     note = champion.get("note")
-    champion["note"] = (f"Re-pointed by iterate_precheck --fix from foreign/invalid SHA; "
-                        f"now tracks real HEAD {head[:12]}. Original note: {note}")
+    champion["note"] = (f"Re-pointed by iterate_precheck --fix; now tracks HEAD "
+                        f"{head[:12]}. Previous note: {note}")
     state["champion"] = champion
 
     if isinstance(state.get("next_cycle_id"), int) and state.get("cycles"):

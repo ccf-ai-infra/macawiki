@@ -445,7 +445,13 @@ class RepositoryTests(unittest.TestCase):
         )
 
     def test_source_registry_urls_are_plausible(self) -> None:
-        """All sources in source-registry.yaml must have URL and id fields."""
+        """All sources in source-registry.yaml must have URL and id fields.
+
+        Remote sources must be HTTP(S) so a fabricated or placeholder URL is
+        caught. A local-capture source is a separate, audited class: its
+        evidence is a committed artifact in this repo, not a fetchable page, so
+        it uses the explicit local:// scheme and must point at that artifact.
+        """
         registry_path = ROOT / "data" / "source-registry.yaml"
         data = json.loads(registry_path.read_text(encoding="utf-8"))
         sources = data.get("sources", [])
@@ -454,10 +460,25 @@ class RepositoryTests(unittest.TestCase):
             with self.subTest(src_id=src.get("id", "unknown")):
                 self.assertIn("id", src)
                 self.assertIn("url", src)
+                url = src["url"]
+                if url.startswith("http"):
+                    continue
                 self.assertTrue(
-                    src["url"].startswith("http"),
-                    f"source {src['id']} URL is not HTTP: {src['url']}"
-                )
+                    url.startswith("local://"),
+                    f"source {src['id']} URL is neither HTTP nor local://: {url}")
+                # A local:// claim is only auditable if it names the committed
+                # artifact it stands on; otherwise it is an unfalsifiable
+                # assertion about an unreachable machine.
+                self.assertEqual(
+                    src.get("access"), "local-capture",
+                    f"source {src['id']} uses local:// but access is not "
+                    f"local-capture: {src.get('access')}")
+                ref = src.get("fixed_ref") or ""
+                artifact = ref.split()[0] if ref else ""
+                self.assertTrue(
+                    artifact and (ROOT / artifact).is_file(),
+                    f"source {src['id']} local:// URL has no committed artifact "
+                    f"in fixed_ref: {ref!r}")
 
     def test_agent_value_proxy_enhanced_passes(self) -> None:
         """All agent-value cases (>=8) must pass including negative-trigger."""
