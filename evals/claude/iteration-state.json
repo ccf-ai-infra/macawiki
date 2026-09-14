@@ -3,12 +3,12 @@
   "objective": "maximize measured Macawiki value without quality or safety regression",
   "head_at_start": "3b1e9a6397af589ebb4bfbf5d90964818e3ec668",
   "champion": {
-    "commit": "b2bb4071ba8c6c43d24223baec7b96306faa5f3e",
+    "commit": "1e93b559a5af4d8b7732f6a47030619acdb97094",
     "task_set_version": "2",
     "metrics_file": "evals/claude/reports/verification-report-2026-07-23.md",
-    "note": "Phase 2 tooling improvements in working tree: OR/fuzzy search, quality gates, recall check, coverage report, freshness check, pickle index, pip install, tutorial"
+    "note": "Fixed 2026-09-14: prior champion b2bb4071 did not exist in this repo's history (foreign fork/branch residue), so every state-consistency check failed. Re-pointed to the real validated HEAD at time of fix. Original note: Phase 2 tooling improvements in working tree: OR/fuzzy search, quality gates, recall check, coverage report, freshness check, pickle index, pip install, tutorial"
   },
-  "next_cycle_id": 10,
+  "next_cycle_id": 11,
   "cycles": [
     {
       "cycle_id": 1,
@@ -510,7 +510,8 @@
       "confidence": "high",
       "effort": "low",
       "dependencies": [],
-      "status": "completed"
+      "status": "completed",
+      "resolved_note": "Placeholder SHA never existed in this repo. Resolved by pointing champion at 1e93b559a5af (verified with git cat-file)."
     },
     {
       "id": "auto-sig-001",

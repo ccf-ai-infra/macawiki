@@ -1,4 +1,4 @@
-.PHONY: validate test indices status eval doctor quality freshness coverage recall signals signals-merge self-improve-check self-improve evolve report check check-advisory all env-probe perf-signals token-report perf-capture perf-capture-full
+.PHONY: validate test indices status eval doctor quality freshness coverage recall signals signals-merge self-improve-check self-improve evolve report check check-advisory iterate-precheck all env-probe perf-signals token-report perf-capture perf-capture-full
 
 validate:
 	python3 scripts/validate.py
@@ -61,6 +61,12 @@ signals:
 # Signal aggregation + merge — process signals into backlog items.
 signals-merge:
 	python3 scripts/signal_aggregator.py --merge
+
+# Iteration precheck — refuse to start a cycle while loop state has drifted
+# (cycle-id collision, foreign/absent champion SHA, unaggregated signals).
+# Non-zero exit means: fix the findings before opening a new cycle.
+iterate-precheck:
+	python3 scripts/iterate_precheck.py
 
 # Self-improvement dry-run — preview auto-fixable items.
 self-improve-check:

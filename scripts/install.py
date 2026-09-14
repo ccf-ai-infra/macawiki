@@ -21,16 +21,26 @@ AGENT_PATHS = {
 }
 TOP_LEVEL_EXCLUDED = {
     ".git", ".DS_Store", "__pycache__", ".pytest_cache", ".mypy_cache",
-    ".macawiki-v0.3-build", ".agents", ".claude", ".codebuddy", "docs", "tests",
+    ".macawiki-v0.3-build", ".agents", ".claude", ".codebuddy", "tests",
     "README.md", "CLAUDE.md", "Makefile", "LICENSE", "VERSION",
 }
+
+# docs/ mixes contributor planning with files the skill contract tells agents
+# to read. Ship only the ones an installed skill can actually resolve;
+# otherwise SKILL.md/AGENTS.md point at a file the copy install never made.
+DOCS_DIR_NAME = "docs"
+SHIPPED_DOCS = {"hardware-validation.md", "source-and-license-policy.md"}
 
 
 def copy_ignore(path: str, names: list[str]) -> set[str]:
     """Keep the installed skill useful without copying contributor-only files."""
     ignored = {name for name in names if name in {".git", ".DS_Store", "__pycache__", ".pytest_cache", ".mypy_cache", "results"}}
-    if Path(path).resolve() == ROOT.resolve():
+    resolved = Path(path).resolve()
+    if resolved == ROOT.resolve():
         ignored.update(name for name in names if name in TOP_LEVEL_EXCLUDED)
+    elif resolved == (ROOT / DOCS_DIR_NAME).resolve():
+        ignored.update(name for name in names
+                       if name not in SHIPPED_DOCS and Path(path, name).is_file())
     return ignored
 
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -12,14 +13,25 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
+# Redirect every signal write in this process (and the subprocesses it
+# spawns) to a scratch dir. Without this, `make test` dumps synthetic
+# queries ("zzzqqq", "算子") and perf records into the real evals/signals/,
+# and `make signals-merge` then turns that test noise into backlog items
+# the self-evolution loop will dutifully try to "fix". setdefault keeps an
+# explicit redirect from the caller's environment.
+_SIGNAL_SCRATCH = tempfile.TemporaryDirectory(prefix="macawiki-test-signals-")
+os.environ.setdefault("MACAWIKI_SIGNAL_DIR", _SIGNAL_SCRATCH.name)
 
-def run_script(*args: str) -> subprocess.CompletedProcess[str]:
+
+def run_script(*args: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+    full_env = {**os.environ, **env} if env else None
     return subprocess.run(
         [sys.executable, *args],
         cwd=ROOT,
         text=True,
         capture_output=True,
         check=False,
+        env=full_env,
     )
 
 
@@ -144,6 +156,37 @@ class RepositoryTests(unittest.TestCase):
                 "--target-root", target, "--mode", "copy",
             )
             self.assertNotEqual(second.returncode, 0)
+
+    def test_copy_install_ships_skill_referenced_docs(self) -> None:
+        """copy install must include every docs/ file the skill contract points at.
+
+        SKILL.md cites docs/hardware-validation.md and the iterate skill cites
+        docs/source-and-license-policy.md; excluding docs/ wholesale made both
+        dangling references in every copy install.
+        """
+        with tempfile.TemporaryDirectory() as target:
+            r = run_script(
+                "scripts/install.py", "--agent", "codebuddy", "--scope", "user",
+                "--target-root", target, "--mode", "copy", "--replace",
+            )
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            skill = Path(target) / ".codebuddy/skills/macawiki"
+            for doc in ("hardware-validation.md", "source-and-license-policy.md"):
+                self.assertTrue((skill / "docs" / doc).is_file(),
+                                f"copy install omitted docs/{doc}")
+
+    def test_copy_install_drops_contributor_only_docs(self) -> None:
+        """copy install must NOT ship contributor planning docs."""
+        with tempfile.TemporaryDirectory() as target:
+            run_script(
+                "scripts/install.py", "--agent", "codebuddy", "--scope", "user",
+                "--target-root", target, "--mode", "copy", "--replace",
+            )
+            installed = Path(target) / ".codebuddy/skills/macawiki/docs"
+            self.assertFalse((installed / "iteration-plan.md").exists(),
+                             "contributor planning doc shipped to agents")
+            self.assertFalse((installed / "iteration-plan-issue2.md").exists(),
+                             "contributor planning doc shipped to agents")
 
     def test_operator_fixture_is_listable(self) -> None:
         result = run_script("benchmarks/pytorch_baseline.py", "--list")
@@ -608,27 +651,28 @@ log_zero_result(["missing_term"], {{}}, "and", False)
 
     def test_signal_aggregator_empty_no_error(self) -> None:
         """Signal aggregator should handle empty signal dir gracefully."""
-        import tempfile, os
         with tempfile.TemporaryDirectory() as tmp:
-            os.environ["MACAWIKI_SIGNAL_DIR"] = tmp
-            try:
-                import subprocess
-                r = subprocess.run(
-                    ["python3", "scripts/signal_aggregator.py", "--check", "--json"],
-                    cwd=str(ROOT), capture_output=True, text=True,
-                )
-                self.assertEqual(r.returncode, 0, r.stderr)
-                data = json.loads(r.stdout)
-                self.assertEqual(data["total_signals"], 0)
-            finally:
-                del os.environ["MACAWIKI_SIGNAL_DIR"]
+            # Pass via env=, not os.environ=: mutating the process env would
+            # clobber the module-level redirect for every later test.
+            r = run_script("scripts/signal_aggregator.py", "--check", "--json",
+                           env={"MACAWIKI_SIGNAL_DIR": tmp})
+            self.assertEqual(r.returncode, 0, r.stderr)
+            data = json.loads(r.stdout)
+            self.assertEqual(data["total_signals"], 0)
 
     def test_query_signal_log_flag_works(self) -> None:
         """--signal-log flag should produce log entries."""
-        result = run_script("scripts/query.py", "算子", "--compact", "--signal-log")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        log_path = ROOT / "evals" / "signals" / "query-log.jsonl"
-        self.assertTrue(log_path.exists(), f"Log not created at {log_path}")
+        # Redirect to a temp dir: tests that write to the real
+        # evals/signals/ pollute the self-evolution backlog with
+        # synthetic queries (e.g. "zzzqqq") every time `make test` runs.
+        with tempfile.TemporaryDirectory() as tmp:
+            result = run_script(
+                "scripts/query.py", "算子", "--compact", "--signal-log",
+                env={"MACAWIKI_SIGNAL_DIR": tmp},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            log_path = Path(tmp) / "query-log.jsonl"
+            self.assertTrue(log_path.exists(), f"Log not created at {log_path}")
 
     def test_evolve_pipeline_scripts_exist(self) -> None:
         """All self-evolution scripts must be importable."""
@@ -889,6 +933,64 @@ log_tool_inventory({{"mcTracer": {{"path": "/opt/maca/bin/mcTracer", "version": 
             self.assertIsNotNone(mct.get("path"),
                                  "mcTracer path should be detected on C500")
 
+    # ── iteration loop state gates ────────────────────────────────────
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_iterate_skill_copies_stay_identical(self) -> None:
+        """The two macawiki-iterate SKILL.md copies must stay byte-identical.
+
+        They are the same adapter duplicated for discovery paths; a drift
+        (e.g. a step added to one) means the two agents follow different
+        iteration protocols.
+        """
+        copies = (
+            ROOT / ".claude/skills/macawiki-iterate/SKILL.md",
+            ROOT / ".agents/skills/macawiki-iterate/SKILL.md",
+        )
+        missing = [str(p.relative_to(ROOT)) for p in copies if not p.is_file()]
+        self.assertEqual(missing, [], f"iterate skill copies missing: {missing}")
+        bodies = [p.read_text(encoding="utf-8") for p in copies]
+        self.assertEqual(bodies[0], bodies[1],
+                         "macawiki-iterate SKILL.md copies have diverged")
+
+    def test_precheck_rejects_drifted_state(self) -> None:
+        """iterate_precheck must fail loudly on structural drift, not pass silently.
+
+        next_cycle_id colliding with an existing cycle, and a champion SHA that
+        does not exist in this repo, both previously went unnoticed — that is
+        how state drifted far enough to break cycle 11.
+        """
+        import shutil as _shutil
+
+        state_path = ROOT / "evals/claude/iteration-state.json"
+        backup = state_path.with_suffix(".json.precheck-test-backup")
+        try:
+            _shutil.copy2(state_path, backup)
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            if state.get("cycles"):
+                state["next_cycle_id"] = state["cycles"][-1]["cycle_id"]  # collide
+            state.setdefault("champion", {})["commit"] = "0" * 40          # foreign
+            state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n",
+                                  encoding="utf-8")
+
+            r = run_script("scripts/iterate_precheck.py", "--json")
+            self.assertNotEqual(r.returncode, 0,
+                                "precheck must exit non-zero on drifted state")
+            data = json.loads(r.stdout)
+            codes = {f["code"] for f in data["findings"]}
+            self.assertFalse(data["ok"], "precheck reported ok=true on drifted state")
+            self.assertIn("cycle-id-collision", codes)
+            self.assertIn("champion-foreign-sha", codes)
+        finally:
+            # Restored by plain rename/overwrite, never git checkout/reset.
+            backup.replace(state_path)
+
+    def test_precheck_passes_on_current_state(self) -> None:
+        """precheck must accept the real, maintained state file (no false blocks)."""
+        r = run_script("scripts/iterate_precheck.py", "--json")
+        self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
+        data = json.loads(r.stdout)
+        blocking = [f for f in data["findings"]
+                    if f["level"] in ("critical", "error")]
+        self.assertEqual(blocking, [],
+                         f"state has unhandled blocking findings: {blocking}")
+
