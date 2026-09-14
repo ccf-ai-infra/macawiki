@@ -11,6 +11,7 @@
 
 ## source-repo
 
+- [`local-c500-maca-sdk-install`](../sources/repos/local-c500-maca-sdk.md) — 本地 C500 MXMACA SDK 安装实测记录（MACA 3.7.1.5）
 - [`repo-flash-attention-v2-6-3`](../sources/repos/flash-attention-v2-6-3.md) — 上游 FlashAttention v2.6.3
 - [`repo-mcpytorch`](../sources/repos/mcpytorch.md) — mcPyTorch
 - [`repo-mxmaca-performance-tuning-guide`](../sources/repos/mxmaca-performance-tuning-guide.md) — MXMACA Performance Optimization Guide 仓库
@@ -35,7 +36,13 @@
 ## wiki-tool
 
 - [`diagnostics-mcprofiler-basics`](../wiki/diagnostics/mcprofiler-basics.md) — mcProfiler 基本使用
+- [`diagnostics-mctracer-basics`](../wiki/diagnostics/mctracer-basics.md) — mcTracer 追踪工具基础（C500 实测安装证据）
 - [`diagnostics-mx-smi`](../wiki/diagnostics/mx-smi.md) — mx-smi 硬件与版本查询工具（能力边界与验证清单）
 - [`reference-maca-environment-variables`](../wiki/reference/maca-environment-variables.md) — vLLM-MetaX cu-bridge 环境变量配置
+- [`reference-mcblas-basics`](../wiki/reference/mcblas-basics.md) — mcBLAS 数学库基础参考（C500 实测安装证据）
+- [`reference-mccl-basics`](../wiki/reference/mccl-basics.md) — mcCL 集合通信库基础参考（C500 实测安装证据）
+- [`reference-mcdnn-basics`](../wiki/reference/mcdnn-basics.md) — mcDNN 数学库基础参考（C500 实测安装证据）
+- [`reference-mctilelang-basics`](../wiki/reference/mctilelang-basics.md) — TileLang（MetaX 构建）安装证据与边界
+- [`reference-mctriton-basics`](../wiki/reference/mctriton-basics.md) — Triton（MetaX 构建）安装证据与边界
 - [`reference-mxcc-compiler-basics`](../wiki/reference/mxcc-compiler-basics.md) — mxcc 编译器基础参考
 - [`reference-mxmaca-runtime-api`](../wiki/reference/mxmaca-runtime-api.md) — MXMACA Runtime API 参考（能力边界与验证清单）

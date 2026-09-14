@@ -87,6 +87,16 @@
       "note": "Upstream semantics only; this source does not establish MetaX C500 or MXMACA support"
     },
     {
+      "id": "local-c500-maca-sdk-install",
+      "name": "本地 C500 MXMACA SDK 安装实测记录（MACA 3.7.1.5）",
+      "url": "local:///opt/maca-3.7.1",
+      "access": "local-capture",
+      "license_status": "unknown",
+      "capture_policy": "metadata-and-original-summary-only",
+      "fixed_ref": "benchmarks/results/environment-c500-components.json (fingerprint 52bbcb62b59d098b123bb4d3710c90931b15671c5630e0d097af1ad0a74c4200, 2026-09-14)",
+      "note": "Local capture, not a copy of any published document. Version numbers are measured on the machine (headers + tool self-report), never inferred from docs. Reproduce with scripts/capture_environment.py --output <path>."
+    },
+    {
       "id": "doc-mctilelang-flash-attention-pr-2",
       "name": "mcTileLang FlashAttention example PR !2",
       "url": "https://gitee.com/metax-maca/mcTileLang/pulls/2",
