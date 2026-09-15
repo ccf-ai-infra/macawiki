@@ -1,6 +1,6 @@
 # Macawiki iteration trend
 
-12 cycles recorded: 12 accepted, 0 rejected, 0 abandoned, 0 in progress. 2 carry measurable metrics.
+13 cycles recorded: 13 accepted, 0 rejected, 0 abandoned, 0 in progress. 3 carry measurable metrics.
 
 | Cycle | Status | pages | component_coverage | version_claims_specified | draft_ratio | unspecified_ratio | license_known_ratio | recall | tests |
 |-------|--------|---|---|---|---|---|---|---|---|
@@ -16,6 +16,7 @@
 | 10 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
 | 11 | ✅ accepted | 28 | 18/21 | 4/6 | 50.0% | 28.6% | 58.3% | 1.000 | 72 |
 | 12 | ✅ accepted | 28 | 18/21 | 4/6 | 50.0% | 28.6% | 58.3% | 1.000 | 82 |
+| 13 | ✅ accepted | 28 | 18/20 | 4/6 | 50.0% | 28.6% | 66.7% | 1.000 | 85 |
 
 Legend:
 - `pages` — total corpus pages
@@ -51,16 +52,16 @@ audit its own past will repeat it.
 - `version_claims_specified`: flat at 4
 - `draft_ratio`: flat at 50.0%
 - `unspecified_ratio`: flat at 28.6%
-- `license_known_ratio`: flat at 58.3%
+- `license_known_ratio`: 58.3% → 66.7% (up 8.4pp)
 - `recall`: flat at 1.000
-- `tests`: 72 → 82 (up 10.0)
+- `tests`: 72 → 85 (up 13.0)
 
 Note: `up` is not always improvement. Draft ratio and unspecified
 ratio are *better when lower*; the symbol only records direction.
 
 ## Most recent decision
 
-**Cycle 12 (accepted)**
+**Cycle 13 (accepted)**
 
-> Tooling cycle, not a corpus cycle: no tracked corpus metric moved (all 10 unchanged), which is expected because this adds instruments rather than evidence. Accepted on the traceability claim, verified concretely: (1) the falsifiability gate rejected its own operator's first draft of this hypothesis for naming no measurable metric, proving it enforces rather than advises; (2) a begin->reject run in the test suite leaves a report with metrics, closing the cycles-7-10 failure mode; (3) next_cycle_id advances at --begin, pre-empting the exact drift Phase 2 had to fix by hand. Genuinely no corpus gain, so this main line returns to corpus work next cycle; the <25% unspecified sub-target remains deliberately out of reach per AGENTS.md.
+> Both targets met, and the denominator change is an honesty correction, not a cosmetic one. license_known_ratio 58.3% -> 66.7%: the install at /opt/maca-3.7.1 ships a proprietary End User License Agreement (EULA-en.txt, Version 1.0, September 13, 2025, plus EULA-zh.txt), so the local-capture source's license status is now determinable and recorded as 'restricted'. Only the presence, title, version and nature were recorded; the EULA text is neither copied nor summarized, and no rights are granted. The remaining 4 unknown-license sources are all gitee URLs unreachable in this environment, so 66.7% is this cycle's real ceiling. component coverage 18/21 -> 18/20: 'unspecified' was a placeholder bucket for pages naming no specific component, and it is declared by zero pages in the whole corpus, so the true ceiling was always 20. Deleting it raises real coverage from 85.7% to 90.0%; the raw 'component_total' count moves DOWN (21 -> 20) and must not be read as a regression -- the trend's direction-of-travel note already warns that a symbol only records direction, not improvement. Verified against the rejection path: the EULA exists and is classifiable (not absent), and no page declares the deleted tag, so the removal fixes a bad denominator instead of hiding real coverage. A third defect surfaced while opening this cycle and was fixed rather than worked around: the target parser latched 'coverage to 18' onto the bare phrase 'unspecified' (which names a tag, not the ratio), fabricating an unspecified_ratio target the hypothesis never stated and the cycle could not reach; the number must now follow its own metric. A test-isolation flaw of the same family was also fixed -- scratch state copied any in-progress real cycle, so 'make test' failed spuriously whenever a cycle was genuinely mid-flight. The page-level unspecified_ratio 28.6% still misses the <25% sub-target and is left there on purpose: those pages cite upstream non-MXMACA sources that carry no MXMACA version and AGENTS.md forbids inferring one.
 

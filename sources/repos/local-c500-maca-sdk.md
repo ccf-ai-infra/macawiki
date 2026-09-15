@@ -18,7 +18,7 @@
   "ref": "local-install@/opt/maca-3.7.1 (mx-smi 报告 MACA 3.7.1.5)",
   "source_category": "official-repo",
   "retrieved_at": "2026-09-14",
-  "license_status": "unknown",
+  "license_status": "restricted",
   "note": "本地捕获类证据，非公开文档副本。URL 使用 local:// 前缀明确表示来源是本机安装而非可下载文档；版本号均为本机实测，不从文档推断。",
   "aliases": ["MXMACA SDK 安装", "C500 SDK", "/opt/maca", "MACA 3.7.1.5 安装"]
 }
@@ -34,6 +34,22 @@ benchmarks/results/environment-c500-components.json
 ```
 
 该产物由 `scripts/capture_environment.py --output <path>` 生成，hostname 与硬件 UUID 默认脱敏。
+
+# 许可
+
+安装根目录提供专有最终用户许可协议（不是宽松许可）：
+
+| 文件 | 标题 | 版本与日期 | 语言 |
+|------|------|-----------|------|
+| `/opt/maca-3.7.1/EULA-en.txt` | End User License Agreement | Version 1.0, September 13, 2025 | 英文 |
+| `/opt/maca-3.7.1/EULA-zh.txt` | 沐曦软件开发套件（SDK）最终用户许可协议 | 同上 | 中文 |
+
+据此外推的结论：该安装是**受专有 EULA 约束的商业 SDK**，不是 permissive 或开源许可软件。
+本页只记录许可**存在、标题、版本与性质**，不复制协议正文（本仓库的捕获策略为
+metadata-and-original-summary-only）。该许可为 `restricted` 类别：可用于验证「许可状态可确定」
+这一事实，但**不**构成许可条款的摘要，也**不**授予任何权利。
+
+许可状态此前记为 `unknown`；2026-09-15 探得上述文件后改为 `restricted`，使本源的许可状态可确定。
 
 # 本页与公开来源的关系
 
