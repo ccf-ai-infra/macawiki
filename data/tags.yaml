@@ -5,7 +5,7 @@
   "components": [
     "mxmaca-sdk", "mxmaca-runtime", "mxcc", "mcprofiler", "mctracer", "mx-smi",
     "mcpytorch", "mctriton", "mctilelang", "mctvm", "pytorch", "tilelang", "mxmaca-cpp", "flash-attn", "vllm-metax", "sglang",
-    "mcblas", "mcdnn", "mccl", "diagnostics", "unspecified"
+    "mcblas", "mcdnn", "mccl", "diagnostics"
   ],
   "topic_tags": [
     "quick-start", "installation", "programming-model", "runtime", "compiler",

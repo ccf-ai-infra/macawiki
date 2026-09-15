@@ -49,6 +49,12 @@ def _scratch_iteration_state() -> Any:
     Copies rather than synthesizes, so the cycle under test sees a realistic
     backlog and cycle history (including the cycles with `report: null`,
     which the tools must tolerate).
+
+    Any cycle left open on the real state is closed in the copy: a test must
+    be able to --begin regardless of whether a real cycle happens to be
+    mid-flight, or `make test` fails spuriously whenever someone has a cycle
+    open. next_cycle_id is untouched, so the copy stays internally
+    consistent.
     """
     import shutil
     real_state = ROOT / "evals" / "claude" / "iteration-state.json"
@@ -57,6 +63,17 @@ def _scratch_iteration_state() -> Any:
         state_copy = scratch_dir / "iteration-state.json"
         if real_state.is_file():
             shutil.copy2(real_state, state_copy)
+            data = json.loads(state_copy.read_text(encoding="utf-8"))
+            for cycle in data.get("cycles") or []:
+                if cycle.get("status") == "in_progress":
+                    cycle["status"] = "abandoned"
+                    cycle["decision_reason"] = (
+                        "closed by the test harness: scratch isolation must not "
+                        "inherit an in-progress cycle from the real loop state")
+                    cycle["report"] = None
+            state_copy.write_text(
+                json.dumps(data, ensure_ascii=False, indent=2),
+                encoding="utf-8")
         else:
             state_copy.write_text('{"cycles": [], "next_cycle_id": 1}', encoding="utf-8")
         reports = scratch_dir / "reports"
@@ -1097,6 +1114,27 @@ log_tool_inventory({{"mcTracer": {{"path": "/opt/maca/bin/mcTracer", "version": 
         reachable = _parse_targets("raises component coverage to >=15")
         self.assertEqual(_target_problems(reachable, baseline), [],
                          "a reachable target was flagged as impossible")
+
+    def test_target_parser_does_not_steal_a_foreign_number(self) -> None:
+        """A metric phrase must not latch onto another metric's number.
+
+        Bare phrases like 'unspecified' and 'draft' also name tags and
+        statuses, not only ratios. With a wide search window, mentioning "the
+        'unspecified' bucket" followed a sentence later by "coverage to 18"
+        produced a fabricated unspecified_ratio target the author never wrote
+        and the cycle could not reach. The number must follow its own metric.
+        """
+        from scripts.iterate_cycle import _parse_targets
+        hypothesis = (
+            "Recording the EULA raises license to >=66.7%, and deleting the "
+            "'unspecified' bucket from data/tags.yaml corrects component "
+            "coverage to 18 of 20 known; rejected if no page declares it.")
+        targets = _parse_targets(hypothesis)
+        self.assertEqual(targets.get("license_known_ratio"), 66.7)
+        self.assertEqual(targets.get("component_coverage"), 18.0)
+        self.assertNotIn("unspecified_ratio", targets,
+                         "'unspecified' named a tag bucket, but the parser "
+                         "stole 'coverage to 18' as an unspecified_ratio target")
 
     def test_cycle_begin_rejects_nonfalsifiable_hypothesis(self) -> None:
         """--begin must refuse to open a cycle on an untestable claim.

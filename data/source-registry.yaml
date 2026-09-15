@@ -91,10 +91,10 @@
       "name": "本地 C500 MXMACA SDK 安装实测记录（MACA 3.7.1.5）",
       "url": "local:///opt/maca-3.7.1",
       "access": "local-capture",
-      "license_status": "unknown",
+      "license_status": "restricted",
       "capture_policy": "metadata-and-original-summary-only",
       "fixed_ref": "benchmarks/results/environment-c500-components.json (fingerprint 52bbcb62b59d098b123bb4d3710c90931b15671c5630e0d097af1ad0a74c4200, 2026-09-14)",
-      "note": "Local capture, not a copy of any published document. Version numbers are measured on the machine (headers + tool self-report), never inferred from docs. Reproduce with scripts/capture_environment.py --output <path>."
+      "note": "Local capture, not a copy of any published document. Version numbers are measured on the machine (headers + tool self-report), never inferred from docs. Reproduce with scripts/capture_environment.py --output <path>. License determined 2026-09-15: the install ships a proprietary End User License Agreement at /opt/maca-3.7.1/EULA-en.txt (Version 1.0, September 13, 2025) and EULA-zh.txt — recorded as 'restricted' on the presence and title of those files only; the EULA text itself is not copied or summarized, and this entry grants no rights."
     },
     {
       "id": "doc-mctilelang-flash-attention-pr-2",

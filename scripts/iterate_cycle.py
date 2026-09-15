@@ -49,6 +49,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -89,6 +90,13 @@ _MIN_HYPOTHESIS_LEN = 60
 # A claim of a specific target ("coverage to 20") is checked against this
 # bound so a hypothesis can never silently demand the impossible.
 _COMPONENT_TOTAL_MAX = 64
+
+# How far after a metric phrase its number may appear. Tight on purpose: bare
+# phrases like "unspecified" and "draft" also name tags and statuses, and a
+# wide window lets them latch onto a number belonging to a different metric a
+# full sentence away. "coverage to 18" fits; "the 'unspecified' bucket ...
+# coverage to 18" does not.
+_TARGET_WINDOW = 40
 
 
 def _utc() -> str:
@@ -188,43 +196,28 @@ def _parse_targets(hypothesis: str) -> dict[str, float]:
             i = lowered.find(phrase.lower())
             if i < 0:
                 continue
-            tail = lowered[i : i + 200]
-            # A comparison operator, or a bare "to N" / "至 N" / "到 N".
-            for pattern in (">=", "<=", ">", "<", " to ", " 至 ", " 到 "):
-                j = tail.find(pattern)
-                if j < 0:
-                    continue
-                num, had_pct = _read_number(tail[j + len(pattern):])
-                if num is None or num <= 0:
-                    continue
-                if key.endswith("_ratio"):
-                    # "25" or "25%" means 25%; only a bare fraction below 1
-                    # (e.g. 0.25) needs scaling up.
-                    targets[key] = num if (had_pct or num > 1) else num * 100
-                else:
-                    targets[key] = num
-                break
-            if key in targets:
-                break
-    return targets
-
-
-def _read_number(text: str) -> tuple[float | None, bool]:
-    """Read a leading number, reporting whether a % sign followed it."""
-    num = ""
-    for ch in text[:16]:
-        if ch.isdigit() or ch in ".":
-            num += ch
-        else:
+            # The number must follow the metric closely. A wide window is not
+            # safe: bare phrases like "unspecified" or "draft" also name tags
+            # and statuses, and would latch onto a number belonging to a
+            # different metric up to a sentence away — a target the author
+            # never wrote and the cycle could not reach.
+            m = re.search(
+                r"(>=|<=|>|<|\bto\b|\b至\b|\b到\b)\s*([0-9]*\.?[0-9]+)",
+                lowered[i : i + _TARGET_WINDOW])
+            if not m:
+                continue
+            num = float(m.group(2))
+            if num <= 0:
+                continue
+            had_pct = lowered[i + m.end(2) : i + m.end(2) + 1].strip().startswith("%")
+            if key.endswith("_ratio"):
+                # "25" or "25%" means 25%; only a bare fraction below 1
+                # (e.g. 0.25) needs scaling up.
+                targets[key] = num if (had_pct or num > 1) else num * 100
+            else:
+                targets[key] = num
             break
-    if not num:
-        return None, False
-    try:
-        value = float(num)
-    except ValueError:
-        return None, False
-    had_pct = text[len(num):len(num) + 1].strip().startswith("%")
-    return value, had_pct
+    return targets
 
 
 def _target_problems(targets: dict[str, float],
