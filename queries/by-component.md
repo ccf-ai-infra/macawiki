@@ -9,6 +9,7 @@
 ## flash-attn
 
 - [`kernel-flash-attention-mxmaca`](../wiki/kernels/flash-attention-mxmaca.md) — FlashAttention 在 MXMACA/C500 上的证据与验证指南
+- [`reference-ecosystem-port-status`](../wiki/reference/ecosystem-port-status.md) — C500 开源生态移植状态（实测）
 - [`repo-flash-attention-v2-6-3`](../sources/repos/flash-attention-v2-6-3.md) — 上游 FlashAttention v2.6.3
 
 ## mcblas
@@ -36,6 +37,7 @@
 ## mcpytorch
 
 - [`kernel-flash-attention-mxmaca`](../wiki/kernels/flash-attention-mxmaca.md) — FlashAttention 在 MXMACA/C500 上的证据与验证指南
+- [`reference-ecosystem-port-status`](../wiki/reference/ecosystem-port-status.md) — C500 开源生态移植状态（实测）
 - [`repo-mcpytorch`](../sources/repos/mcpytorch.md) — mcPyTorch
 - [`repo-vllm-metax`](../sources/repos/vllm-metax.md) — vLLM-MetaX
 
@@ -45,6 +47,7 @@
 - [`doc-pytorch-operator-reference`](../sources/official-docs/pytorch-operator-reference.md) — PyTorch stable operator reference for evaluation baselines
 - [`evaluation-compare-operator-backends`](../wiki/evaluations/compare-operator-backends.md) — 用 PyTorch、TileLang、MXMACA++ 比较算子实现
 - [`kernel-flash-attention-mxmaca`](../wiki/kernels/flash-attention-mxmaca.md) — FlashAttention 在 MXMACA/C500 上的证据与验证指南
+- [`reference-ecosystem-port-status`](../wiki/reference/ecosystem-port-status.md) — C500 开源生态移植状态（实测）
 - [`reference-mctilelang-basics`](../wiki/reference/mctilelang-basics.md) — TileLang（MetaX 构建）安装证据与边界
 
 ## mctracer
@@ -54,6 +57,7 @@
 
 ## mctriton
 
+- [`reference-ecosystem-port-status`](../wiki/reference/ecosystem-port-status.md) — C500 开源生态移植状态（实测）
 - [`reference-mctriton-basics`](../wiki/reference/mctriton-basics.md) — Triton（MetaX 构建）安装证据与边界
 
 ## mx-smi
@@ -91,6 +95,7 @@
 - [`evaluation-compare-operator-backends`](../wiki/evaluations/compare-operator-backends.md) — 用 PyTorch、TileLang、MXMACA++ 比较算子实现
 - [`local-c500-maca-sdk-install`](../sources/repos/local-c500-maca-sdk.md) — 本地 C500 MXMACA SDK 安装实测记录（MACA 3.7.1.5）
 - [`recipe-verify-mxmaca-environment`](../wiki/tutorials/verify-mxmaca-environment.md) — 验证 MXMACA 开发环境的证据清单
+- [`reference-ecosystem-port-status`](../wiki/reference/ecosystem-port-status.md) — C500 开源生态移植状态（实测）
 - [`reference-mcblas-basics`](../wiki/reference/mcblas-basics.md) — mcBLAS 数学库基础参考（C500 实测安装证据）
 - [`reference-mccl-basics`](../wiki/reference/mccl-basics.md) — mcCL 集合通信库基础参考（C500 实测安装证据）
 - [`reference-mcdnn-basics`](../wiki/reference/mcdnn-basics.md) — mcDNN 数学库基础参考（C500 实测安装证据）
@@ -111,6 +116,7 @@
 - [`local-c500-maca-sdk-install`](../sources/repos/local-c500-maca-sdk.md) — 本地 C500 MXMACA SDK 安装实测记录（MACA 3.7.1.5）
 - [`pattern-establish-performance-baseline`](../wiki/optimization-patterns/establish-performance-baseline.md) — 优化前先建立可比较的性能基线
 - [`recipe-verify-mxmaca-environment`](../wiki/tutorials/verify-mxmaca-environment.md) — 验证 MXMACA 开发环境的证据清单
+- [`reference-ecosystem-port-status`](../wiki/reference/ecosystem-port-status.md) — C500 开源生态移植状态（实测）
 - [`reference-maca-environment-variables`](../wiki/reference/maca-environment-variables.md) — vLLM-MetaX cu-bridge 环境变量配置
 - [`reference-mcblas-basics`](../wiki/reference/mcblas-basics.md) — mcBLAS 数学库基础参考（C500 实测安装证据）
 - [`reference-mccl-basics`](../wiki/reference/mccl-basics.md) — mcCL 集合通信库基础参考（C500 实测安装证据）
@@ -132,6 +138,10 @@
 - [`evaluation-compare-operator-backends`](../wiki/evaluations/compare-operator-backends.md) — 用 PyTorch、TileLang、MXMACA++ 比较算子实现
 - [`kernel-flash-attention-mxmaca`](../wiki/kernels/flash-attention-mxmaca.md) — FlashAttention 在 MXMACA/C500 上的证据与验证指南
 - [`repo-flash-attention-v2-6-3`](../sources/repos/flash-attention-v2-6-3.md) — 上游 FlashAttention v2.6.3
+
+## sglang
+
+- [`reference-ecosystem-port-status`](../wiki/reference/ecosystem-port-status.md) — C500 开源生态移植状态（实测）
 
 ## tilelang
 
