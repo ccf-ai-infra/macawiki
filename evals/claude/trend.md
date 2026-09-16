@@ -1,6 +1,6 @@
 # Macawiki iteration trend
 
-13 cycles recorded: 13 accepted, 0 rejected, 0 abandoned, 0 in progress. 3 carry measurable metrics.
+14 cycles recorded: 13 accepted, 0 rejected, 0 abandoned, 1 in progress. 3 carry measurable metrics.
 
 | Cycle | Status | pages | component_coverage | version_claims_specified | draft_ratio | unspecified_ratio | license_known_ratio | recall | tests |
 |-------|--------|---|---|---|---|---|---|---|---|
@@ -17,6 +17,7 @@
 | 11 | ✅ accepted | 28 | 18/21 | 4/6 | 50.0% | 28.6% | 58.3% | 1.000 | 72 |
 | 12 | ✅ accepted | 28 | 18/21 | 4/6 | 50.0% | 28.6% | 58.3% | 1.000 | 82 |
 | 13 | ✅ accepted | 28 | 18/20 | 4/6 | 50.0% | 28.6% | 66.7% | 1.000 | 85 |
+| 14 | ⏳ in_progress | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
 
 Legend:
 - `pages` — total corpus pages
@@ -44,6 +45,7 @@ audit its own past will repeat it.
 - **cycle 8**: no report path in state (cycles 7-10); decision is not traceable
 - **cycle 9**: no report path in state (cycles 7-10); decision is not traceable
 - **cycle 10**: no report path in state (cycles 7-10); decision is not traceable
+- **cycle 14**: no report path in state (cycles 7-10); decision is not traceable
 
 ## Direction of travel
 
