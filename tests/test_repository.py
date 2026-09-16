@@ -136,6 +136,9 @@ class RepositoryTests(unittest.TestCase):
                 "wiki/kernels/flash-attention-mxmaca.md",
                 "sources/repos/flash-attention-v2-6-3.md",
                 "sources/official-docs/mctilelang-flash-attention-pr-2.md",
+                # The ecosystem-port page records flash_attn/flashinfer build
+                # status, so it legitimately matches a flash-attention query too.
+                "wiki/reference/ecosystem-port-status.md",
             })
         )
 
