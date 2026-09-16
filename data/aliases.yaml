@@ -16,5 +16,8 @@
   "diagnostics-mcprofiler-basics": ["mcProfiler 使用", "profiling 基础", "性能分析入门"],
   "kernel-flash-attention-mxmaca": ["MXMACA FlashAttention", "C500 flash_attn", "FlashAttention 证据边界"],
   "reference-mxmaca-runtime-api": ["MXMACA Runtime API", "运行时API 参考", "设备内存管理", "kernel 启动"],
-  "diagnostics-mx-smi": ["mx-smi 使用", "硬件查询工具", "设备信息查询", "显存查询"]
+  "diagnostics-mx-smi": ["mx-smi 使用", "硬件查询工具", "设备信息查询", "显存查询"],
+  "sglang": ["SGLang", "sglang", "sglang-omni", "SGLang-Omni", "omni", "多阶段推理", "TTS serving", "语音推理"],
+  "flashinfer": ["flashinfer", "FlashInfer", "flashinfer 版本", "attention kernel 库"],
+  "reference-ecosystem-port-status": ["生态移植", "移植状态", "开源生态", "C500 兼容性", "CUDA 兼容层", "sm_80", "算力 8.0", "第三方框架"]
 }

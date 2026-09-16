@@ -1,70 +1,16 @@
-# Macawiki iteration trend
+# Cycle 014: accepted change cluster
 
-14 cycles recorded: 14 accepted, 0 rejected, 0 abandoned, 0 in progress. 4 carry measurable metrics.
+| Field | Value |
+|-------|-------|
+| Cycle ID | 14 |
+| Status | accepted |
+| Workstream | corpus |
+| Date | 2026-09-16 |
+| Hypothesis | Adding a measured ecosystem-port-status page recording that flashinfer is a metax build of 0.2.6 (not the upstream 0.6.x API line), that sgl_kernel has no metax build and its PyPI wheel is sm90/sm100 plus CUDA 13 only, and that mcPyTorch exposes the C500 through the torch.cuda namespace as sm_80, raises component coverage from 18 to 19 of 20 and makes three previously zero-result queries (sglang, flashinfer, omni) resolve to a page. Rejected if any recorded version fails to reproduce on this machine, or if any of those queries still returns zero after index regeneration, since a page that cannot be found provides no value to an agent. |
 
-| Cycle | Status | pages | component_coverage | version_claims_specified | draft_ratio | unspecified_ratio | license_known_ratio | recall | tests |
-|-------|--------|---|---|---|---|---|---|---|---|
-| 1 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| 2 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| 3 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| 4 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| 5 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| 6 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| 7 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| 8 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| 9 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| 10 | ✅ accepted | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| 11 | ✅ accepted | 28 | 18/21 | 4/6 | 50.0% | 28.6% | 58.3% | 1.000 | 72 |
-| 12 | ✅ accepted | 28 | 18/21 | 4/6 | 50.0% | 28.6% | 58.3% | 1.000 | 82 |
-| 13 | ✅ accepted | 28 | 18/20 | 4/6 | 50.0% | 28.6% | 66.7% | 1.000 | 85 |
-| 14 | ✅ accepted | 29 | 19/20 | 4/6 | 51.7% | 27.6% | 66.7% | 1.000 | 85 |
+## Decision
 
-Legend:
-- `pages` — total corpus pages
-- `component_coverage` — covered / known components in data/tags.yaml
-- `version_claims_specified` — version-claims.yaml entries with a real version
-- `draft_ratio` — share of wiki pages still in draft status
-- `unspecified_ratio` — share of wiki pages with no MXMACA version
-- `license_known_ratio` — share of sources with a determinable license
-- `recall` — gold-question recall (recall_check.py)
-- `tests` — unittest methods in tests/
-
-## Cycles without metrics
-
-These contribute no trend point. Each gap is a record-keeping
-gap, not necessarily a bad outcome — but a loop that cannot
-audit its own past will repeat it.
-
-- **cycle 1**: report predates metric recording and has no embedded metrics block
-- **cycle 2**: report predates metric recording and has no embedded metrics block
-- **cycle 3**: report predates metric recording and has no embedded metrics block
-- **cycle 4**: report predates metric recording and has no embedded metrics block
-- **cycle 5**: report predates metric recording and has no embedded metrics block
-- **cycle 6**: report predates metric recording and has no embedded metrics block
-- **cycle 7**: no report path in state (cycles 7-10); decision is not traceable
-- **cycle 8**: no report path in state (cycles 7-10); decision is not traceable
-- **cycle 9**: no report path in state (cycles 7-10); decision is not traceable
-- **cycle 10**: no report path in state (cycles 7-10); decision is not traceable
-
-## Direction of travel
-
-- `pages`: 28 → 29 (up 1.0)
-- `component_coverage`: 18 → 19 (up 1.0)
-- `version_claims_specified`: flat at 4
-- `draft_ratio`: 50.0% → 51.7% (up 1.7pp)
-- `unspecified_ratio`: 28.6% → 27.6% (down 1.0pp)
-- `license_known_ratio`: 58.3% → 66.7% (up 8.4pp)
-- `recall`: flat at 1.000
-- `tests`: 72 → 85 (up 13.0)
-
-Note: `up` is not always improvement. Draft ratio and unspecified
-ratio are *better when lower*; the symbol only records direction.
-
-## Most recent decision
-
-**Cycle 14 (accepted)**
-
-> ACCEPTED. All three falsifiable parts of the hypothesis reproduced on this machine.
+**accepted**. ACCEPTED. All three falsifiable parts of the hypothesis reproduced on this machine.
 
 Coverage: component_coverage 18/20 -> 19/20. The page declares mcpytorch, mctriton, mctilelang, flash-attn, sglang, mxmaca-sdk and mxmaca-runtime; sglang was the only one of those with zero pages before, so coverage moved by exactly one bucket and not by padding. Recall stays 1.000 and tests went 84 -> 85.
 
@@ -82,3 +28,79 @@ The non-obvious finding, and the reason this page exists at all: an agent readin
 
 Evidence boundaries kept: the page claims only what is installed, what version, and which symbols are missing. It claims no API compatibility, no performance and no correctness. sgl_kernel's 'not ported' is scoped to public PyPI wheels. verified was not assigned; the page stays draft.
 
+## Metrics (before → after)
+
+| Metric | Before | After | Δ |
+|--------|--------|-------|---|
+| pages | 29 | 29 | — |
+| component_coverage | 19 | 19 | — |
+| component_total | 20 | 20 | — |
+| version_claims_specified | 4 | 4 | — |
+| version_claims_total | 6 | 6 | — |
+| draft_ratio | 51.7% | 51.7% | — |
+| unspecified_ratio | 27.6% | 27.6% | — |
+| license_known_ratio | 66.7% | 66.7% | — |
+| recall | 1.000 | 1.000 | — |
+| tests | 85 | 85 | — |
+
+*No tracked metric changed between baseline and finish.*
+
+## Candidate changes
+
+- `data/aliases.yaml`
+- `evals/claude/iteration-state.json`
+- `evals/claude/trend.md`
+- `queries/by-component.md`
+- `queries/by-hardware.md`
+- `queries/by-type.md`
+- `queries/by-version.md`
+- `queries/index.pickle`
+- `tests/test_repository.py`
+- `wiki/reference/ecosystem-port-status.md`
+
+## Reproduction
+
+```bash
+python3 scripts/iterate_metrics.py --json    # re-measure
+make all
+make check-advisory
+```
+
+<!-- iterate_metrics
+```json
+{
+  "metrics_before": {
+    "_quality_gates_error": null,
+    "pages": 29,
+    "draft_ratio": 0.517,
+    "unspecified_ratio": 0.276,
+    "license_known_ratio": 0.667,
+    "_coverage_error": null,
+    "component_coverage": 19,
+    "component_total": 20,
+    "version_claims_specified": 4,
+    "version_claims_total": 6,
+    "_recall_error": null,
+    "recall": 1.0,
+    "tests": 85
+  },
+  "metrics_after": {
+    "_quality_gates_error": null,
+    "pages": 29,
+    "draft_ratio": 0.517,
+    "unspecified_ratio": 0.276,
+    "license_known_ratio": 0.667,
+    "_coverage_error": null,
+    "component_coverage": 19,
+    "component_total": 20,
+    "version_claims_specified": 4,
+    "version_claims_total": 6,
+    "_recall_error": null,
+    "recall": 1.0,
+    "tests": 85
+  },
+  "deltas": {},
+  "status": "accepted"
+}
+```
+-->

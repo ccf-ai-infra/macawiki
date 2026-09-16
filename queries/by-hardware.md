@@ -12,6 +12,7 @@
 - [`kernel-flash-attention-mxmaca`](../wiki/kernels/flash-attention-mxmaca.md) — FlashAttention 在 MXMACA/C500 上的证据与验证指南
 - [`local-c500-maca-sdk-install`](../sources/repos/local-c500-maca-sdk.md) — 本地 C500 MXMACA SDK 安装实测记录（MACA 3.7.1.5）
 - [`pattern-establish-performance-baseline`](../wiki/optimization-patterns/establish-performance-baseline.md) — 优化前先建立可比较的性能基线
+- [`reference-ecosystem-port-status`](../wiki/reference/ecosystem-port-status.md) — C500 开源生态移植状态（实测）
 - [`reference-maca-environment-variables`](../wiki/reference/maca-environment-variables.md) — vLLM-MetaX cu-bridge 环境变量配置
 - [`reference-mcblas-basics`](../wiki/reference/mcblas-basics.md) — mcBLAS 数学库基础参考（C500 实测安装证据）
 - [`reference-mccl-basics`](../wiki/reference/mccl-basics.md) — mcCL 集合通信库基础参考（C500 实测安装证据）

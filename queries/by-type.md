@@ -19,6 +19,10 @@
 - [`repo-vllm-metax`](../sources/repos/vllm-metax.md) — vLLM-MetaX
 - [`repo-vllm-metax-env-sh`](../sources/repos/vllm-metax-env-sh.md) — vLLM-MetaX env.sh — cu-bridge 环境配置
 
+## wiki-framework
+
+- [`reference-ecosystem-port-status`](../wiki/reference/ecosystem-port-status.md) — C500 开源生态移植状态（实测）
+
 ## wiki-kernel
 
 - [`kernel-flash-attention-mxmaca`](../wiki/kernels/flash-attention-mxmaca.md) — FlashAttention 在 MXMACA/C500 上的证据与验证指南
