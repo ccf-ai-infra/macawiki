@@ -3,10 +3,10 @@
   "objective": "maximize measured Macawiki value without quality or safety regression",
   "head_at_start": "3b1e9a6397af589ebb4bfbf5d90964818e3ec668",
   "champion": {
-    "commit": "1fbaf40e37c901d85230ebf9322f4d5495fae89f",
+    "commit": "e4932ea7eda351fe6410e4c210e77b11cd7b6a8b",
     "task_set_version": "2",
     "metrics_file": "evals/claude/reports/verification-report-2026-07-23.md",
-    "note": "Re-pointed by iterate_precheck --fix; now tracks HEAD 1fbaf40e37c9. Previous note: Re-pointed by iterate_precheck --fix; now tracks HEAD e5fdc86fd04c. Previous note: Re-pointed by iterate_precheck --fix; now tracks HEAD abf335092d39. Previous note: Re-pointed by iterate_precheck --fix; now tracks HEAD 4b5577715860. Previous note: Fixed 2026-09-14: prior champion b2bb4071 did not exist in this repo's history (foreign fork/branch residue), so every state-consistency check failed. Re-pointed to the real validated HEAD at time of fix. Original note: Phase 2 tooling improvements in working tree: OR/fuzzy search, quality gates, recall check, coverage report, freshness check, pickle index, pip install, tutorial"
+    "note": "Re-pointed by iterate_precheck --fix; now tracks HEAD e4932ea7eda3. Previous note: Re-pointed by iterate_precheck --fix; now tracks HEAD 1fbaf40e37c9. Previous note: Re-pointed by iterate_precheck --fix; now tracks HEAD e5fdc86fd04c. Previous note: Re-pointed by iterate_precheck --fix; now tracks HEAD abf335092d39. Previous note: Re-pointed by iterate_precheck --fix; now tracks HEAD 4b5577715860. Previous note: Fixed 2026-09-14: prior champion b2bb4071 did not exist in this repo's history (foreign fork/branch residue), so every state-consistency check failed. Re-pointed to the real validated HEAD at time of fix. Original note: Phase 2 tooling improvements in working tree: OR/fuzzy search, quality gates, recall check, coverage report, freshness check, pickle index, pip install, tutorial"
   },
   "next_cycle_id": 15,
   "cycles": [
