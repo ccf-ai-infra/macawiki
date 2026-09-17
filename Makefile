@@ -1,4 +1,4 @@
-.PHONY: validate test indices status eval doctor quality freshness coverage recall signals signals-merge self-improve-check self-improve evolve report check check-advisory iterate-precheck iterate-cycle trend all env-probe perf-signals token-report perf-capture perf-capture-full
+.PHONY: validate test indices status eval doctor quality freshness coverage recall signals signals-merge self-improve-check self-improve evolve report check check-advisory iterate-precheck iterate-cycle trend doc-facts all env-probe perf-signals token-report perf-capture perf-capture-full
 
 validate:
 	python3 scripts/validate.py
@@ -27,6 +27,9 @@ freshness:
 coverage:
 	python3 scripts/coverage_report.py --markdown evals/coverage/report.md
 
+doc-facts:
+	python3 scripts/check_doc_facts.py
+
 recall:
 	python3 scripts/recall_check.py --mode or
 
@@ -46,8 +49,11 @@ check-advisory:
 	-@echo "=== Freshness Check ==="
 	-@python3 scripts/freshness_check.py --skip-url-check 2>&1; _rc=$$?; echo "  (exit: $$_rc)"
 	-@echo ""
+	-@echo "=== Doc Facts ==="
+	-@python3 scripts/check_doc_facts.py; _rc=$$?; echo "  (exit: $$_rc)"
+	-@echo ""
 	@echo "=== Advisory check complete ==="
-	@echo "See: make quality | make coverage | make recall | make freshness"
+	@echo "See: make quality | make coverage | make recall | make freshness | make doc-facts"
 
 # Full health report: all gates + status summary.
 report: check-advisory status
@@ -119,7 +125,9 @@ check: validate test
 	@echo ""
 	@echo "=== Pre-commit check passed ==="
 
-# trend is in `all` because the artifact is regenerated, not hand-edited: if it
-# is not refreshed on every gate run it silently drifts from the state file, and
-# a trend that disagrees with the loop it describes is worse than none.
-all: validate indices test eval doctor status trend
+# trend and coverage are in `all` because the artifacts are regenerated, not
+# hand-edited: if they are not refreshed on every gate run they silently drift
+# from the corpus they describe, and a report that disagrees with the repo it
+# describes is worse than none (coverage was left out once and reported 28
+# pages plus an already-covered component as uncovered for weeks).
+all: validate indices test eval doctor status trend coverage

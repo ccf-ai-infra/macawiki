@@ -16,9 +16,9 @@ Build an auditable, evidence-first MXMACA knowledge base that helps humans and A
 
 ## Current state (v0.3)
 
-- 14 pages (8 sources, 6 wiki) with validated schemas and generated indices.
-- 38 automated tests covering schema, contracts, evidence integrity, and transpose workloads.
-- 9 agent-value cases (7 positive + 2 negative) with deterministic retrieval proxy.
+- 29 pages (12 sources, 17 wiki) with validated schemas and generated indices.
+- 89 automated tests covering schema, contracts, evidence integrity, and transpose workloads.
+- 17 agent-value cases (15 positive + 2 negative) with deterministic retrieval proxy.
 - C500 benchmarks: 7 case slots with status records (5 comparable, 2 not_comparable), MXMACA++ not_run.
 - Iteration infrastructure: state file, cycle reports, macawiki-iterate skill.
 

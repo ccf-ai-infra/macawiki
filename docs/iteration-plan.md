@@ -48,4 +48,4 @@ MXMACA++ 后端尚未接入（`not_run`）。
 - 根据稳定 API 将后端模板升级为可运行实现。
 - 经人工审阅后才把实验结论提升为 `verified`。
 
-**前置条件**：MXMACA++ SDK 环境就绪，Claude API 付费授权（用于 A/B 评测）。
+**前置条件**：MXMACA++ SDK 环境就绪。（第 2 层 Claude API 付费 A/B 评估已弃用，不再作为前置条件，见 `docs/evaluation.md`。）
