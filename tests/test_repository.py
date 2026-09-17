@@ -90,6 +90,73 @@ def _iterate_env(state: Path, reports: Path) -> dict[str, str]:
     }
 
 
+@contextlib.contextmanager
+def _scratch_doc_facts() -> Any:
+    """Copy docs/facts.json into a scratch dir and point the linter at it.
+
+    The linter resolves claims by env var, not by monkeypatching, so a test
+    can corrupt a copy without ever touching the file other contributors
+    rely on. The real docs/ directory stays in place: the linter reads the
+    real docs, which is what makes a drift assertion meaningful.
+
+    Yields the scratch copy together with the env that reaches it, in the
+    shape ``run_script`` already accepts.
+    """
+    import shutil
+
+    real_facts = ROOT / "docs" / "facts.json"
+    with tempfile.TemporaryDirectory(prefix="macawiki-docfacts-test-") as scratch:
+        scratch_dir = Path(scratch)
+        facts_copy = scratch_dir / "facts.json"
+        if real_facts.is_file():
+            shutil.copy2(real_facts, facts_copy)
+        else:
+            facts_copy.write_text('{"claims": []}', encoding="utf-8")
+        env = {"MACAWIKI_DOC_FACTS": str(facts_copy)}
+        yield facts_copy, env
+
+
+def _make_claim_stale(facts_path: Path) -> None:
+    """Point one numeric claim at a real anchor but expect a false number.
+
+    Rewriting the claim's 'expect' to a different count makes the mismatch
+    detectable while the pattern still matches real prose, which is exactly
+    the 'drift' shape the linter must report.
+    """
+    data = json.loads(facts_path.read_text(encoding="utf-8"))
+    claims = data.get("claims") or []
+    for claim in claims:
+        if "pattern" in claim and claim.get("expect") == "pages_total":
+            claim["expect"] = "agent_cases_total"
+            break
+    facts_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _break_claim_pattern(facts_path: Path) -> None:
+    """Point a claim at a phrase that no longer appears anywhere in the doc."""
+    data = json.loads(facts_path.read_text(encoding="utf-8"))
+    claims = data.get("claims") or []
+    for claim in claims:
+        if "pattern" in claim:
+            claim["pattern"] = "zzz-this-sentence-was-rewritten-(\\d+)"
+            break
+    facts_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+@contextlib.contextmanager
+def _scratch_doc() -> Any:
+    """Point the linter at a scratch docs dir containing one invented file.
+
+    Used for the dangling-reference check, which scans whatever docs dir it
+    is given. The scratch dir holds only the file the test writes, so the
+    real docs cannot contribute a failure.
+    """
+    with tempfile.TemporaryDirectory(prefix="macawiki-docs-test-") as scratch:
+        scratch_dir = Path(scratch)
+        env = {"MACAWIKI_DOCS_DIR": str(scratch_dir)}
+        yield scratch_dir / "invented.md", env
+
+
 class RepositoryTests(unittest.TestCase):
     def test_validator_passes(self) -> None:
         result = run_script("scripts/validate.py")
@@ -179,6 +246,39 @@ class RepositoryTests(unittest.TestCase):
     def test_generated_indices_are_current(self) -> None:
         result = run_script("scripts/generate_indices.py", "--check")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_doc_facts_pass_when_corpus_is_current(self) -> None:
+        """Every prose number in docs/ must match the live corpus it describes."""
+        result = run_script("scripts/check_doc_facts.py", "--quiet")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_doc_facts_detects_a_stale_number(self) -> None:
+        """A wrong number must fail loudly, not pass as a minor cosmetic issue.
+
+        This is the falsifiability half of the linter: a guard that only
+        exercises its happy path cannot be said to guard anything.
+        """
+        with _scratch_doc_facts() as (facts_path, env):
+            _make_claim_stale(facts_path)
+            result = run_script("scripts/check_doc_facts.py", env=env)
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+            self.assertIn("drift", result.stdout)
+
+    def test_doc_facts_reports_missing_anchor(self) -> None:
+        """A claim whose pattern no longer matches is not being checked at all."""
+        with _scratch_doc_facts() as (facts_path, env):
+            _break_claim_pattern(facts_path)
+            result = run_script("scripts/check_doc_facts.py", env=env)
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+            self.assertIn("missing-anchor", result.stdout)
+
+    def test_doc_facts_flags_a_dangling_script_reference(self) -> None:
+        """A doc must never point at a script that does not exist."""
+        with _scratch_doc() as (doc_path, env):
+            doc_path.write_text("Run `scripts/this_script_does_not_exist.py`.\n", encoding="utf-8")
+            result = run_script("scripts/check_doc_facts.py", env=env)
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+            self.assertIn("dangling-ref", result.stdout)
 
     def test_minimum_page_count(self) -> None:
         """Corpus must not shrink below usable threshold."""
