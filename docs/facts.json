@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "purpose": "Every prose number in docs/ that quotes a repository count is registered here. scripts/check_doc_facts.py re-derives each one from the repository and fails when a doc disagrees. Add a claim whenever docs/ gains a new number that must stay true; do not edit a doc number without also confirming it against this file.",
+  "notes": [
+    "The docs stay plain prose. This file holds the patterns that locate each number, so no markup ever appears in a sentence.",
+    "Each numeric claim has exactly one capturing group in 'pattern'; the captured integer is compared to the fact named in 'expect'.",
+    "If a sentence is reworded and the pattern stops matching, the linter reports 'missing-anchor' -- a claim that cannot be located is not being checked at all.",
+    "Drift is fixed by correcting the doc, not by loosening this file.",
+    "Existence claims use 'expect': 'script_exists' | 'dir_exists' | 'file_exists' | 'tag_exists' with a 'path' instead of a pattern."
+  ],
+  "claims": [
+    {
+      "id": "charter-pages-total",
+      "doc": "docs/charter.md",
+      "pattern": "(\\d+) pages \\(\\d+ sources, \\d+ wiki\\)",
+      "expect": "pages_total",
+      "note": "headline corpus size"
+    },
+    {
+      "id": "charter-sources",
+      "doc": "docs/charter.md",
+      "pattern": "\\d+ pages \\((\\d+) sources, \\d+ wiki\\)",
+      "expect": "sources"
+    },
+    {
+      "id": "charter-wiki",
+      "doc": "docs/charter.md",
+      "pattern": "\\d+ pages \\(\\d+ sources, (\\d+) wiki\\)",
+      "expect": "wiki"
+    },
+    {
+      "id": "charter-tests",
+      "doc": "docs/charter.md",
+      "pattern": "(\\d+) automated tests",
+      "expect": "test_count"
+    },
+    {
+      "id": "charter-agent-cases",
+      "doc": "docs/charter.md",
+      "pattern": "(\\d+) agent-value cases",
+      "expect": "agent_cases_total"
+    },
+    {
+      "id": "evaluation-agent-cases-total",
+      "doc": "docs/evaluation.md",
+      "pattern": "(\\d+) 个 case（\\d+ 个正向检索 \\+ \\d+ 个负向触发）",
+      "expect": "agent_cases_total"
+    },
+    {
+      "id": "evaluation-agent-cases-positive",
+      "doc": "docs/evaluation.md",
+      "pattern": "\\d+ 个 case（(\\d+) 个正向检索 \\+ \\d+ 个负向触发）",
+      "expect": "agent_cases_positive"
+    },
+    {
+      "id": "evaluation-agent-cases-negative",
+      "doc": "docs/evaluation.md",
+      "pattern": "\\d+ 个 case（\\d+ 个正向检索 \\+ (\\d+) 个负向触发）",
+      "expect": "agent_cases_negative"
+    },
+    {
+      "id": "evaluation-gold-questions",
+      "doc": "docs/evaluation.md",
+      "pattern": "(\\d+) 个问题，覆盖 \\d+ 个领域",
+      "expect": "gold_questions"
+    },
+    {
+      "id": "evaluation-tests",
+      "doc": "docs/evaluation.md",
+      "pattern": "(\\d+) 个单元测试",
+      "expect": "test_count"
+    },
+    {
+      "id": "evaluation-run-expected-numerator",
+      "doc": "docs/evaluation.md",
+      "pattern": "预期: (\\d+)/(\\d+) passed",
+      "expect": "agent_cases_total",
+      "note": "the slash form 'N/N passed' tracks the case count on both digits"
+    },
+    {
+      "id": "evaluation-run-expected-denominator",
+      "doc": "docs/evaluation.md",
+      "pattern": "预期: (\\d+)/(\\d+) passed",
+      "expect": "agent_cases_total",
+      "group": 2
+    },
+    {
+      "id": "evaluation-status-cases",
+      "doc": "docs/evaluation.md",
+      "pattern": "agent-value proxy \\| ✅ 已实现 \\| (\\d+) cases",
+      "expect": "agent_cases_total"
+    },
+    {
+      "id": "evaluation-status-questions",
+      "doc": "docs/evaluation.md",
+      "pattern": "gold-questions \\| ✅ 已实现 \\| (\\d+) 个问题",
+      "expect": "gold_questions"
+    },
+    {
+      "id": "evaluation-status-contract-tests",
+      "doc": "docs/evaluation.md",
+      "pattern": "compare_benchmarks \\| ✅ 已实现 \\| (\\d+) contract tests",
+      "expect": "test_count",
+      "note": "the contract-test row counts the whole suite, so it tracks test_count"
+    },
+    {
+      "id": "installation-tests",
+      "doc": "docs/installation.md",
+      "pattern": "预期: OK \\((\\d+) tests",
+      "expect": "test_count"
+    },
+    {
+      "id": "installation-run-expected-numerator",
+      "doc": "docs/installation.md",
+      "pattern": "预期: (\\d+)/(\\d+) passed",
+      "expect": "agent_cases_total"
+    },
+    {
+      "id": "installation-run-expected-denominator",
+      "doc": "docs/installation.md",
+      "pattern": "预期: (\\d+)/(\\d+) passed",
+      "expect": "agent_cases_total",
+      "group": 2
+    },
+    {
+      "id": "installation-agent-value-row-numerator",
+      "doc": "docs/installation.md",
+      "pattern": "agent value eval \\| exit code 0，(\\d+)/(\\d+) pass",
+      "expect": "agent_cases_total"
+    },
+    {
+      "id": "installation-agent-value-row-denominator",
+      "doc": "docs/installation.md",
+      "pattern": "agent value eval \\| exit code 0，(\\d+)/(\\d+) pass",
+      "expect": "agent_cases_total",
+      "group": 2
+    },
+    {
+      "id": "usage-agent-cases",
+      "doc": "docs/usage.md",
+      "pattern": "(\\d+) 个演练 case 覆盖",
+      "expect": "agent_cases_total"
+    },
+    {
+      "id": "usage-agent-cases-positive",
+      "doc": "docs/usage.md",
+      "pattern": "\\d+ 个演练 case 覆盖：正向检索（(\\d+) 个）",
+      "expect": "agent_cases_positive"
+    },
+    {
+      "id": "usage-agent-cases-negative",
+      "doc": "docs/usage.md",
+      "pattern": "\\d+ 个演练 case 覆盖：正向检索（\\d+ 个）、负向触发（(\\d+) 个）",
+      "expect": "agent_cases_negative"
+    }
+  ]
+}

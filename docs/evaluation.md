@@ -1,20 +1,21 @@
 # 评估方法
 
 本文档定义 Macawiki 的评估框架，分为两个层次：
-- **第 1 层**：确定性检索与证据代理测试（无 LLM 调用，每次提交自动运行）
-- **第 2 层**：真实 Agent A/B 评估（需 Claude API 付费授权，按主要版本发布运行）
+- **第 1 层**：确定性检索与证据代理测试（无 LLM 调用，每次提交自动运行）——**唯一被实现的层次**
+- **第 2 层**：真实 Agent A/B 评估 —— **已弃用（wontfix）**，见第 3 节。Macawiki 定位为本地 Agent CLI 工具，付费 API A/B 评估不在此架构范围内；本文保留其设计仅作历史记录，不再规划实现
 
 ---
 
 ## 1. 两层评估体系
 
-| 维度 | 第 1 层：确定性检索代理 | 第 2 层：Agent A/B 评估 |
+| 维度 | 第 1 层：确定性检索代理 | 第 2 层：Agent A/B 评估（已弃用） |
 |------|------------------------|------------------------|
 | 测量什么 | 仓库是否提供正确的证据 | 加载 Macawiki 是否改善 Agent 回答 |
-| 自动化程度 | 全自动（CI） | 半自动（需 API 调用） |
+| 自动化程度 | 全自动（`make all`） | 半自动（需 API 调用） |
 | 成本 | 免费 | API 费用 |
-| 频率 | 每次提交 | 每个主要版本 |
+| 频率 | 每次提交 | 不再运行 |
 | 评分方式 | 确定性匹配 | 人工审阅或 LLM-as-judge |
+| 状态 | ✅ 已实现 | ❌ wontfix |
 
 **核心原则：** 代理检索命中率只能证明索引可检索，不能替代真实 Agent A/B 结论。C500 性能对比必须先通过正确性检查，并确保设备、软件栈、shape、dtype、预热与计时方法一致。
 
@@ -26,18 +27,18 @@
 
 **位置**：`evals/agent-value-cases.yaml`（schema version 1）
 
-**当前覆盖**：9 个 case（7 个正向检索 + 2 个负向触发）
+**当前覆盖**：17 个 case（15 个正向检索 + 2 个负向触发）
 
 | 类别 | 数量 | 行为 |
 |------|------|------|
-| 正向检索 (positive_retrieval) | 7 | 预期页面和来源必须被找到 |
+| 正向检索 (positive_retrieval) | 15 | 预期页面和来源必须被找到 |
 | 负向触发 (negative_trigger) | 2 | 非 MXMACA 或隐私信息 Prompt 不得返回任何 Macawiki 页面 |
 
 **运行方式**：
 
 ```bash
 python3 scripts/run_agent_value_eval.py
-# 预期: 9/9 passed
+# 预期: 17/17 passed
 ```
 
 **指标**：
@@ -53,7 +54,7 @@ python3 scripts/run_agent_value_eval.py
 
 **位置**：`evals/gold-questions.yaml`
 
-**当前覆盖**：7 个问题，覆盖 5 个领域：
+**当前覆盖**：13 个问题，覆盖 7 个领域：
 
 | 领域 | 示例问题 | 预期页面 |
 |------|---------|---------|
@@ -63,16 +64,18 @@ python3 scripts/run_agent_value_eval.py
 | 编译器 | mxcc 编译基础 | reference-mxcc-compiler-basics |
 | 性能分析 | mcProfiler 使用 | diagnostics-mcprofiler-basics |
 | 证据不足 | MXMACA++ BLAS 状态 | 多页面 + 边界声明 |
+| FlashAttention | 来源、安装、特性、正确性、对比与无来源边界 | kernel-flash-attention-mxmaca 及来源页 |
 
 ### 2.3 Contract Tests
 
 **位置**：`tests/test_repository.py`
 
-**当前覆盖**：38 个单元测试，覆盖：
-- 页面验证、查询、别名过滤、来源跟踪
-- compare_benchmarks 合约（18 个测试：schema、contract、timing、exit codes）
-- transpose 工作负载合约（3 个测试）
-- 证据完整性（8 个测试：版本声明、禁止伪造数字、来源 URL、agent-value 等）
+**当前覆盖**：89 个单元测试，覆盖：
+- compare_benchmarks 合约（17 个测试：schema、contract、timing、exit codes）
+- 信号与迭代回路（18 个测试：signal logger、cycle、trend、iterate 状态自洽）
+- 查询与检索（10 个测试：AND/OR/fuzzy、别名过滤、零结果日志）
+- transpose 与 TileLang 工作负载合约（4 个测试）
+- 环境探测、installer、doctor、gold questions 等其余断言
 
 ### 2.4 添加新 Case
 
@@ -119,7 +122,7 @@ python3 scripts/run_agent_value_eval.py
 | 上下游生态项目 | mcPytorch、vLLM-MetaX 集成 | "vllm-metax 的版本要求是什么？" |
 | 评测设计 | 基准测试方法和门禁 | "三后端对比需要满足什么条件？" |
 
-任务问题从 `evals/gold-questions.yaml`（当前 7 个问题）中抽取。每个 gold question 定义了 expected_pages、required_sources、must_state 和 must_not_state。
+任务问题从 `evals/gold-questions.yaml`（当前 13 个问题）中抽取。每个 gold question 定义了 expected_pages、required_sources、must_state 和 must_not_state。
 
 ### 3.3 主要指标
 
@@ -141,22 +144,12 @@ python3 scripts/run_agent_value_eval.py
 1. 每个任务至少执行 N 次独立运行（N ≥ 3，推荐 ≥ 5 以获得统计显著性）
 2. 随机化加载/不加载 session 的顺序
 3. 记录所有输出：成功、失败、错误、超时
-4. 原始日志保存在 `evals/claude/runs/YYYY-MM-DD-task-id-{a,b}-run-N.json`
+4. 原始日志保存在 `evals/claude/reports/`（按 cycle 组织）
 5. 评分：两名独立审阅者或 LLM-as-judge（配明确评分标准）
 6. 聚合：每个任务每个指标的平均值和标准差
 7. 报告同时包含成功和失败样本，不只报告均值
 
-### 3.5 运行器与评分脚本（待实现）
-
-```bash
-# A/B 评估运行器（Phase 2）
-MACAWIKI_RUN_PAID_EVAL=1 python3 scripts/run_claude_ab_eval.py
-
-# 评分
-python3 scripts/score_claude_eval.py --results <results-dir>
-```
-
-### 3.6 数据公开要求
+### 3.5 数据公开要求
 
 - 任务定义文件（JSON/YAML schema）
 - 评分标准（rubric）
@@ -196,11 +189,11 @@ MXMACA++ 后端：`not_run`（契约已定义，等待 SDK 环境重捕获）。
 
 | 组件 | 状态 | 说明 |
 |------|------|------|
-| agent-value proxy | ✅ 已实现 | 9 cases, 7 positive + 2 negative |
-| gold-questions | ✅ 已实现 | 7 个问题，5 个领域 |
-| compare_benchmarks | ✅ 已实现 | 38 contract tests |
-| Claude A/B runner | ❌ 已弃用 | wontfix：本地 Agent 优先架构 |
+| agent-value proxy | ✅ 已实现 | 17 cases, 15 positive + 2 negative |
+| gold-questions | ✅ 已实现 | 13 个问题，7 个领域 |
+| compare_benchmarks | ✅ 已实现 | 89 contract tests |
+| Claude A/B runner | ❌ 已弃用 | wontfix：本地 Agent 优先架构，不再规划实现 |
 | Claude A/B scorer | ❌ 已弃用 | wontfix |
 | CI/CD 自动评估 | ⚠️ 部分 | `make all` 包含 validate + test + agent-value |
 
-**下一步**：获得 Claude API 付费授权 → 实现 `run_claude_ab_eval.py` → 实现 `score_claude_eval.py` → 首次 A/B 评估运行 → 结果写入 `evals/claude/reports/`。
+**下一步**：扩展 gold questions 与 agent-value cases 的领域覆盖（见 `evals/coverage/report.md` 的 uncovered 项），并为 docs 中的语料数字接入 `make doc-facts` 漂移检查。Claude API 付费 A/B 评估不在规划内。

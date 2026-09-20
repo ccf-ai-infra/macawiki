@@ -162,11 +162,11 @@ python3 scripts/generate_indices.py --check
 
 # 5. 单元测试
 python3 -m unittest discover -s tests -v
-# 预期: OK (38 tests, 3 项因无 PyTorch 跳过)
+# 预期: OK (89 tests, 3 项因无 PyTorch 跳过)
 
 # 6. Agent 价值演练
 python3 scripts/run_agent_value_eval.py
-# 预期: 9/9 passed
+# 预期: 17/17 passed
 
 # 7. 全量检查
 make all
@@ -180,7 +180,7 @@ make all
 | query.py | 包含 pattern-establish-performance-baseline |
 | generate_indices.py | 索引为最新 |
 | unittest | exit code 0，all pass |
-| agent value eval | exit code 0，9/9 pass |
+| agent value eval | exit code 0，17/17 pass |
 | make all | exit code 0 |
 
 ## 7. 升级与回退
@@ -195,9 +195,13 @@ make all
 # 重启 Agent 即生效
 
 # 回退到特定版本
-git checkout v0.3.0
+git log --oneline           # 找到此前已验证通过的提交
+git checkout <commit>       # 仓库尚未发布版本 tag，只能按提交回退
 make all
 ```
+
+> 注意：仓库目前**没有版本 tag**，因此无法 `git checkout v0.3.0` 之类的标签。
+> 回退前请确认目标提交曾通过 `make all`，否则需先在该提交上重跑验证。
 
 ### copy 安装
 

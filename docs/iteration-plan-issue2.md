@@ -1,6 +1,6 @@
 # Issue #2 迭代计划: Macawiki Claude 持续价值优化
 
-> **状态**: 待审核
+> **状态**: 已归档（其中规划的 Cycle 1–5 已执行完毕，结果见 `evals/claude/reports/cycle-001.md` 等；后续迭代改由 `scripts/iterate_cycle.py` 与 `evals/claude/iteration-state.json` 承载，本文不再作为活跃计划）
 > **基于**: Issue #2 评审评论 + 当前 HEAD (`3b1e9a6`) 本地代码核实
 > **创建日期**: 2026-07-22
 

@@ -18,7 +18,7 @@ python3 -m unittest discover -s tests -v
 
 ## 安装到 Agent
 
-当前仓库已经包含 `.agents/skills/macawiki`（Codex）与 `.claude/skills/macawiki`（Claude Code）适配器。在本仓库启动对应 Agent 即可发现 Skill。
+当前仓库已经包含 `.agents/skills/macawiki`（Codex）与 `.claude/skills/macawiki`（Claude Code）适配器。在本仓库启动对应 Agent 即可发现 Skill。安装器还支持 CodeBuddy（`--agent codebuddy`），但该适配器目录不随仓库分发，需通过安装命令生成。
 
 安装为用户级 Skill，供其他项目复用：
 
