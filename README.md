@@ -76,7 +76,6 @@ python3 scripts/doctor.py
 
 - [MXMACA 官方文档中心](https://developer.metax-tech.com/doc)
 - [MetaX-MACA Gitee 组织](https://gitee.com/metax-maca)
-- [MXMACA Performance Optimization Guide](https://gitee.com/metax-maca/mxmaca-performance-tuning-guide)
 - [KernelWiki](https://github.com/mit-han-lab/KernelWiki)
 
 ## 许可证
